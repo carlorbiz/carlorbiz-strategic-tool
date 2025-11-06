@@ -1,0 +1,820 @@
+// RWAV Strategic Plan 2026-2030 - Structured Data Model
+// All content extracted from strategic plan document
+// Australian English spelling throughout
+
+const STRATEGIC_PLAN_DATA = {
+  
+  EXECUTIVE_SUMMARY: {
+    currentState: "RWAV currently operates as a government-funded workforce placement service, competing with other agencies for limited recruitment success. This model focuses on individual placements rather than systemic solutions, creates dependency on government funding cycles, limits strategic influence and cross-sector collaboration, and underutilises RWAV's unique neutral position and established relationships.",
+    
+    futureVision: "The transformation positions RWAV as rural Victoria's trusted systems coordinator, using data intelligence and coalition leadership - leveraging the trust the community and stakeholders already have in other organisations - to drive retention, workforce planning, and health system reform. This addresses the coordination crisis while establishing sustainable revenue streams aligned with stakeholder needs.",
+    
+    evidenceSummary: "With 91% identifying poor coordination as a barrier, 66% believing coordination could solve the majority of problems, and 74% trusting RWAV, the mandate for transformation is unambiguous. The question is not whether RWAV should transform, but how quickly and effectively it can capture this coordination leadership opportunity.",
+    
+    requiredDecisions: [
+      {
+        id: "strategic_direction",
+        title: "Strategic Direction Approval",
+        description: "Endorse the three-pillar transformation framework",
+        priority: "critical",
+        dependencies: []
+      },
+      {
+        id: "pilot_program",
+        title: "Pilot Program Authorisation",
+        description: "Approve three-region pilot implementation with allocated resources",
+        priority: "critical",
+        dependencies: ["strategic_direction"]
+      },
+      {
+        id: "financial_strategy",
+        title: "Financial Strategy Commitment",
+        description: "Support revenue diversification targeting 25-30% non-government funding by 2030",
+        priority: "high",
+        dependencies: ["strategic_direction"]
+      },
+      {
+        id: "cultural_safety",
+        title: "Cultural Safety Mandate",
+        description: "Approve mandatory ACCHO leadership requirements",
+        priority: "critical",
+        dependencies: []
+      },
+      {
+        id: "implementation_timeline",
+        title: "Implementation Timeline",
+        description: "Authorise immediate commencement of Phase 1 foundation building",
+        priority: "high",
+        dependencies: ["strategic_direction", "pilot_program"]
+      }
+    ],
+    
+    postApprovalActions: [
+      "Stakeholder communication of Board-approved transformation strategy",
+      "Pilot region partnership development and community consultation initiation",
+      "Community Map platform development tender and contractor selection",
+      "Revenue stream development and initial client engagement",
+      "Transformation oversight governance structure establishment"
+    ]
+  },
+
+  EVIDENCE_BASE: {
+    surveyStats: {
+      coordinationBarrier: {
+        value: 91,
+        label: "See poor coordination as a significant barrier",
+        indicator: "warning",
+        colour: "#dc2626"
+      },
+      trustRWA: {
+        value: 74,
+        label: "Trust Rural Workforce Agencies (moderate-to-high trust)",
+        indicator: "confidence",
+        colour: "#059669"
+      },
+      coordinationImpact: {
+        value: 66,
+        label: "Believe coordination could solve majority of problems",
+        indicator: "opportunity",
+        colour: "#2563eb"
+      },
+      partnershipsPositive: {
+        value: 92,
+        label: "See health organisation partnerships as having positive impact",
+        indicator: "validation",
+        colour: "#059669"
+      },
+      communityInputBarrier: {
+        value: 72,
+        label: "Cite lack of community input as significant barrier",
+        indicator: "action",
+        colour: "#ea580c"
+      },
+      willingToContribute: {
+        value: 95,
+        label: "Willing to contribute to workforce solutions",
+        indicator: "engagement",
+        colour: "#059669"
+      }
+    },
+    
+    keyFindings: [
+      {
+        finding: "Poor coordination identified as significant barrier",
+        percentage: 91,
+        implication: "Clear mandate for coordination services"
+      },
+      {
+        finding: "Lack of community input as significant barrier",
+        percentage: 72,
+        implication: "Demand for community-centred planning"
+      },
+      {
+        finding: "Health organisation partnerships create positive impact",
+        percentage: 92,
+        implication: "Support for partnership facilitation role"
+      },
+      {
+        finding: "Trust in Rural Workforce Agencies (moderate to high)",
+        percentage: 74,
+        implication: "Credibility foundation for leadership role"
+      }
+    ],
+    
+    communityWillingness: [
+      { activity: "Talk to family/friends about health workforce importance", percentage: 65 },
+      { activity: "Advocate for funding and policy changes", percentage: 50 },
+      { activity: "Pursue a career in health care", percentage: 40 },
+      { activity: "Participate in local community health worker program", percentage: 38 },
+      { activity: "Volunteer to support the health workforce", percentage: 35 },
+      { activity: "Donate to organisations that support health workforce", percentage: 25 },
+      { activity: "Host community event to raise awareness", percentage: 20 },
+      { activity: "Not willing to do anything", percentage: 5 }
+    ],
+    
+    stakeholderQuotes: [
+      {
+        quote: "Health professionals need peers… Priority should be in supporting the building of one workforce that works across the various services in rural areas…",
+        theme: "Coordination",
+        source: "Stakeholder Consultation"
+      },
+      {
+        quote: "Stop stealing from each other and share resources…",
+        theme: "Collaboration",
+        source: "Stakeholder Consultation"
+      },
+      {
+        quote: "I don't understand why every state Rural Workforce Agency is so different with services. QLD services are far better for Rural General Practice than Victoria.",
+        theme: "Service Consistency",
+        source: "Survey Response"
+      },
+      {
+        quote: "As a health professional and as a carer in rural/regional Australia, we need to bring health care to the patient and their families.",
+        theme: "Community-Centred Care",
+        source: "Survey Response"
+      }
+    ]
+  },
+
+  THREE_PILLARS: {
+    doers: {
+      id: "doers",
+      title: "DOERS - Frontline Impact Through Strategic Partnerships",
+      colour: "#0891b2", // Teal
+      icon: "fa-handshake",
+      objective: "Deliver measurable workforce and health outcomes through coordinated partner networks rather than direct service delivery.",
+      
+      initiatives: [
+        {
+          name: "Retention Excellence Hubs",
+          description: "Multi-organisational coordination centres addressing the 72% who identify lack of community input as barrier",
+          impact: "high",
+          timeline: "Year 1-2",
+          connections: ["drivers.rural_coalition", "enablers.partnership_infrastructure"]
+        },
+        {
+          name: "Community Map Platform",
+          description: "Real-time workforce intelligence system providing early warning and strategic planning capability",
+          impact: "critical",
+          timeline: "Year 1-3",
+          connections: ["drivers.policy_advocacy", "enablers.data_intelligence"]
+        },
+        {
+          name: "Cultural Safety Integration",
+          description: "Mandatory ACCHO leadership in all initiatives, addressing First Nations workforce priorities",
+          impact: "critical",
+          timeline: "Year 1-5",
+          connections: ["drivers.innovation_facilitation"]
+        },
+        {
+          name: "Rural Health Innovation Partnerships",
+          description: "Facilitating the 92% who see health partnerships as positive impact",
+          impact: "high",
+          timeline: "Year 2-5",
+          connections: ["drivers.multi_regional", "enablers.revenue_diversification"]
+        }
+      ],
+      
+      successMetrics: [
+        { metric: "15% increase in rural health workforce retention", target: "15%", year: 2030 },
+        { metric: "25% improvement in workforce planning accuracy", target: "25%", year: 2030 },
+        { metric: "100% cultural safety compliance", target: "100%", year: 2028 },
+        { metric: "85% community input in workforce planning", target: "85%", year: 2030 }
+      ],
+      
+      stakeholderEvidence: "Health professionals need peers… priority should be in supporting the building of one workforce that works across the various services in rural areas."
+    },
+    
+    drivers: {
+      id: "drivers",
+      title: "DRIVERS - Systems Change and Strategic Influence",
+      colour: "#2563eb", // Blue
+      icon: "fa-chart-line",
+      objective: "Lead policy reform and systems coordination addressing root causes of rural health workforce challenges.",
+      
+      initiatives: [
+        {
+          name: "Rural Health Coalition Leadership",
+          description: "Convening cross-sector partnerships for systems reform",
+          impact: "critical",
+          timeline: "Year 2-5",
+          connections: ["doers.retention_hubs", "enablers.partnership_infrastructure"]
+        },
+        {
+          name: "Evidence-Based Policy Advocacy",
+          description: "Using Community Map data for strategic government engagement",
+          impact: "high",
+          timeline: "Year 2-5",
+          connections: ["doers.community_map", "enablers.data_intelligence"]
+        },
+        {
+          name: "Multi-Regional Coordination",
+          description: "Facilitating resource sharing and collaborative service delivery",
+          impact: "high",
+          timeline: "Year 2-4",
+          connections: ["doers.innovation_partnerships"]
+        },
+        {
+          name: "Innovation Facilitation",
+          description: "Supporting technology adoption and service model innovation",
+          impact: "medium",
+          timeline: "Year 3-5",
+          connections: ["doers.cultural_safety", "enablers.revenue_diversification"]
+        }
+      ],
+      
+      successMetrics: [
+        { metric: "3 major policy reforms influenced", target: "3", year: 2030 },
+        { metric: "5 multi-regional partnerships established", target: "5", year: 2028 },
+        { metric: "20% increase in cross-sector collaboration", target: "20%", year: 2030 },
+        { metric: "75% cross-sector partnership participation", target: "75%", year: 2030 }
+      ],
+      
+      stakeholderEvidence: "Development of service hubs in every 50km radius, bring health care to the patient and their families, and advocate for and promote multi-disciplinary General Practice in rural areas."
+    },
+    
+    enablers: {
+      id: "enablers",
+      title: "ENABLERS - Organisational Transformation and Sustainability",
+      colour: "#ea580c", // Warm Orange
+      icon: "fa-cogs",
+      objective: "Build internal capability and financial sustainability to support coordination leadership role.",
+      
+      initiatives: [
+        {
+          name: "Revenue Diversification",
+          description: "Ethical revenue streams aligned with coordination mission (25-30% by 2030)",
+          impact: "critical",
+          timeline: "Year 1-5",
+          connections: ["doers.innovation_partnerships", "drivers.innovation_facilitation"]
+        },
+        {
+          name: "Data Intelligence Capability",
+          description: "Advanced analytics and predictive modelling expertise",
+          impact: "critical",
+          timeline: "Year 1-3",
+          connections: ["doers.community_map", "drivers.policy_advocacy"]
+        },
+        {
+          name: "Partnership Infrastructure",
+          description: "Systems and processes for multi-organisational coordination",
+          impact: "high",
+          timeline: "Year 1-4",
+          connections: ["doers.retention_hubs", "drivers.rural_coalition"]
+        },
+        {
+          name: "Cultural Transformation",
+          description: "From service delivery to strategic leadership organisational culture",
+          impact: "high",
+          timeline: "Year 1-5",
+          connections: []
+        }
+      ],
+      
+      successMetrics: [
+        { metric: "25-30% non-government revenue by 2030", target: "25-30%", year: 2030 },
+        { metric: "90% stakeholder satisfaction with coordination services", target: "90%", year: 2030 },
+        { metric: "Advanced data analytics capability established", target: "100%", year: 2027 }
+      ],
+      
+      stakeholderEvidence: "The very act of providing such detailed, thoughtful, and passionate feedback is qualitative evidence of community engagement. Specific, solutions-focused comments show that community members are actively thinking about and proposing solutions."
+    }
+  },
+
+  PILOT_PROGRAM: {
+    overview: {
+      purpose: "Test and refine RWAV's transformation model through intensive implementation in three diverse rural communities, providing evidence base for statewide rollout and Board confidence in strategic direction.",
+      timeline: "18-month pilot (July 2026 - December 2027) with 6-month evaluation and refinement period",
+      investment: "Dedicated resources for intensive community engagement, platform development, and outcome measurement"
+    },
+    
+    communities: [
+      {
+        id: "bendigo",
+        name: "Bendigo Region",
+        classification: "Inner Regional",
+        population: 100000,
+        firstNationsContext: "Dja Dja Wurrung country with active ACCHO presence",
+        
+        focusAreas: [
+          "Data intelligence platform development and testing",
+          "Retention strategies for established services",
+          "University partnership enhancement and coordination"
+        ],
+        
+        strengths: [
+          "Strong university presence (La Trobe)",
+          "Existing coordination mechanisms",
+          "Diverse health services across specialties",
+          "Regional centre with surrounding communities"
+        ],
+        
+        challenges: [
+          "Competition with Melbourne for workforce",
+          "Ageing practitioner demographics",
+          "Recruitment challenges in specific specialties"
+        ],
+        
+        workforceProfile: "Established services with recruitment challenges in specific specialties",
+        
+        implementationPhases: [
+          {
+            phase: 1,
+            title: "Community Engagement & Baseline",
+            months: "1-3",
+            activities: [
+              "Formal agreements with stakeholders",
+              "ACCHO partnership establishment",
+              "Baseline workforce data collection"
+            ]
+          },
+          {
+            phase: 2,
+            title: "Platform Development",
+            months: "4-9",
+            activities: [
+              "Community Map beta implementation",
+              "Real-time monitoring system",
+              "Multi-organisational partnerships"
+            ]
+          },
+          {
+            phase: 3,
+            title: "Service Delivery",
+            months: "10-18",
+            activities: [
+              "Retention Excellence Hub launch",
+              "University partnership coordination",
+              "Data intelligence service testing"
+            ]
+          }
+        ],
+        
+        expectedOutcomes: [
+          "10% improvement in workforce retention",
+          "Enhanced university-health service partnerships",
+          "Validated data intelligence platform"
+        ],
+        
+        resourceAllocation: {
+          engagement: 25,
+          technology: 30,
+          service: 20,
+          evaluation: 15,
+          cultural: 10
+        },
+        
+        coordinates: { lat: -36.7570, lng: 144.2794 }
+      },
+      
+      {
+        id: "gippsland",
+        name: "Gippsland Lakes Region",
+        classification: "Outer Regional",
+        population: 25000,
+        firstNationsContext: "Gunaikurnai country requiring authentic ACCHO partnership",
+        
+        focusAreas: [
+          "Community-led planning and decision-making",
+          "Innovative supervision models for isolated practitioners",
+          "International Medical Graduate integration and support"
+        ],
+        
+        strengths: [
+          "Strong community identity and engagement",
+          "Tourism economy providing lifestyle attraction",
+          "Tight-knit professional networks",
+          "Community willingness to participate"
+        ],
+        
+        challenges: [
+          "Geographic isolation from training centres",
+          "Limited supervision capacity",
+          "Gaps across multiple specialties",
+          "Limited career progression pathways"
+        ],
+        
+        workforceProfile: "Significant gaps across multiple specialties with limited supervision capacity",
+        
+        implementationPhases: [
+          {
+            phase: 1,
+            title: "Community Engagement & Baseline",
+            months: "1-3",
+            activities: [
+              "Community steering committee formation",
+              "ACCHO partnership with decision authority",
+              "Local workforce needs assessment"
+            ]
+          },
+          {
+            phase: 2,
+            title: "Model Innovation",
+            months: "4-9",
+            activities: [
+              "Hub-and-spoke coordination development",
+              "Telehealth supervision system",
+              "IMG pathway coordination"
+            ]
+          },
+          {
+            phase: 3,
+            title: "Community-Led Implementation",
+            months: "10-18",
+            activities: [
+              "Community-controlled recruitment strategy",
+              "Innovative service delivery models",
+              "Cultural integration support programs"
+            ]
+          }
+        ],
+        
+        expectedOutcomes: [
+          "Community-led workforce planning model validated",
+          "Improved IMG integration and retention",
+          "Innovative supervision models established"
+        ],
+        
+        resourceAllocation: {
+          engagement: 30,
+          technology: 25,
+          service: 20,
+          evaluation: 15,
+          cultural: 10
+        },
+        
+        coordinates: { lat: -37.8284, lng: 147.6333 }
+      },
+      
+      {
+        id: "mallee",
+        name: "Mallee Region",
+        classification: "Remote",
+        population: 8000,
+        firstNationsContext: "Wergaia country with historical workforce access inequities",
+        
+        focusAreas: [
+          "Early warning systems for critical shortages",
+          "Hub-and-spoke service coordination models",
+          "Cultural safety integration and equity redress"
+        ],
+        
+        strengths: [
+          "Tight-knit community with strong resilience",
+          "Agricultural economy stability",
+          "Community commitment to solutions",
+          "Existing cross-community collaboration"
+        ],
+        
+        challenges: [
+          "Critical workforce shortages across services",
+          "High turnover rates",
+          "Distance from training centres",
+          "Limited housing availability",
+          "Social isolation for practitioners"
+        ],
+        
+        workforceProfile: "Critical shortages with high turnover and limited service diversity",
+        
+        implementationPhases: [
+          {
+            phase: 1,
+            title: "Baseline & Partnership",
+            months: "1-3",
+            activities: [
+              "ACCHO partnership with equity focus",
+              "Critical shortage assessment",
+              "Emergency response protocol development"
+            ]
+          },
+          {
+            phase: 2,
+            title: "System Development",
+            months: "4-9",
+            activities: [
+              "Early warning system implementation",
+              "Multi-community coordination platform",
+              "Technology-enabled service delivery"
+            ]
+          },
+          {
+            phase: 3,
+            title: "Innovation & Sustainability",
+            months: "10-18",
+            activities: [
+              "Hub-and-spoke model operation",
+              "Cultural safety protocols implementation",
+              "Cross-community professional networks"
+            ]
+          }
+        ],
+        
+        expectedOutcomes: [
+          "Early warning system preventing service gaps",
+          "Reduced workforce turnover",
+          "Cultural safety and equity improvements"
+        ],
+        
+        resourceAllocation: {
+          engagement: 25,
+          technology: 35,
+          service: 15,
+          evaluation: 15,
+          cultural: 10
+        },
+        
+        coordinates: { lat: -35.1167, lng: 142.0167 }
+      }
+    ],
+    
+    successCriteria: [
+      "Demonstrated workforce outcome improvements in all three communities",
+      "Stakeholder satisfaction scores >80% across all categories",
+      "Financial sustainability model validation with revenue stream evidence",
+      "Cultural safety protocol effectiveness and First Nations partner satisfaction",
+      "Scalability framework development with clear implementation pathway"
+    ],
+    
+    boardDecisionPoints: [
+      { month: 6, decision: "Initial progress review and refinement approval" },
+      { month: 12, decision: "Mid-point evaluation and continuation decision" },
+      { month: 18, decision: "Final evaluation and statewide rollout recommendation" },
+      { month: 21, decision: "Refined strategy approval and implementation authorisation" }
+    ]
+  },
+
+  FINANCIAL_STRATEGY: {
+    targetRange: "25-30%",
+    targetYear: 2030,
+    ethicalFramework: "Revenue diversification strengthens rather than compromises RWAV's mission by reducing government dependency while creating sustainable funding for coordination services that stakeholders value. All revenue activities must enhance rather than compromise RWAV's primary mission.",
+    
+    revenueStreams: [
+      {
+        id: "data_intelligence",
+        name: "Data Intelligence Services",
+        target: "10-12%",
+        colour: "#3b82f6",
+        description: "Community Map subscriptions, workforce analytics, and predictive modelling services for health services and government",
+        launchYear: 2026,
+        rampUpYears: [2026, 2027, 2028],
+        examples: [
+          "Community Map subscriptions for health services",
+          "Workforce analytics and predictive modelling",
+          "Custom research and analysis for policy development",
+          "Market intelligence reports on workforce trends"
+        ]
+      },
+      {
+        id: "coordination_admin",
+        name: "Coordination Administration",
+        target: "8-10%",
+        colour: "#8b5cf6",
+        description: "Multi-site supervision program administration, cross-regional partnership facilitation, and coalition secretariat services",
+        launchYear: 2027,
+        rampUpYears: [2027, 2028, 2029],
+        examples: [
+          "Multi-site supervision program administration",
+          "Cross-regional partnership facilitation services",
+          "Coalition secretariat and project management",
+          "Partnership coordination systems"
+        ]
+      },
+      {
+        id: "strategic_consultation",
+        name: "Strategic Consultation",
+        target: "5-7%",
+        colour: "#06b6d4",
+        description: "Rural health system design consultation, workforce planning, retention strategy development, and cultural safety expertise",
+        launchYear: 2027,
+        rampUpYears: [2027, 2028, 2029, 2030],
+        examples: [
+          "Rural health system design consultation",
+          "Workforce planning and retention strategy development",
+          "Cultural safety and community engagement expertise",
+          "Community workforce planning services"
+        ]
+      },
+      {
+        id: "innovation_partnerships",
+        name: "Innovation Partnerships",
+        target: "2-3%",
+        colour: "#10b981",
+        description: "Technology company partnerships for rural health solutions, sponsored IMG pathways, and corporate partnership facilitation",
+        launchYear: 2028,
+        rampUpYears: [2028, 2029, 2030],
+        examples: [
+          "Technology company partnerships for rural health solutions",
+          "Sponsored coordination of IMG pathways",
+          "Corporate partnership facilitation aligned with rural health needs",
+          "Conference and event management services"
+        ]
+      }
+    ],
+    
+    riskMitigation: {
+      title: "Ethical Framework and Pilot Testing Approach",
+      principles: [
+        "Maintain clear separation between Commonwealth-funded activities and revenue-generating services",
+        "Ensure all revenue activities enhance rather than compromise RWAV's primary mission",
+        "Establish transparent pricing and service delivery standards",
+        "Regular review of revenue activities alignment with organisational values"
+      ],
+      pilotApproach: "Test revenue streams in pilot communities before statewide rollout, ensuring stakeholder acceptance and value delivery"
+    }
+  },
+
+  IMPLEMENTATION_TIMELINE: {
+    year1: {
+      year: 2026,
+      title: "Foundation Building",
+      colour: "#3b82f6",
+      milestones: [
+        {
+          id: "y1m1",
+          title: "Community Map Beta Launch",
+          quarter: "Q2",
+          description: "Initial platform development and pilot community testing",
+          pillar: "doers"
+        },
+        {
+          id: "y1m2",
+          title: "Partnership Agreements",
+          quarter: "Q2-Q3",
+          description: "Formal agreements with key stakeholders and health services",
+          pillar: "drivers"
+        },
+        {
+          id: "y1m3",
+          title: "Cultural Safety Protocols",
+          quarter: "Q3",
+          description: "ACCHO partnership establishment and protocol implementation",
+          pillar: "doers"
+        },
+        {
+          id: "y1m4",
+          title: "Revenue Pilot Programs",
+          quarter: "Q4",
+          description: "Initial data intelligence services launch",
+          pillar: "enablers"
+        }
+      ]
+    },
+    
+    year2: {
+      year: 2027,
+      title: "Coalition Development",
+      colour: "#8b5cf6",
+      milestones: [
+        {
+          id: "y2m1",
+          title: "Rural Workforce Coalition",
+          quarter: "Q1-Q2",
+          description: "Cross-sector partnership establishment and coalition launch",
+          pillar: "drivers"
+        },
+        {
+          id: "y2m2",
+          title: "Data Subscription Services",
+          quarter: "Q2",
+          description: "Commercial data intelligence service launch",
+          pillar: "enablers"
+        },
+        {
+          id: "y2m3",
+          title: "Enhanced Retention Programs",
+          quarter: "Q3",
+          description: "Retention Excellence Hubs operational",
+          pillar: "doers"
+        },
+        {
+          id: "y2m4",
+          title: "10% Non-Govt Revenue",
+          quarter: "Q4",
+          description: "First revenue diversification milestone achieved",
+          pillar: "enablers"
+        }
+      ]
+    },
+    
+    year3: {
+      year: 2028,
+      title: "System Integration",
+      colour: "#06b6d4",
+      milestones: [
+        {
+          id: "y3m1",
+          title: "Full Community Map Deployment",
+          quarter: "Q1-Q2",
+          description: "Statewide platform rollout across rural Victoria",
+          pillar: "doers"
+        },
+        {
+          id: "y3m2",
+          title: "Policy Influence Expansion",
+          quarter: "Q2-Q3",
+          description: "Evidence-based policy advocacy and government engagement",
+          pillar: "drivers"
+        },
+        {
+          id: "y3m3",
+          title: "Partnership Revenue Streams",
+          quarter: "Q3",
+          description: "Consultation and coordination services established",
+          pillar: "enablers"
+        },
+        {
+          id: "y3m4",
+          title: "15% Non-Govt Revenue",
+          quarter: "Q4",
+          description: "Second revenue diversification milestone achieved",
+          pillar: "enablers"
+        }
+      ]
+    },
+    
+    years45: {
+      years: "2029-2030",
+      title: "Leadership Consolidation",
+      colour: "#10b981",
+      milestones: [
+        {
+          id: "y45m1",
+          title: "Regional Coordination Leadership",
+          quarter: "2029 Q1-Q4",
+          description: "RWAV established as Victoria's rural health coordination leader",
+          pillar: "drivers"
+        },
+        {
+          id: "y45m2",
+          title: "25-30% Sustainable Revenue",
+          quarter: "2030 Q2",
+          description: "Target revenue diversification achieved",
+          pillar: "enablers"
+        },
+        {
+          id: "y45m3",
+          title: "System Change Impact Measurement",
+          quarter: "2030 Q3",
+          description: "Comprehensive evaluation of transformation outcomes",
+          pillar: "all"
+        },
+        {
+          id: "y45m4",
+          title: "Long-term Strategic Planning",
+          quarter: "2030 Q4",
+          description: "Next phase strategic direction development",
+          pillar: "all"
+        }
+      ]
+    }
+  },
+
+  CULTURAL_SAFETY: {
+    mandate: "All RWAV coordination initiatives will include mandatory Aboriginal Community Controlled Health Organisation (ACCHO) leadership, ensuring cultural safety is embedded rather than added to rural health workforce development.",
+    
+    priorities: [
+      "ACCHO-led workforce development programs",
+      "Cultural safety training coordination for all health services",
+      "First Nations health professional retention support",
+      "Community-controlled health service strengthening"
+    ],
+    
+    selfDetermination: "RWAV's coordination role will support rather than direct First Nations health workforce initiatives, providing administrative and technical support while ensuring ACCHO control over priorities, methods, and outcomes."
+  },
+
+  METADATA: {
+    title: "RWAV Strategic Plan 2026-2030",
+    subtitle: "Preparing a Bold Agenda for 2026-2030",
+    organisation: "Rural Workforce Agency Victoria",
+    consultant: "Carla Taylor, Carlorbiz",
+    version: "1.0",
+    lastUpdated: "2025-11-06",
+    surveyRespondents: 120,
+    stakeholderInterviews: 19
+  }
+};
+
+// Export for use in application
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = STRATEGIC_PLAN_DATA;
+}

@@ -1,0 +1,1557 @@
+{
+  "meta": {
+    "title": "RWAV Operational Playbook 2026-2030",
+    "subtitle": "Detailed Implementation Guidance for Strategic Transformation",
+    "version": "1.0",
+    "lastUpdated": "2025-11-06",
+    "author": "Carlorbiz Strategic Consulting",
+    "description": "Comprehensive operational details, stakeholder recommendations, risk management, governance, and implementation protocols"
+  },
+
+  "stakeholderConsultations": {
+    "overview": {
+      "totalInterviews": 19,
+      "categories": ["Colleges & Professional Bodies", "Primary Health Networks", "Government & Policy", "Training & Education", "Specialist Services", "Community & Regional"],
+      "methodology": "One-on-one structured interviews, thematic analysis, cross-validation with survey data"
+    },
+    "keyFindings": [
+      {
+        "id": "consultation_001",
+        "stakeholder": "Anita Munoz",
+        "organisation": "Royal Australian College of General Practitioners (RACGP)",
+        "role": "College Representative",
+        "keyQuote": "RWAV is the organisation that can bring everyone together without territorial competition—that's invaluable in this fragmented sector.",
+        "mainRecommendations": [
+          "Develop unified supervisor support frameworks across all training organisations",
+          "Create shared data platforms for workforce planning and coordination",
+          "Establish regional workforce planning collaboratives with RACGP participation",
+          "Coordinate GP-specific retention strategies with other specialties"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 1-2",
+        "resourceImplications": "Medium - requires partnership development and platform investment"
+      },
+      {
+        "id": "consultation_002",
+        "stakeholder": "Cath Lees",
+        "organisation": "College for Emergency Medicine (C4EM)",
+        "role": "Emergency Medicine Representative",
+        "keyQuote": "Rural emergency medicine needs champions who understand both the clinical demands and community context—RWAV can be that bridge.",
+        "mainRecommendations": [
+          "Develop emergency medicine-specific rural pathways and rotation programs",
+          "Implement technology-enabled mentoring for isolated emergency physicians",
+          "Create cross-specialty training coordination (ED, anaesthetics, rural generalist)",
+          "Support rural emergency department workforce planning"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 2-3",
+        "resourceImplications": "Medium - specialist pathway development"
+      },
+      {
+        "id": "consultation_003",
+        "stakeholder": "Miranda Grace",
+        "organisation": "Australasian Association of Practice Management (AAPM)",
+        "role": "Practice Management Representative",
+        "keyQuote": "Practice managers are the unsung heroes of rural health—investing in their capacity strengthens the entire system.",
+        "mainRecommendations": [
+          "Develop rural-specific practice management certification programs",
+          "Create shared administrative service models for small practices",
+          "Provide technology and systems support for rural practices",
+          "Establish practice manager peer networks and professional development"
+        ],
+        "priority": "medium",
+        "implementationTimeline": "Year 2-4",
+        "resourceImplications": "Low-Medium - training program development"
+      },
+      {
+        "id": "consultation_004",
+        "stakeholder": "Craig Wilding",
+        "organisation": "Western Victoria Primary Health Network",
+        "role": "PHN Executive",
+        "keyQuote": "PHNs and RWAs need to stop duplicating efforts and start genuinely collaborating—shared data is the foundation.",
+        "mainRecommendations": [
+          "Establish formal PHN-RWAV data sharing agreements and protocols",
+          "Create joint advocacy frameworks for state and Commonwealth engagement",
+          "Develop collaborative workforce planning processes at regional level",
+          "Co-design and co-fund supervision and retention programs"
+        ],
+        "priority": "critical",
+        "implementationTimeline": "Year 1",
+        "resourceImplications": "Low - primarily partnership and protocol development"
+      },
+      {
+        "id": "consultation_005",
+        "stakeholder": "Matt Jones",
+        "organisation": "Murray Primary Health Network",
+        "role": "PHN Executive",
+        "keyQuote": "Cross-border coordination is essential but rarely happens—RWAV could be the glue that makes it work.",
+        "mainRecommendations": [
+          "Develop cross-jurisdictional service coordination models for border regions",
+          "Create shared workforce intelligence across NSW-VIC border",
+          "Implement technology-enabled support for isolated border communities",
+          "Establish community partnership models that cross state boundaries"
+        ],
+        "priority": "medium",
+        "implementationTimeline": "Year 2-3",
+        "resourceImplications": "Medium - requires interstate negotiation and partnership"
+      },
+      {
+        "id": "consultation_006",
+        "stakeholder": "Susan Wearne",
+        "organisation": "Commonwealth Department of Health",
+        "role": "Policy Advisor",
+        "keyQuote": "Evidence-based advocacy wins policy change—RWAV needs comprehensive evaluation frameworks to demonstrate outcomes.",
+        "mainRecommendations": [
+          "Develop rigorous evaluation frameworks for workforce interventions",
+          "Create pilot programs demonstrating alternative funding models",
+          "Build Commonwealth-compatible data systems for policy influence",
+          "Establish evidence-based advocacy capacity within RWAV"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 1-2",
+        "resourceImplications": "Medium - evaluation and data expertise required"
+      },
+      {
+        "id": "consultation_007",
+        "stakeholder": "Shane Bullock",
+        "organisation": "Monash University",
+        "role": "Academic Lead",
+        "keyQuote": "Universities can be partners, not just training providers—research collaboration strengthens both sectors.",
+        "mainRecommendations": [
+          "Establish research partnerships for workforce innovation",
+          "Develop community-based training models in pilot regions",
+          "Create student support frameworks for rural placements",
+          "Implement PhD and research collaborations on rural workforce"
+        ],
+        "priority": "medium",
+        "implementationTimeline": "Year 2-3",
+        "resourceImplications": "Low-Medium - primarily partnership development"
+      },
+      {
+        "id": "consultation_008",
+        "stakeholder": "Professor Lena Sanci",
+        "organisation": "University of Melbourne",
+        "role": "Academic Lead",
+        "keyQuote": "Patient journey-led planning, not organisational silos, should drive rural health workforce strategy.",
+        "mainRecommendations": [
+          "Design workforce planning around patient pathways, not professional groups",
+          "Develop shared KPIs across universities, health services, and RWAV",
+          "Create multidisciplinary co-design processes for training programs",
+          "Establish regional workforce planning collaboratives with university participation"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 1-3",
+        "resourceImplications": "Medium - system redesign required"
+      },
+      {
+        "id": "consultation_009",
+        "stakeholder": "Lara Fuller",
+        "organisation": "Deakin University Rural Training",
+        "role": "Rural Training Coordinator",
+        "keyQuote": "Scholarships need reform—longer rural placements, expanded internships, and genuine community integration.",
+        "mainRecommendations": [
+          "Reform scholarship programs to incentivise longer rural placements",
+          "Expand rural internship and residency programs",
+          "Develop high school engagement pipelines for rural health careers",
+          "Create local specialist training pathways to retain rural-origin students"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 2-4",
+        "resourceImplications": "High - requires funding model changes and partnerships"
+      },
+      {
+        "id": "consultation_010",
+        "stakeholder": "Belinda O'Sullivan",
+        "organisation": "Monash University (Bendigo Rural School)",
+        "role": "Rural Medical Education Specialist",
+        "keyQuote": "Data and evidence-backed innovation is how we transform rural medical education—partnership for research is key.",
+        "mainRecommendations": [
+          "Develop data-driven approaches to rural training placement optimisation",
+          "Create PhD collaboration opportunities on rural workforce innovation",
+          "Implement evidence-based retention interventions in training pipeline",
+          "Establish longitudinal tracking of rural training outcomes"
+        ],
+        "priority": "medium",
+        "implementationTimeline": "Year 2-4",
+        "resourceImplications": "Medium - research capacity and data systems"
+      },
+      {
+        "id": "consultation_011",
+        "stakeholder": "Karin Judlowski-Tan",
+        "organisation": "Rural Medical Educator",
+        "role": "Cultural Safety Specialist",
+        "keyQuote": "Cultural safety must be embedded from day one, not retrofitted—ACCHO leadership is non-negotiable.",
+        "mainRecommendations": [
+          "Implement mandatory cultural safety training for all rural health professionals",
+          "Ensure ACCHO leadership in all First Nations workforce initiatives",
+          "Develop Indigenous-led mentoring and supervision frameworks",
+          "Create culturally safe onboarding processes for all rural placements"
+        ],
+        "priority": "critical",
+        "implementationTimeline": "Year 1 onwards",
+        "resourceImplications": "Medium - training development and ACCHO partnership"
+      },
+      {
+        "id": "consultation_012",
+        "stakeholder": "Pat Giddings",
+        "organisation": "Rural Vocational Training Scheme (RVTS)",
+        "role": "Training Organisation Leader",
+        "keyQuote": "Supervisor coordination and accreditation streamlining would transform rural training capacity.",
+        "mainRecommendations": [
+          "Coordinate supervision resources across all training organisations",
+          "Streamline supervisor accreditation processes across colleges",
+          "Develop cultural mentoring programs for supervisors",
+          "Create technology-enabled supervision support systems"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 1-2",
+        "resourceImplications": "Medium - requires cross-organisation negotiation"
+      },
+      {
+        "id": "consultation_013",
+        "stakeholder": "Ronda Gurney",
+        "organisation": "Rural Vocational Training Scheme",
+        "role": "Nursing & Midwifery Leadership",
+        "keyQuote": "Nursing and midwifery pathways need as much attention as medical—it's the same coordination challenges.",
+        "mainRecommendations": [
+          "Extend coordination models to nursing and midwifery training",
+          "Develop nurse practitioner rural pathways and support",
+          "Create midwifery-specific retention and recruitment strategies",
+          "Establish allied health coordination frameworks"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 2-3",
+        "resourceImplications": "Medium - requires nursing/midwifery sector engagement"
+      },
+      {
+        "id": "consultation_014",
+        "stakeholder": "Marlene Drysdale",
+        "organisation": "Indigenous Health Specialist",
+        "role": "ACCHO Advisor",
+        "keyQuote": "Scale best-practice cultural mentoring universally—every Indigenous placement needs this foundation.",
+        "mainRecommendations": [
+          "Scale cultural mentoring programs across all Indigenous health settings",
+          "Develop universal ACCHO-led onboarding for rural health workforce",
+          "Create Indigenous workforce development pathways with community control",
+          "Implement community-controlled evaluation of all cultural safety initiatives"
+        ],
+        "priority": "critical",
+        "implementationTimeline": "Year 1 onwards",
+        "resourceImplications": "Medium-High - ACCHO partnership and program scaling"
+      },
+      {
+        "id": "consultation_015",
+        "stakeholder": "Michael Ben-Meir",
+        "organisation": "Royal Flying Doctor Service",
+        "role": "Specialist Service Provider",
+        "keyQuote": "Family support services and innovative employment models are essential for extreme rural contexts.",
+        "mainRecommendations": [
+          "Develop comprehensive family support services for remote practitioners",
+          "Implement technology-enabled specialist consultation models",
+          "Create innovative employment models (job sharing, part-time, rotational)",
+          "Establish hub-and-spoke coordination for remote service delivery"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 2-3",
+        "resourceImplications": "High - requires service model innovation and funding"
+      },
+      {
+        "id": "consultation_016",
+        "stakeholder": "Catherine Maloney",
+        "organisation": "Services for Australian Rural and Remote Allied Health (SARRAH)",
+        "role": "Allied Health Representative",
+        "keyQuote": "Allied health needs profession-specific solutions, not medical model adaptations.",
+        "mainRecommendations": [
+          "Develop allied health-specific coordination frameworks and platforms",
+          "Create allied health professional development and supervision networks",
+          "Implement technology platforms supporting allied health service delivery",
+          "Establish allied health workforce data collection and intelligence"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 2-4",
+        "resourceImplications": "Medium-High - profession-specific development"
+      },
+      {
+        "id": "consultation_017",
+        "stakeholder": "Marg Garde",
+        "organisation": "Former RWAV Leadership",
+        "role": "Organisational History & Evolution",
+        "keyQuote": "RWAV's evolution requires strategic flexibility, sustained community engagement, and strong governance.",
+        "mainRecommendations": [
+          "Maintain strategic flexibility to adapt to changing rural contexts",
+          "Sustain deep community engagement through transformation",
+          "Develop regional collaboration frameworks that respect local autonomy",
+          "Build governance capacity for increased organisational complexity"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 1 onwards",
+        "resourceImplications": "Medium - governance and change management capacity"
+      },
+      {
+        "id": "consultation_018",
+        "stakeholder": "Peta Rutherford",
+        "organisation": "Regional Health Practitioner",
+        "role": "Community Practitioner Perspective",
+        "keyQuote": "Community and family integration is the key to retention—professional networking alone isn't enough.",
+        "mainRecommendations": [
+          "Develop comprehensive family integration support programs",
+          "Create spouse/partner employment assistance services",
+          "Establish children's education support and connection services",
+          "Build professional and social networking opportunities"
+        ],
+        "priority": "high",
+        "implementationTimeline": "Year 1-3",
+        "resourceImplications": "High - requires cross-sector partnerships beyond health"
+      },
+      {
+        "id": "consultation_019",
+        "stakeholder": "Leigh Clarke",
+        "organisation": "Victorian Healthcare Association (VHA)",
+        "role": "Health Sector Advocacy",
+        "keyQuote": "Join VHA's health collective for risk-shared advocacy—sector-wide narrative, not individual organisational risk.",
+        "mainRecommendations": [
+          "Join VHA health collective to participate in sector-level advocacy",
+          "Engage in high-level sector needs advocacy without direct political confrontation",
+          "Build narrative-driven advocacy campaigns through collective voice",
+          "Share advocacy risk across sector participants"
+        ],
+        "priority": "medium",
+        "implementationTimeline": "Year 1",
+        "resourceImplications": "Low - membership and participation"
+      }
+    ]
+  },
+
+  "policyAdvocacy": {
+    "overview": {
+      "objectives": [
+        "Influence at least 5 major rural health workforce policy reforms by 2030",
+        "Establish RWAV as trusted policy advisor to state and Commonwealth governments",
+        "Build evidence base for systemic rural health workforce reform",
+        "Lead coalition-based advocacy for sector transformation"
+      ],
+      "approach": "Evidence-based, coalition-led, narrative-driven advocacy that minimises political risk for government-funded entity"
+    },
+    "priorityReforms": [
+      {
+        "id": "reform_001",
+        "title": "Integrated Rural Health Workforce Planning Framework",
+        "description": "Commonwealth-State agreement on coordinated rural health workforce planning using shared data platforms",
+        "targetLevel": "National",
+        "advocacyStrategy": "Evidence demonstration through Community Map pilot, PHN partnership validation, Commonwealth Department engagement",
+        "timeline": "Year 2-3",
+        "successMetrics": ["Policy adoption by 2+ jurisdictions", "Commonwealth funding allocation", "Mandated data sharing protocols"],
+        "stakeholderCoalition": ["PHNs", "State health departments", "Training organisations", "Professional colleges"]
+      },
+      {
+        "id": "reform_002",
+        "title": "Funding Model Reform for Rural Coordination",
+        "description": "Alternative funding models that recognise and resource coordination as legitimate health system function",
+        "targetLevel": "State and Commonwealth",
+        "advocacyStrategy": "Pilot program demonstration, economic analysis of coordination ROI, VHA collective advocacy",
+        "timeline": "Year 2-4",
+        "successMetrics": ["Dedicated coordination funding stream established", "Recognition in PHN commissioning frameworks", "State budget line item"],
+        "stakeholderCoalition": ["VHA", "PHNs", "Regional health services", "Local government"]
+      },
+      {
+        "id": "reform_003",
+        "title": "Streamlined Supervisor Accreditation",
+        "description": "Cross-college harmonisation of rural supervisor accreditation reducing administrative burden",
+        "targetLevel": "National (College level)",
+        "advocacyStrategy": "College partnership demonstration, supervisor burden analysis, unified standards proposal",
+        "timeline": "Year 1-3",
+        "successMetrics": ["Mutual recognition agreements between colleges", "Reduced accreditation timeframes", "Increased rural supervisor numbers"],
+        "stakeholderCoalition": ["RACGP", "ACRRM", "Training organisations", "Specialist colleges"]
+      },
+      {
+        "id": "reform_004",
+        "title": "Cultural Safety Mandate in Rural Health Funding",
+        "description": "Mandatory ACCHO partnership and cultural safety requirements for all Commonwealth rural health funding",
+        "targetLevel": "National",
+        "advocacyStrategy": "ACCHO-led advocacy, evidence from pilot implementation, alignment with Closing the Gap commitments",
+        "timeline": "Year 2-4",
+        "successMetrics": ["Funding guidelines updated", "ACCHO partnership mandatory in grants", "Cultural safety reporting required"],
+        "stakeholderCoalition": ["ACCHO sector", "First Nations health leadership", "Commonwealth Indigenous health team"]
+      },
+      {
+        "id": "reform_005",
+        "title": "Technology-Enabled Rural Service Delivery Framework",
+        "description": "Policy and funding frameworks supporting technology-enabled rural health service delivery and supervision",
+        "targetLevel": "State and Commonwealth",
+        "advocacyStrategy": "Innovation demonstration, technology ROI analysis, telehealth expansion advocacy",
+        "timeline": "Year 3-5",
+        "successMetrics": ["Telehealth funding parity established", "Technology infrastructure investment", "Supervision via technology recognised"],
+        "stakeholderCoalition": ["Tech providers", "Telehealth specialists", "Rural health services", "Training organisations"]
+      }
+    ],
+    "advocacyCapabilities": {
+      "evidenceGeneration": "Community Map data, pilot evaluation findings, stakeholder testimonials, economic analysis",
+      "coalitionBuilding": "VHA membership, Rural Health Alliance Victoria, stakeholder advisory council, sector working groups",
+      "governmentEngagement": "Regular briefings to health departments, Commonwealth submission processes, ministerial advisory participation",
+      "mediaStrategy": "Strategic media partnerships, case study publication, thought leadership articles, sector conference presentations"
+    }
+  },
+
+  "riskManagement": {
+    "framework": {
+      "approach": "Proactive identification, assessment, mitigation, and monitoring with Board-level oversight",
+      "reviewCadence": "Quarterly risk register review, annual comprehensive risk assessment, incident-triggered reviews",
+      "escalationProtocol": "Operational risks → CEO → Transformation Oversight Committee → Board (for strategic/critical risks)"
+    },
+    "riskCategories": [
+      {
+        "category": "Community Engagement",
+        "risks": [
+          {
+            "id": "risk_ce_001",
+            "description": "Insufficient community buy-in or engagement fatigue",
+            "likelihood": "Medium",
+            "impact": "High",
+            "mitigationStrategies": [
+              "Intensive relationship building in pilot regions before formal launch",
+              "Clear value demonstration through early wins and visible outcomes",
+              "Flexible engagement approaches adapted to community preferences",
+              "Community co-design of engagement processes",
+              "Regular feedback loops and responsive adaptation"
+            ],
+            "monitoringIndicators": ["Community event attendance rates", "Feedback survey response rates", "Steering committee participation", "Community champion engagement"],
+            "contingencyPlans": ["Pause expansion until community confidence rebuilt", "Increase community engagement resources", "Bring in community development specialists"]
+          },
+          {
+            "id": "risk_ce_002",
+            "description": "Stakeholder resistance to coordination model",
+            "likelihood": "Medium",
+            "impact": "High",
+            "mitigationStrategies": [
+              "Early and transparent communication of transformation rationale",
+              "Individual stakeholder engagement to understand concerns",
+              "Co-design of coordination mechanisms with stakeholders",
+              "Demonstration of mutual benefit and win-win outcomes",
+              "Gradual implementation with stakeholder feedback integration"
+            ],
+            "monitoringIndicators": ["Stakeholder satisfaction scores", "Partnership agreement sign-up rates", "Attendance at collaborative forums", "Informal feedback from key stakeholders"],
+            "contingencyPlans": ["Modify coordination model based on feedback", "Increase stakeholder engagement intensity", "Demonstrate early value through quick wins"]
+          }
+        ]
+      },
+      {
+        "category": "Technology Platform",
+        "risks": [
+          {
+            "id": "risk_tp_001",
+            "description": "Platform development delays or functionality limitations",
+            "likelihood": "Medium-High",
+            "impact": "High",
+            "mitigationStrategies": [
+              "Agile development methodology with iterative releases",
+              "User feedback integration at every sprint",
+              "Alternative solution preparation (manual coordination processes)",
+              "Experienced technology partner selection with proven rural health expertise",
+              "Clear requirements definition with stakeholder input",
+              "Buffer time built into implementation timeline"
+            ],
+            "monitoringIndicators": ["Development sprint completion rates", "User acceptance testing feedback", "Platform stability metrics", "Stakeholder usability ratings"],
+            "contingencyPlans": ["Activate manual coordination processes", "Extend pilot timeline", "Engage alternative technology provider", "Reduce platform scope to core functions"]
+          },
+          {
+            "id": "risk_tp_002",
+            "description": "Data security breach or privacy violation",
+            "likelihood": "Low-Medium",
+            "impact": "Critical",
+            "mitigationStrategies": [
+              "Comprehensive security architecture design and independent audit",
+              "Strict access controls and user authentication",
+              "Encryption of data in transit and at rest",
+              "Regular security testing and vulnerability assessment",
+              "Privacy impact assessment and ongoing monitoring",
+              "Staff training on data security and privacy obligations",
+              "Incident response plan development and regular testing"
+            ],
+            "monitoringIndicators": ["Security audit findings", "Access log anomalies", "Privacy compliance audit results", "Incident reports"],
+            "contingencyPlans": ["Immediate incident response activation", "External cyber security expertise engagement", "Affected stakeholder notification", "Platform suspension if necessary"]
+          }
+        ]
+      },
+      {
+        "category": "Financial Sustainability",
+        "risks": [
+          {
+            "id": "risk_fs_001",
+            "description": "Revenue stream validation failure or market resistance",
+            "likelihood": "Medium",
+            "impact": "High",
+            "mitigationStrategies": [
+              "Conservative revenue projections with multiple scenarios",
+              "Multiple revenue stream testing to diversify risk",
+              "Government funding backup maintained during transition period",
+              "Early market testing and client development",
+              "Flexible pricing and service models responsive to market feedback",
+              "Regular financial monitoring and early intervention triggers"
+            ],
+            "monitoringIndicators": ["Revenue pipeline development", "Client acquisition rates", "Revenue target achievement", "Cash flow projections vs actuals"],
+            "contingencyPlans": ["Slow revenue diversification pace", "Increase government funding dependency temporarily", "Pivot to alternative revenue models", "Reduce operational costs"]
+          },
+          {
+            "id": "risk_fs_002",
+            "description": "Government funding reduction during transition",
+            "likelihood": "Low-Medium",
+            "impact": "Critical",
+            "mitigationStrategies": [
+              "Transparent communication with government funders about transformation",
+              "Evidence demonstration of improved outcomes and value",
+              "Multiple-year funding agreements where possible",
+              "Contingency reserves for funding fluctuations",
+              "Alternative government funding source development"
+            ],
+            "monitoringIndicators": ["Government funding commitment letters", "Funder satisfaction feedback", "Political environment monitoring", "Budget allocation announcements"],
+            "contingencyPlans": ["Rapid operational cost reduction", "Revenue diversification acceleration", "Stakeholder advocacy for funding restoration", "Service scope reduction if necessary"]
+          }
+        ]
+      },
+      {
+        "category": "Cultural Safety",
+        "risks": [
+          {
+            "id": "risk_cs_001",
+            "description": "Inadequate First Nations partnership or cultural protocol failures",
+            "likelihood": "Low-Medium",
+            "impact": "Critical",
+            "mitigationStrategies": [
+              "ACCHO leadership priority in all First Nations initiatives",
+              "Comprehensive cultural safety training for all staff and Board",
+              "Community-controlled evaluation processes",
+              "Regular cultural safety audits and feedback",
+              "Dedicated cultural safety advisor with authority",
+              "Embedding cultural safety in all policies and procedures",
+              "Continuous learning and improvement culture"
+            ],
+            "monitoringIndicators": ["ACCHO partner satisfaction surveys", "Cultural safety audit findings", "First Nations community feedback", "Staff cultural competency assessments"],
+            "contingencyPlans": ["Immediate pause of affected initiatives", "External cultural safety review", "ACCHO-led remediation process", "Enhanced training and support"]
+          }
+        ]
+      },
+      {
+        "category": "Operational and Strategic",
+        "risks": [
+          {
+            "id": "risk_os_001",
+            "description": "Transformation pace exceeds organisational change capacity",
+            "likelihood": "Medium-High",
+            "impact": "High",
+            "mitigationStrategies": [
+              "Phased implementation with adequate preparation time",
+              "Change management capacity building",
+              "Regular staff wellbeing and capacity assessment",
+              "External change management expertise where needed",
+              "Realistic timeline expectations and buffer periods"
+            ],
+            "monitoringIndicators": ["Staff satisfaction surveys", "Change readiness assessments", "Turnover rates", "Workload monitoring"],
+            "contingencyPlans": ["Slow transformation pace", "Increase change support resources", "External temporary capacity", "Reprioritise initiatives"]
+          },
+          {
+            "id": "risk_os_002",
+            "description": "Loss of key staff or leadership during transformation",
+            "likelihood": "Medium",
+            "impact": "High",
+            "mitigationStrategies": [
+              "Succession planning for critical roles",
+              "Knowledge documentation and transfer processes",
+              "Competitive retention strategies",
+              "Positive organisational culture development",
+              "Clear career pathways and development opportunities"
+            ],
+            "monitoringIndicators": ["Staff retention rates", "Exit interview feedback", "Succession plan currency", "Internal promotion rates"],
+            "contingencyPlans": ["Rapid recruitment processes", "Interim leadership arrangements", "External expertise engagement", "Workload redistribution"]
+          },
+          {
+            "id": "risk_os_003",
+            "description": "Competitor organisations capturing coordination market",
+            "likelihood": "Medium",
+            "impact": "Medium-High",
+            "mitigationStrategies": [
+              "First-mover advantage through rapid pilot implementation",
+              "Strong stakeholder relationship maintenance",
+              "Continuous innovation and value demonstration",
+              "Strategic partnership development",
+              "Brand positioning and thought leadership"
+            ],
+            "monitoringIndicators": ["Market intelligence on competitor activities", "Stakeholder feedback on alternatives", "Partnership retention rates", "Market share assessment"],
+            "contingencyPlans": ["Accelerate transformation pace", "Differentiation strategy enhancement", "Strategic partnership intensification", "Competitive pricing if necessary"]
+          }
+        ]
+      }
+    ]
+  },
+
+  "governance": {
+    "structure": {
+      "board": {
+        "role": "Strategic direction, transformation oversight, major decision approval, risk governance, CEO accountability",
+        "composition": "Independent directors with health, community, First Nations, business, and governance expertise",
+        "meetingFrequency": "Bi-monthly regular meetings, additional transformation update sessions",
+        "keyResponsibilities": [
+          "Approve strategic plan and transformation direction",
+          "Oversee transformation progress and risk management",
+          "Approve major partnerships and financial commitments",
+          "Monitor organisational performance against strategic objectives",
+          "Ensure cultural safety and ACCHO partnership integrity",
+          "CEO performance management and succession planning"
+        ]
+      },
+      "transformationOversightCommittee": {
+        "role": "Board-level monitoring of strategic transformation progress and risk",
+        "composition": "Board Chair, 2-3 Board members, CEO, Transformation Program Director",
+        "meetingFrequency": "Monthly during active transformation phases",
+        "keyResponsibilities": [
+          "Monitor transformation milestones and deliverables",
+          "Review transformation risks and mitigation effectiveness",
+          "Oversee pilot program implementation and evaluation",
+          "Approve transformation budget allocations",
+          "Escalate critical issues to full Board"
+        ],
+        "reportingLines": "Reports to full Board at each regular meeting"
+      },
+      "stakeholderAdvisoryCouncil": {
+        "role": "Representative body ensuring community and stakeholder accountability",
+        "composition": "Representatives from PHNs, health services, training organisations, professional colleges, universities, community groups (15-20 members)",
+        "meetingFrequency": "Quarterly meetings, annual strategic retreat",
+        "keyResponsibilities": [
+          "Provide feedback on RWAV strategic direction and initiatives",
+          "Ensure stakeholder perspectives inform decision-making",
+          "Champion RWAV coordination role within own organisations",
+          "Contribute to partnership development and problem-solving",
+          "Participate in evaluation and continuous improvement"
+        ],
+        "reportingLines": "Advises CEO and Board, no formal authority but influential voice"
+      },
+      "accho PartnerhipCouncil": {
+        "role": "First Nations leadership in cultural safety governance and Indigenous workforce initiatives",
+        "composition": "Representatives from ACCHOs in each pilot region, First Nations health leaders, Indigenous health professionals (8-12 members)",
+        "meetingFrequency": "Bi-monthly meetings, co-design workshops as needed",
+        "keyResponsibilities": [
+          "Lead cultural safety framework development and monitoring",
+          "Direct all First Nations workforce initiatives",
+          "Approve (or veto) any initiatives affecting Indigenous communities",
+          "Conduct community-controlled evaluation of cultural safety",
+          "Ensure self-determination principles upheld",
+          "Advise Board on First Nations strategic priorities"
+        ],
+        "reportingLines": "Direct line to Board on cultural safety matters, authority over Indigenous initiatives",
+        "specialProvisions": "Veto power on cultural safety decisions, community-controlled evaluation mandate"
+      },
+      "pilotRegionSteeringGroups": {
+        "role": "Local governance for community-centred pilot implementation",
+        "composition": "Community representatives, local health services, ACCHO partners, training providers, local government (8-12 members per region)",
+        "meetingFrequency": "Monthly during pilot phase",
+        "keyResponsibilities": [
+          "Guide pilot implementation in local context",
+          "Ensure community voice in decision-making",
+          "Problem-solve local implementation challenges",
+          "Monitor pilot progress and outcomes",
+          "Provide feedback for statewide model refinement"
+        ],
+        "reportingLines": "Reports to CEO and Transformation Oversight Committee"
+      }
+    },
+    "decisionAuthority": {
+      "board": [
+        "Strategic direction approval",
+        "Budget allocation >$500k",
+        "Major partnership agreements",
+        "CEO appointment and performance",
+        "Risk tolerance settings",
+        "Policy reform positions"
+      ],
+      "ceo": [
+        "Operational decisions within approved strategy",
+        "Budget allocation <$500k",
+        "Partnership development and negotiation",
+        "Staffing decisions",
+        "Pilot implementation oversight",
+        "Stakeholder engagement"
+      ],
+      "transformationOversightCommittee": [
+        "Transformation budget reallocation",
+        "Milestone approval and timeline adjustment",
+        "Risk mitigation strategy approval",
+        "Pilot community selection"
+      ],
+      "acchoPartnershipCouncil": [
+        "Cultural safety protocol approval",
+        "First Nations initiative direction",
+        "Veto on initiatives affecting Indigenous communities",
+        "Cultural safety evaluation methodology"
+      ]
+    },
+    "reportingFramework": {
+      "board": "Quarterly Board papers with strategic progress, financial performance, risk register, stakeholder feedback, transformation milestones",
+      "transformationOversightCommittee": "Monthly transformation dashboard with milestone status, risk heatmap, budget vs actual, key issues",
+      "stakeholderAdvisoryCouncil": "Quarterly stakeholder report with engagement summary, partnership status, pilot progress, feedback themes",
+      "acchoPartnershipCouncil": "Bi-monthly cultural safety report with ACCHO satisfaction, cultural safety audit findings, First Nations workforce outcomes, community feedback",
+      "publicReporting": "Annual public report with transformation progress, outcomes achieved, stakeholder testimonials, financial summary"
+    }
+  },
+
+  "changeManagement": {
+    "overview": {
+      "approach": "Structured change management aligned with transformation phases, emphasising communication, capability building, and cultural evolution",
+      "principles": ["Transparent communication", "Staff involvement", "Capability building", "Celebrate successes", "Learn from challenges"]
+    },
+    "impactAssessment": {
+      "staffImpact": [
+        "Role changes from direct service to coordination focus",
+        "New skills required (data analytics, partnership facilitation, technology use)",
+        "Increased complexity and scope of work",
+        "Potential anxiety about revenue diversification and sustainability",
+        "Opportunities for growth and development"
+      ],
+      "stakeholderImpact": [
+        "Shift from RWAV as competitor to RWAV as collaborator",
+        "New partnership expectations and accountabilities",
+        "Data sharing requirements and protocols",
+        "Changed engagement models and communication channels",
+        "Potential for improved outcomes and efficiency"
+      ],
+      "culturalImpact": [
+        "From service delivery to strategic leadership mindset",
+        "From government dependency to entrepreneurial thinking",
+        "From individual organisation to collective sector view",
+        "Enhanced cultural safety and First Nations partnership",
+        "Data-driven decision-making culture"
+      ]
+    },
+    "communicationStrategy": {
+      "internal": {
+        "channels": ["All-staff meetings", "Team huddles", "Email updates", "Intranet transformation hub", "One-on-one check-ins"],
+        "frequency": "Weekly updates during intensive phases, fortnightly in consolidation phases",
+        "keyMessages": [
+          "Why transformation is necessary (coordination crisis, stakeholder mandate)",
+          "What success looks like (vision and outcomes)",
+          "How we'll get there (phased approach, pilot testing)",
+          "What it means for staff (roles, development, support)",
+          "How staff can contribute (feedback, ideas, participation)"
+        ],
+        "feedbackMechanisms": ["Anonymous surveys", "Town halls", "Suggestion portal", "Change champion network"]
+      },
+      "external": {
+        "channels": ["Stakeholder briefings", "Newsletter", "Website updates", "Social media", "Sector conferences", "Media releases"],
+        "frequency": "Monthly external updates, quarterly stakeholder briefings, annual public report",
+        "keyMessages": [
+          "RWAV's transformation to coordination leadership",
+          "Evidence base and stakeholder validation",
+          "Pilot program approach and early wins",
+          "Partnership opportunities and collaboration invitation",
+          "Outcomes and impact stories"
+        ],
+        "targetAudiences": [
+          "Stakeholder organisations (PHNs, health services, colleges, universities)",
+          "Government (state and Commonwealth health departments)",
+          "Communities (pilot regions and broader rural Victoria)",
+          "Media (rural health journalists, sector publications)",
+          "Funders (government and potential revenue clients)"
+        ]
+      }
+    },
+    "capabilityBuilding": {
+      "staffDevelopment": [
+        {
+          "capability": "Data analytics and intelligence",
+          "activities": ["Data analysis training", "Community Map platform training", "Interpretation and insight development"],
+          "timeline": "Year 1",
+          "priority": "High"
+        },
+        {
+          "capability": "Partnership facilitation and coordination",
+          "activities": ["Stakeholder engagement training", "Conflict resolution skills", "Collaborative governance understanding"],
+          "timeline": "Year 1-2",
+          "priority": "High"
+        },
+        {
+          "capability": "Cultural safety and ACCHO partnership",
+          "activities": ["Cultural safety training", "Partnership protocols", "Self-determination principles"],
+          "timeline": "Year 1 (mandatory)",
+          "priority": "Critical"
+        },
+        {
+          "capability": "Business development and revenue generation",
+          "activities": ["Service design", "Client engagement", "Proposal development", "Ethical revenue principles"],
+          "timeline": "Year 2-3",
+          "priority": "Medium-High"
+        },
+        {
+          "capability": "Change leadership",
+          "activities": ["Change management fundamentals", "Leading through uncertainty", "Team resilience"],
+          "timeline": "Year 1",
+          "priority": "High"
+        }
+      ],
+      "leadershipDevelopment": [
+        {
+          "audience": "Board",
+          "focus": "Transformation governance, strategic risk management, complex stakeholder landscapes",
+          "format": "Board education sessions, external expert input, peer learning",
+          "frequency": "Quarterly"
+        },
+        {
+          "audience": "Executive team",
+          "focus": "Transformation execution, change leadership, strategic partnership development",
+          "format": "Executive coaching, leadership programs, action learning",
+          "frequency": "Ongoing"
+        },
+        {
+          "audience": "Middle management",
+          "focus": "Leading teams through change, operational excellence, stakeholder engagement",
+          "format": "Management development programs, peer networks, mentoring",
+          "frequency": "Quarterly workshops"
+        }
+      ]
+    },
+    "successCelebration": {
+      "approach": "Regular recognition of milestones, early wins, and individual contributions",
+      "mechanisms": [
+        "Quarterly transformation milestone celebrations",
+        "Staff recognition awards for transformation contributions",
+        "Success stories shared in newsletters and meetings",
+        "Annual transformation progress celebration event",
+        "Public acknowledgement of stakeholder partnership contributions"
+      ]
+    }
+  }
+,
+  "operationalPlaybooks": {
+    "retentionExcellenceHubs": {
+      "overview": {
+        "purpose": "Multi-organisational coordination centres addressing workforce retention through comprehensive support",
+        "targetAudience": "Rural health professionals at all career stages, particularly mid-career practitioners",
+        "implementationTimeline": "Year 1-2 pilot, Year 3-5 statewide rollout"
+      },
+      "implementationSteps": [
+        {
+          "phase": "Planning and Partnership Development",
+          "duration": "Months 1-3",
+          "activities": [
+            "Identify partner organisations (health services, PHNs, training providers, professional colleges)",
+            "Conduct stakeholder mapping and readiness assessment",
+            "Develop partnership agreements and MoUs with clear roles and responsibilities",
+            "Establish hub steering committee with partner representation",
+            "Define retention challenges and priority cohorts for initial focus",
+            "Secure commitment of in-kind and financial resources from partners"
+          ],
+          "keyOutputs": ["Partnership agreements signed", "Steering committee operational", "Retention challenge analysis complete", "Resource commitments secured"]
+        },
+        {
+          "phase": "Hub Design and Setup",
+          "duration": "Months 4-6",
+          "activities": [
+            "Design hub governance structure and decision-making processes",
+            "Develop retention program menu (mentorship, peer support, family services, professional development)",
+            "Create practitioner onboarding process and welcome package",
+            "Establish communication channels and engagement platforms",
+            "Recruit hub coordinator and support staff",
+            "Set up physical space (if applicable) or virtual hub infrastructure"
+          ],
+          "keyOutputs": ["Hub governance documented", "Program menu finalised", "Staff recruited", "Infrastructure ready"]
+        },
+        {
+          "phase": "Program Launch and Practitioner Engagement",
+          "duration": "Months 7-12",
+          "activities": [
+            "Launch hub with stakeholder event and practitioner invitation",
+            "Enroll practitioners into hub membership and conduct needs assessment",
+            "Match practitioners with mentors, peer groups, and support services",
+            "Deliver initial programs (mentorship kickoff, professional development, family orientation)",
+            "Establish regular touchpoints and engagement rhythm",
+            "Monitor engagement levels and adjust program delivery"
+          ],
+          "keyOutputs": ["Hub launched", "Practitioners enrolled", "Programs delivered", "Engagement monitoring established"]
+        },
+        {
+          "phase": "Program Expansion and Refinement",
+          "duration": "Months 13-18",
+          "activities": [
+            "Expand program offerings based on practitioner feedback",
+            "Develop specialised programs for specific cohorts (IMGs, mid-career, new graduates)",
+            "Integrate Community Map data for targeted retention interventions",
+            "Build family support services (spousal employment, education, community connection)",
+            "Strengthen multi-disciplinary collaboration and cross-sector partnerships",
+            "Conduct mid-term evaluation and refinement"
+          ],
+          "keyOutputs": ["Expanded program menu", "Targeted interventions implemented", "Family services operational", "Evaluation findings integrated"]
+        },
+        {
+          "phase": "Evaluation and Scaling",
+          "duration": "Months 19-24",
+          "activities": [
+            "Conduct comprehensive evaluation (retention outcomes, practitioner satisfaction, partner value)",
+            "Document best practices and lessons learned",
+            "Develop hub replication toolkit for other regions",
+            "Present findings to Board and stakeholders for scaling decision",
+            "Plan statewide rollout based on pilot evidence"
+          ],
+          "keyOutputs": ["Evaluation report complete", "Replication toolkit developed", "Scaling plan approved"]
+        }
+      ],
+      "successMetrics": [
+        "15% improvement in retention rates for hub-enrolled practitioners vs non-enrolled",
+        "80%+ practitioner satisfaction with hub services",
+        "85%+ partner organisation satisfaction with hub value",
+        "Practitioner utilisation rate >60% (enrolled practitioners actively using services)",
+        "Cost per retained practitioner <$15,000 annually"
+      ],
+      "criticalSuccessFactors": [
+        "Strong partner commitment and in-kind contributions",
+        "Dedicated hub coordinator with relationship-building skills",
+        "Responsive program design adapting to practitioner feedback",
+        "Integration with Community Map for data-driven interventions",
+        "Family-inclusive approach recognising retention is household decision"
+      ]
+    },
+    "communityMapPlatform": {
+      "overview": {
+        "purpose": "Real-time workforce intelligence system providing early warning, strategic planning, and coordination capability",
+        "scope": "Statewide coverage of all rural health workforce categories, integrated with partner data systems",
+        "implementationTimeline": "Year 1 beta pilot, Year 2 full pilot deployment, Year 3 statewide rollout"
+      },
+      "technicalSpecifications": {
+        "dataSourceIntegration": [
+          "Health service HR systems (staffing levels, vacancies, turnover)",
+          "Training organisation databases (trainees in region, supervision capacity)",
+          "PHN workforce data (primary care workforce, service gaps)",
+          "University placement records (students in rural training)",
+          "AHPRA registration data (practitioner locations, qualifications)",
+          "RWAV internal data (recruitment activity, retention programs)",
+          "Community survey data (community workforce perceptions, willingness to contribute)"
+        ],
+        "platformFeatures": [
+          "Real-time workforce dashboard (current staffing, vacancies, trends)",
+          "Early warning system (predictive analytics for retention risk, service gaps)",
+          "Scenario planning tools (impact modelling of recruitment/retention strategies)",
+          "Benchmarking and comparison (region-to-region, service-to-service)",
+          "Coordination hub (communication, resource sharing, collaboration)",
+          "Reporting and analytics (customisable reports, data export)",
+          "Mobile accessibility (responsive design for field access)"
+        ],
+        "securityAndPrivacy": [
+          "Role-based access controls (users see only relevant data for their role)",
+          "Data encryption in transit and at rest",
+          "Audit logging of all data access and changes",
+          "Compliance with health sector privacy standards",
+          "Data sharing agreements defining permitted uses",
+          "Individual practitioner data aggregated to protect privacy",
+          "Regular security audits and penetration testing"
+        ],
+        "interoperabilityStandards": [
+          "HL7 FHIR for health data exchange",
+          "API-based integration with partner systems",
+          "Standard data formats (CSV, JSON, XML) for import/export",
+          "SSO integration for user authentication"
+        ]
+      },
+      "developmentMethodology": {
+        "approach": "Agile with 2-week sprints, continuous user feedback, iterative improvement",
+        "phases": [
+          {
+            "phase": "Discovery and Requirements",
+            "duration": "Months 1-2",
+            "activities": [
+              "User research with stakeholders (needs, workflows, pain points)",
+              "Data source mapping and integration feasibility",
+              "Platform architecture design",
+              "Security and privacy requirements definition",
+              "Vendor selection (if outsourcing development)",
+              "Project governance and resourcing confirmed"
+            ]
+          },
+          {
+            "phase": "Beta Development and Testing",
+            "duration": "Months 3-9",
+            "activities": [
+              "Core platform development (dashboard, data integration, basic analytics)",
+              "Beta testing with pilot region users",
+              "User feedback collection and prioritisation",
+              "Iterative improvement sprints",
+              "Security testing and compliance validation",
+              "User training materials development"
+            ]
+          },
+          {
+            "phase": "Full Pilot Deployment",
+            "duration": "Months 10-24",
+            "activities": [
+              "Deployment to all three pilot regions",
+              "Comprehensive user training and onboarding",
+              "Advanced feature development (predictive analytics, scenario planning)",
+              "Integration with additional data sources",
+              "Continuous user support and issue resolution",
+              "Platform performance monitoring and optimisation"
+            ]
+          },
+          {
+            "phase": "Statewide Rollout",
+            "duration": "Year 3 onwards",
+            "activities": [
+              "Phased deployment to remaining regions",
+              "Ongoing feature enhancement based on user needs",
+              "Maintenance and support operations established",
+              "Regular security and compliance audits",
+              "User community development and peer learning"
+            ]
+          }
+        ]
+      },
+      "successMetrics": [
+        "Platform uptime >99.5%",
+        "User adoption rate >75% of target users",
+        "User satisfaction score >4.0/5.0",
+        "Data accuracy >95% (validated against source systems)",
+        "Early warning system accuracy >80% (predictions vs actual outcomes)",
+        "Coordination efficiency: 30% reduction in duplicated recruitment efforts"
+      ]
+    },
+    "ruralHealthCoalition": {
+      "overview": {
+        "purpose": "Cross-sector partnership for systems reform, resource sharing, and collective advocacy",
+        "membership": "Health services, PHNs, training organisations, professional colleges, universities, ACCHOs, local government",
+        "implementationTimeline": "Year 2 establishment, Year 3-5 maturation and impact"
+      },
+      "establishmentProcess": [
+        {
+          "step": "Foundation Building",
+          "activities": [
+            "Identify potential coalition members and conduct stakeholder analysis",
+            "Develop coalition value proposition and benefits case",
+            "Conduct individual engagement meetings to gauge interest and commitment",
+            "Draft coalition charter defining purpose, governance, participation expectations",
+            "Convene inaugural coalition meeting to present charter and seek endorsement"
+          ]
+        },
+        {
+          "step": "Coalition Formation",
+          "activities": [
+            "Finalise coalition charter with member input",
+            "Establish coalition governance structure (steering committee, working groups)",
+            "Sign MOUs with founding members",
+            "Elect coalition leadership (chair, deputy chair)",
+            "Develop coalition workplan and priority initiatives",
+            "Establish communication protocols and meeting rhythm"
+          ]
+        },
+        {
+          "step": "Coalition Activation",
+          "activities": [
+            "Launch first coalition initiative (e.g., joint workforce planning, shared supervision)",
+            "Conduct inaugural coalition summit to build relationships and shared vision",
+            "Establish working groups for priority areas (policy, data, innovation, cultural safety)",
+            "Develop and execute quick wins to demonstrate coalition value",
+            "Build coalition brand and external visibility"
+          ]
+        }
+      ],
+      "coalitionFunctions": [
+        {
+          "function": "Joint Workforce Planning",
+          "description": "Collaborative regional workforce planning replacing siloed organisational planning",
+          "activities": ["Shared data analysis", "Joint gap identification", "Coordinated recruitment strategies", "Resource pooling for hard-to-fill positions"]
+        },
+        {
+          "function": "Policy Advocacy",
+          "description": "Collective voice for policy reform with greater influence than individual organisations",
+          "activities": ["Evidence-based policy submissions", "Coalition spokesperson engagement with government", "Media campaigns", "Sector representation on advisory bodies"]
+        },
+        {
+          "function": "Resource Sharing",
+          "description": "Pooling resources for efficiency and reach",
+          "activities": ["Shared supervision programs", "Joint professional development", "Technology platform sharing", "Coordinated marketing and recruitment"]
+        },
+        {
+          "function": "Innovation Diffusion",
+          "description": "Rapid spread of best practices and innovations across coalition members",
+          "activities": ["Innovation showcase events", "Pilot program collaboration", "Peer learning exchanges", "Joint innovation funding applications"]
+        }
+      ],
+      "successMetrics": [
+        "Coalition membership: 20+ organisations by Year 3",
+        "Member satisfaction >80%",
+        "Joint initiatives launched: 5+ by Year 3",
+        "Policy reforms influenced: 2+ with coalition attribution",
+        "Resource sharing value: $500k+ annually in shared costs/efficiencies"
+      ]
+    }
+  },
+
+  "technologyPlatform": {
+    "communityMapSpecifications": {
+      "userRoles": [
+        {
+          "role": "System Administrator",
+          "permissions": ["Full system access", "User management", "Data source configuration", "Security settings"],
+          "primaryUsers": "RWAV technology team"
+        },
+        {
+          "role": "Regional Coordinator",
+          "permissions": ["Regional data view", "Report generation", "Communication tools", "Program management"],
+          "primaryUsers": "RWAV regional staff, PHN coordinators"
+        },
+        {
+          "role": "Health Service Manager",
+          "permissions": ["Own organisation data", "Regional benchmarking", "Vacancy posting", "Practitioner support tools"],
+          "primaryUsers": "Health service HR and operations managers"
+        },
+        {
+          "role": "Training Organisation",
+          "permissions": ["Trainee data", "Supervision capacity", "Placement matching", "Training program coordination"],
+          "primaryUsers": "Training organisation administrators"
+        },
+        {
+          "role": "Policy Maker",
+          "permissions": ["Aggregated data view", "Trend analysis", "Scenario planning", "Report export"],
+          "primaryUsers": "Government health departments, PHNs"
+        },
+        {
+          "role": "Researcher",
+          "permissions": ["De-identified data access", "Analytics tools", "Data export for analysis"],
+          "primaryUsers": "University researchers, evaluation teams"
+        }
+      ],
+      "dashboards": [
+        {
+          "dashboard": "Executive Overview",
+          "audience": "RWAV leadership, Board",
+          "widgets": ["Current workforce status summary", "Key metrics vs targets", "Trend graphs", "Alert summary", "Recent activities"]
+        },
+        {
+          "dashboard": "Regional Workforce",
+          "audience": "Regional coordinators, PHNs",
+          "widgets": ["Regional staffing levels", "Vacancy analysis", "Retention trends", "Community engagement", "Program utilisation"]
+        },
+        {
+          "dashboard": "Early Warning",
+          "audience": "All coordination users",
+          "widgets": ["Retention risk indicators", "Predicted vacancies", "Service gap alerts", "Proactive intervention recommendations"]
+        },
+        {
+          "dashboard": "Coordination Hub",
+          "audience": "All users",
+          "widgets": ["Announcements", "Resource library", "Discussion forums", "Event calendar", "Contact directory"]
+        }
+      ],
+      "analyticsCapabilities": [
+        "Descriptive analytics: Current state reporting and trend analysis",
+        "Diagnostic analytics: Root cause analysis of workforce challenges",
+        "Predictive analytics: Forecasting vacancies, retention risk, service gaps",
+        "Prescriptive analytics: Recommended interventions based on data patterns"
+      ]
+    }
+  },
+
+  "staffingModels": {
+    "pilotPhaseStaffing": {
+      "pilotProgramCoordinator": {
+        "fte": 1.0,
+        "keyResponsibilities": [
+          "Overall pilot program management and coordination",
+          "Stakeholder relationship management",
+          "Reporting to Board and Transformation Oversight Committee",
+          "Budget management and resource allocation",
+          "Quality assurance and continuous improvement"
+        ],
+        "capabilities": ["Program management", "Stakeholder engagement", "Change management", "Strategic thinking", "Communication"],
+        "reporting": "CEO"
+      },
+      "communityEngagementSpecialists": {
+        "fte": "3 x 0.5 (1.5 total)",
+        "allocation": "0.5 FTE per pilot region",
+        "keyResponsibilities": [
+          "Community relationship building and engagement",
+          "Pilot region steering committee coordination",
+          "Local stakeholder liaison and partnership development",
+          "Community feedback collection and synthesis",
+          "Local program delivery support"
+        ],
+        "capabilities": ["Community development", "Relationship building", "Cultural competency", "Event coordination", "Communication"],
+        "reporting": "Pilot Program Coordinator"
+      },
+      "dataAnalystPlatformDeveloper": {
+        "fte": 1.0,
+        "keyResponsibilities": [
+          "Community Map platform configuration and management",
+          "Data integration from partner systems",
+          "Analytics development and reporting",
+          "User training and support",
+          "Platform performance monitoring"
+        ],
+        "capabilities": ["Data analysis", "Platform management", "Programming/scripting", "User support", "Problem-solving"],
+        "reporting": "Pilot Program Coordinator"
+      },
+      "culturalSafetyAdvisorFirstNationsLiaison": {
+        "fte": 0.5,
+        "keyResponsibilities": [
+          "Cultural safety framework development and implementation",
+          "ACCHO partnership coordination",
+          "First Nations workforce initiative leadership",
+          "Cultural safety training delivery",
+          "Community-controlled evaluation facilitation"
+        ],
+        "capabilities": ["Cultural competency", "ACCHO relationship building", "Training delivery", "Policy development", "Community engagement"],
+        "reporting": "CEO (with accountability to ACCHO Partnership Council)"
+      },
+      "evaluationSpecialist": {
+        "fte": 0.3,
+        "keyResponsibilities": [
+          "Evaluation framework development",
+          "Data collection and analysis",
+          "Outcomes measurement and reporting",
+          "Continuous improvement recommendations",
+          "Evaluation report preparation"
+        ],
+        "capabilities": ["Evaluation methodology", "Quantitative and qualitative analysis", "Report writing", "Stakeholder engagement"],
+        "reporting": "Pilot Program Coordinator"
+      }
+    },
+    "fullTransformationStaffing": {
+      "additionalRolesYear2": [
+        {
+          "role": "Business Development Manager",
+          "fte": 1.0,
+          "purpose": "Revenue diversification and client development",
+          "keyActivities": ["Revenue stream development", "Client engagement", "Proposal development", "Partnership negotiation"]
+        },
+        {
+          "role": "Policy and Advocacy Specialist",
+          "fte": 0.5,
+          "purpose": "Policy influence and sector advocacy",
+          "keyActivities": ["Policy analysis", "Coalition coordination", "Government engagement", "Submission development"]
+        }
+      ],
+      "additionalRolesYear3": [
+        {
+          "role": "Regional Coordinators",
+          "fte": "3-5 x 0.8 (2.4-4.0 total)",
+          "purpose": "Statewide coordination capacity",
+          "allocation": "One per major region for statewide coverage"
+        },
+        {
+          "role": "Platform Support Specialist",
+          "fte": 1.0,
+          "purpose": "Community Map user support and training",
+          "keyActivities": ["User helpdesk", "Training delivery", "User guide development", "Issue resolution"]
+        }
+      ]
+    },
+    "capabilityRequirements": {
+      "allStaff": [
+        "Cultural competency and cultural safety understanding",
+        "Stakeholder engagement and relationship management",
+        "Data-informed decision-making",
+        "Change management and adaptability",
+        "Communication and collaboration",
+        "Rural health context understanding"
+      ],
+      "leadership": [
+        "Strategic thinking and systems perspective",
+        "Coalition building and partnership development",
+        "Financial acumen and revenue generation",
+        "Board engagement and governance understanding",
+        "Policy influence and advocacy",
+        "Innovation and continuous improvement"
+      ]
+    }
+  },
+
+  "partnershipProtocols": {
+    "agreementTemplates": {
+      "standardMOU": {
+        "components": [
+          "Purpose and objectives of partnership",
+          "Roles and responsibilities of each party",
+          "Governance structure and decision-making processes",
+          "Resource contributions (financial, in-kind, data)",
+          "Data sharing protocols and privacy protections",
+          "Communication expectations and channels",
+          "Dispute resolution processes",
+          "Term and review provisions",
+          "Exit clauses and wind-down procedures"
+        ],
+        "customisations": "Tailored for partner type (PHN, health service, training organisation, ACCHO, university)"
+      },
+      "dataSharing Agreement": {
+        "components": [
+          "Data to be shared (scope and granularity)",
+          "Data quality standards and validation",
+          "Update frequency and methods",
+          "Security and privacy protections",
+          "Permitted uses and restrictions",
+          "Access controls and user authentication",
+          "Breach notification and incident response",
+          "Compliance with privacy legislation",
+          "Term and review provisions"
+        ]
+      },
+      "acchoPartnershipAgreement": {
+        "components": [
+          "Self-determination principles acknowledgement",
+          "ACCHO leadership and authority definition",
+          "Cultural safety requirements and standards",
+          "Community consultation protocols",
+          "Decision-making processes (ACCHO authority)",
+          "Resource commitments to ACCHO partners",
+          "Evaluation and accountability (community-controlled)",
+          "Intellectual property and knowledge sharing",
+          "Dispute resolution (culturally appropriate)",
+          "Long-term relationship commitment"
+        ],
+        "specialProvisions": "ACCHO veto rights on cultural safety matters, community-controlled evaluation mandate"
+      }
+    },
+    "partnershipDevelopmentProcess": [
+      {
+        "stage": "Identification and Assessment",
+        "activities": [
+          "Identify potential partners aligned with RWAV strategy",
+          "Assess partner readiness and capacity for collaboration",
+          "Conduct stakeholder analysis (interests, influence, risks)",
+          "Develop value proposition for partnership"
+        ]
+      },
+      {
+        "stage": "Engagement and Negotiation",
+        "activities": [
+          "Initial meetings to explore partnership opportunity",
+          "Joint problem definition and shared objectives development",
+          "Negotiate roles, responsibilities, and resource contributions",
+          "Address concerns and barriers to partnership",
+          "Draft partnership agreement with legal review"
+        ]
+      },
+      {
+        "stage": "Formalisation",
+        "activities": [
+          "Finalise partnership agreement with sign-off from authorised signatories",
+          "Establish governance structures (steering committees, working groups)",
+          "Develop partnership workplan and milestones",
+          "Conduct partnership launch event or communication",
+          "Set up operational processes (meetings, reporting, communication)"
+        ]
+      },
+      {
+        "stage": "Implementation and Monitoring",
+        "activities": [
+          "Execute partnership workplan and initiatives",
+          "Regular partnership meetings and progress reviews",
+          "Monitor partnership health (satisfaction, outcomes, challenges)",
+          "Address issues and adapt partnership as needed",
+          "Celebrate successes and acknowledge contributions"
+        ]
+      },
+      {
+        "stage": "Review and Renewal",
+        "activities": [
+          "Conduct formal partnership review at agreed intervals",
+          "Assess partnership value and outcomes achieved",
+          "Identify improvements and adjustments needed",
+          "Renew partnership agreement with updated terms",
+          "Or gracefully exit partnership if no longer beneficial"
+        ]
+      }
+    ]
+  },
+
+  "culturalSafetyProtocols": {
+    "mandatoryACCHOLeadership": {
+      "principles": [
+        "Self-determination: ACCHO partners control priorities, methods, and outcomes",
+        "Leadership not consultation: ACCHOs lead, RWAV supports",
+        "Veto authority: ACCHO partners can veto initiatives affecting Indigenous communities",
+        "Community-controlled evaluation: Communities assess cultural safety effectiveness",
+        "Resource equity: Adequate resourcing for ACCHO leadership and participation"
+      ],
+      "implementation": [
+        "ACCHO Partnership Council established with decision-making authority",
+        "ACCHO representatives on all relevant governance bodies",
+        "ACCHO-led design of all First Nations workforce initiatives",
+        "ACCHO approval required before any initiative launch",
+        "Regular ACCHO satisfaction assessment and responsive action"
+      ]
+    },
+    "culturalSafetyTraining": {
+      "scope": "Mandatory for all RWAV staff, Board members, and partner organisations",
+      "content": [
+        "Aboriginal and Torres Strait Islander history and culture",
+        "Impact of colonisation and ongoing disadvantage",
+        "Self-determination and community control principles",
+        "Cultural protocols and appropriate engagement",
+        "Racism and unconscious bias recognition and management",
+        "ACCHO role and partnership expectations",
+        "Practical skills for culturally safe practice"
+      ],
+      "delivery": "ACCHO-led training with accredited trainers, minimum 2-day program",
+      "frequency": "Initial mandatory training, refresher every 2 years, role-specific additional training",
+      "accountability": "Training completion tracked, performance expectations linked to cultural safety competency"
+    },
+    "monitoringAndEvaluation": {
+      "achoSatisfactionSurveys": {
+        "frequency": "Bi-annual",
+        "domains": ["Partnership quality", "Leadership authority respected", "Cultural safety effectiveness", "Resource adequacy", "Communication and engagement"],
+        "target": ">80% satisfaction across all domains"
+      },
+      "culturalSafetyAudits": {
+        "frequency": "Annual",
+        "process": "External independent audit using ACCHO-approved framework",
+        "focus": ["Policy and practice alignment", "Staff competency", "Community feedback", "Incident review", "Continuous improvement"],
+        "outcome": "Audit report with recommendations, action plan developed with ACCHO partners"
+      },
+      "communityFeedback": {
+        "mechanisms": ["Community forums", "Feedback channels in ACCHO offices", "Anonymous reporting options", "Regular check-ins with community leaders"],
+        "responsiveness": "Feedback reviewed monthly, issues addressed promptly, ACCHO Partnership Council oversight"
+      }
+    }
+  },
+
+  "performanceMeasurement": {
+    "comprehensiveFramework": {
+      "quantitativeKPIs": [
+        {
+          "pillar": "DOERS",
+          "metrics": [
+            {"metric": "Rural health workforce retention rate", "baseline": "Current regional average", "target": "+15% by 2030", "measurementMethod": "Annual workforce census, longitudinal tracking"},
+            {"metric": "Community input in workforce planning", "baseline": "Current % of planning processes with community input", "target": "85% by 2030", "measurementMethod": "Planning process audit"},
+            {"metric": "Cross-sector partnership participation", "baseline": "Number of active partnerships", "target": "75% eligible organisations participating by 2030", "measurementMethod": "Partnership database tracking"}
+          ]
+        },
+        {
+          "pillar": "DRIVERS",
+          "metrics": [
+            {"metric": "Major policy reforms influenced", "baseline": "0", "target": "5 by 2030", "measurementMethod": "Policy impact assessment, attribution analysis"},
+            {"metric": "Multi-regional partnerships established", "baseline": "Current number", "target": "8 by 2030", "measurementMethod": "Partnership agreement tracking"},
+            {"metric": "Cross-sector collaboration index", "baseline": "Current level", "target": "+30% by 2030", "measurementMethod": "Annual stakeholder survey"}
+          ]
+        },
+        {
+          "pillar": "ENABLERS",
+          "metrics": [
+            {"metric": "Non-government revenue as % of total", "baseline": "Current %", "target": "25-30% by 2030", "measurementMethod": "Financial reporting"},
+            {"metric": "Stakeholder satisfaction with coordination", "baseline": "Current satisfaction", "target": "90% by 2029", "measurementMethod": "Annual stakeholder survey"}
+          ]
+        }
+      ],
+      "qualitativeIndicators": [
+        {"domain": "Stakeholder experience", "methods": ["Annual surveys", "Focus groups", "Stakeholder interviews"], "analysis": "Thematic analysis, sentiment tracking"},
+        {"domain": "Cultural safety", "methods": ["ACCHO satisfaction surveys", "Community feedback", "Cultural safety audits"], "analysis": "ACCHO Partnership Council review, continuous improvement planning"},
+        {"domain": "Innovation and learning", "methods": ["Case studies", "Best practice documentation", "Peer learning sessions"], "analysis": "Innovation diffusion tracking, learning capture"}
+      ]
+    },
+    "reportingCadence": {
+      "monthly": "Internal operations dashboard for management team",
+      "quarterly": "Board reporting pack with KPI progress, risks, milestones",
+      "annual": "Comprehensive annual report with outcomes, financials, stakeholder feedback, public release"
+    }
+  },
+
+  "budgetAllocation": {
+    "pilotProgramBudget": {
+      "totalAllocation": "To be determined based on Board approval",
+      "breakdown": {
+        "communityEngagement": {
+          "percentage": 25,
+          "activities": ["Stakeholder relationship building", "Community events", "Steering committee support", "Communication materials", "Partnership development"]
+        },
+        "platformDevelopment": {
+          "percentage": 30,
+          "activities": ["Platform design and development", "Data integration", "User testing", "Training materials", "Platform hosting and support"]
+        },
+        "serviceDelivery": {
+          "percentage": 20,
+          "activities": ["Retention programs", "Coordination services", "Professional development", "Supervision support", "Practitioner services"]
+        },
+        "evaluation": {
+          "percentage": 15,
+          "activities": ["Evaluation framework development", "Data collection", "Analysis and reporting", "Stakeholder feedback", "Continuous improvement"]
+        },
+        "culturalSafety": {
+          "percentage": 10,
+          "activities": ["ACCHO partnerships", "Cultural safety training", "First Nations workforce programs", "Cultural protocol development", "Community-controlled evaluation"]
+        }
+      }
+    },
+    "financialDiversificationInvestment": {
+      "year1": {
+        "target": "2-3% non-govt revenue",
+        "investment": ["Business development capability", "Marketing and positioning", "First client development"],
+        "expectedReturn": "Initial revenue <$100k, primarily proof of concept"
+      },
+      "year2": {
+        "target": "10% non-govt revenue",
+        "investment": ["Platform subscription infrastructure", "Consulting service development", "Client acquisition"],
+        "expectedReturn": "Revenue $300-500k, business model validation"
+      },
+      "year3Plus": {
+        "target": "15-30% progressive growth",
+        "investment": ["Revenue stream scaling", "Service expansion", "Market development"],
+        "expectedReturn": "Progressive revenue growth to target"
+      }
+    }
+  },
+
+  "additionalRecommendations": {
+    "immediateActions": [
+      {
+        "action": "Board Sign-Off",
+        "description": "Secure Board approval for transformation commencement and initial resource allocation",
+        "timeline": "Within 4 weeks of workshop",
+        "responsibility": "CEO with Board Chair"
+      },
+      {
+        "action": "Pilot Region Partnership Initiation",
+        "description": "Commence formal partnership negotiations with Bendigo, Gippsland Lakes, and Mallee stakeholders",
+        "timeline": "Within 8 weeks of Board approval",
+        "responsibility": "CEO and Pilot Program Coordinator"
+      },
+      {
+        "action": "Community Map Platform Tender",
+        "description": "Issue RFP for Community Map platform development partner",
+        "timeline": "Within 12 weeks of Board approval",
+        "responsibility": "Technology lead with procurement support"
+      },
+      {
+        "action": "Revenue Diversification Pilot Launch",
+        "description": "Commence IMG sponsorship services and data intelligence subscriptions pilots",
+        "timeline": "Within 16 weeks of Board approval",
+        "responsibility": "CEO and Business Development Manager (to be recruited)"
+      },
+      {
+        "action": "VHA Collective Membership",
+        "description": "Join VHA health collective for sector-level advocacy participation",
+        "timeline": "Within 4 weeks of Board approval",
+        "responsibility": "CEO"
+      }
+    ],
+    "crossSectorPartnerships": [
+      {
+        "partner": "Local Government",
+        "purpose": "Address non-workforce barriers (housing, community amenity, family services)",
+        "approach": "Develop formal partnerships with shires in pilot regions, joint planning for community attraction"
+      },
+      {
+        "partner": "Education Departments",
+        "purpose": "Support practitioner families with children's education needs",
+        "approach": "Coordinate with school principals, facilitate school transitions, support rural education advocacy"
+      },
+      {
+        "partner": "Regional Development Victoria",
+        "purpose": "Align health workforce with broader regional development strategies",
+        "approach": "Participate in regional planning forums, integrate health workforce into economic development plans"
+      }
+    ],
+    "communitiesOfPractice": {
+      "purpose": "Ongoing peer networking and professional support for rural health workforce",
+      "delivery": "Digital platforms (forums, webinars, resource libraries) with periodic face-to-face events",
+      "target": "All rural health professionals, specialised groups for specific disciplines/career stages",
+      "resourceRequirement": "Platform licensing ~$20k annually, facilitation 0.2 FTE"
+    },
+    "transparentReporting": {
+      "commitment": "Annual public reporting of transformation progress, outcomes, challenges, and learnings",
+      "format": "Annual report published on RWAV website, distributed to stakeholders, presented at sector events",
+      "content": "Quantitative outcomes, qualitative stories, financial summary, stakeholder testimonials, lessons learned, year ahead priorities"
+    }
+  }
+}

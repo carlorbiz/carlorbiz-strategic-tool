@@ -1,0 +1,224 @@
+/**
+ * RWAV Brand Colour Palette
+ * Extracted from official RWAV logo
+ * Australian English spelling throughout
+ */
+
+:root {
+  /* ========================================
+     RWAV BRAND COLOURS (from logo)
+     ======================================== */
+  
+  /* Primary Brand Colours */
+  --rwav-blue: #0c558c;              /* Deep Blue - trust, professionalism */
+  --rwav-orange: #d66926;            /* Warm Orange - action, energy */
+  --rwav-gold: #e6a85c;              /* Gold - warmth, community */
+  --rwav-olive: #4e582a;             /* Olive Green - growth, rural connection */
+  --rwav-dark: #272312;              /* Dark Brown - stability, earth */
+  
+  /* Extended Palette (derived from brand colours) */
+  --rwav-blue-light: #1a6ba8;
+  --rwav-blue-dark: #083d66;
+  --rwav-orange-light: #e07d3f;
+  --rwav-orange-dark: #b5551e;
+  --rwav-gold-light: #f0c080;
+  --rwav-gold-dark: #d49440;
+  
+  /* ========================================
+     PILLAR-SPECIFIC COLOURS
+     ======================================== */
+  
+  /* DOERS - Frontline Impact (Teal/Blue tones) */
+  --pillar-doers: #16A085;           /* Teal - coordination */
+  --pillar-doers-light: #1abc9c;
+  --pillar-doers-dark: #117a65;
+  
+  /* DRIVERS - Systems Change (Blue tones - using RWAV blue) */
+  --pillar-drivers: #0c558c;         /* RWAV Blue - strategic influence */
+  --pillar-drivers-light: #1a6ba8;
+  --pillar-drivers-dark: #083d66;
+  
+  /* ENABLERS - Sustainability (Orange tones - using RWAV orange) */
+  --pillar-enablers: #d66926;        /* RWAV Orange - transformation */
+  --pillar-enablers-light: #e07d3f;
+  --pillar-enablers-dark: #b5551e;
+  
+  /* ========================================
+     FUNCTIONAL COLOURS
+     ======================================== */
+  
+  /* Status Indicators */
+  --colour-success: #27AE60;         /* Green - positive outcomes */
+  --colour-warning: #F39C12;         /* Amber - caution */
+  --colour-alert: #E74C3C;           /* Red - critical issues */
+  --colour-info: #3498DB;            /* Light Blue - information */
+  
+  /* Priority Levels (for workshop) */
+  --priority-high: #27AE60;          /* Green - immediate action */
+  --priority-medium: #F39C12;        /* Amber - planned implementation */
+  --priority-low: #95A5A6;           /* Grey - future consideration */
+  
+  /* ========================================
+     NEUTRAL PALETTE
+     ======================================== */
+  
+  /* Greys (for text, backgrounds, borders) */
+  --colour-grey-50: #f9fafb;
+  --colour-grey-100: #f3f4f6;
+  --colour-grey-200: #e5e7eb;
+  --colour-grey-300: #d1d5db;
+  --colour-grey-400: #9ca3af;
+  --colour-grey-500: #6b7280;
+  --colour-grey-600: #4b5563;
+  --colour-grey-700: #374151;
+  --colour-grey-800: #1f2937;
+  --colour-grey-900: #111827;
+  
+  /* ========================================
+     TYPOGRAPHY
+     ======================================== */
+  
+  --font-family-primary: "Segoe UI", "Roboto", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-family-headings: "Segoe UI", "Roboto", -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+  --font-size-5xl: 3rem;        /* 48px */
+  
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* ========================================
+     SPACING SYSTEM
+     ======================================== */
+  
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  --spacing-3xl: 4rem;      /* 64px */
+  
+  /* ========================================
+     BORDER & RADIUS
+     ======================================== */
+  
+  --radius-sm: 0.25rem;     /* 4px */
+  --radius-md: 0.5rem;      /* 8px */
+  --radius-lg: 0.75rem;     /* 12px */
+  --radius-xl: 1rem;        /* 16px */
+  --radius-full: 9999px;    /* Fully rounded */
+  
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  
+  /* ========================================
+     SHADOWS
+     ======================================== */
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+  
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+  
+  /* ========================================
+     Z-INDEX LAYERS
+     ======================================== */
+  
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-modal: 1200;
+  --z-popover: 1300;
+  --z-tooltip: 1400;
+}
+
+/* ========================================
+   COLOUR UTILITY CLASSES
+   ======================================== */
+
+/* Background Colours */
+.bg-rwav-blue { background-colour: var(--rwav-blue); }
+.bg-rwav-orange { background-colour: var(--rwav-orange); }
+.bg-rwav-gold { background-colour: var(--rwav-gold); }
+.bg-rwav-olive { background-colour: var(--rwav-olive); }
+
+.bg-doers { background-colour: var(--pillar-doers); }
+.bg-drivers { background-colour: var(--pillar-drivers); }
+.bg-enablers { background-colour: var(--pillar-enablers); }
+
+.bg-priority-high { background-colour: var(--priority-high); }
+.bg-priority-medium { background-colour: var(--priority-medium); }
+.bg-priority-low { background-colour: var(--priority-low); }
+
+/* Text Colours */
+.text-rwav-blue { colour: var(--rwav-blue); }
+.text-rwav-orange { colour: var(--rwav-orange); }
+.text-rwav-gold { colour: var(--rwav-gold); }
+.text-rwav-olive { colour: var(--rwav-olive); }
+
+.text-doers { colour: var(--pillar-doers); }
+.text-drivers { colour: var(--pillar-drivers); }
+.text-enablers { colour: var(--pillar-enablers); }
+
+/* Border Colours */
+.border-rwav-blue { border-colour: var(--rwav-blue); }
+.border-rwav-orange { border-colour: var(--rwav-orange); }
+.border-doers { border-colour: var(--pillar-doers); }
+.border-drivers { border-colour: var(--pillar-drivers); }
+.border-enablers { border-colour: var(--pillar-enablers); }
+
+/* ========================================
+   GRADIENT UTILITIES
+   ======================================== */
+
+.gradient-doers {
+  background: linear-gradient(135deg, var(--pillar-doers) 0%, var(--pillar-doers-dark) 100%);
+}
+
+.gradient-drivers {
+  background: linear-gradient(135deg, var(--pillar-drivers) 0%, var(--pillar-drivers-dark) 100%);
+}
+
+.gradient-enablers {
+  background: linear-gradient(135deg, var(--pillar-enablers) 0%, var(--pillar-enablers-dark) 100%);
+}
+
+.gradient-rwav-primary {
+  background: linear-gradient(135deg, var(--rwav-blue) 0%, var(--rwav-orange) 100%);
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  :root {
+    /* Adjust colours for print */
+    --rwav-blue: #0c558c;
+    --rwav-orange: #d66926;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+  }
+}

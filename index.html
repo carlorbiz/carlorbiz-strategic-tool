@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RWAV Strategic Plan 2026-2030 - Interactive Workshop Tool">
+    <meta name="author" content="Carla Taylor, Carlorbiz">
+    <meta name="theme-color" content="#2563eb">
+    
+    <title>RWAV Strategic Plan 2026-2030 - Workshop Tool</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icons/favicon.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for Data Visualisations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- jsPDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>RWAV Strategic Plan 2026-2030</h1>
+                    <p>Preparing a Bold Agenda for Rural Workforce Transformation</p>
+                </div>
+                <div class="header-actions no-print">
+                    <button id="btn-version-toggle" class="btn btn-secondary">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span id="version-label">Switch to Workshop Mode</span>
+                    </button>
+                    <button id="btn-export-pdf" class="btn btn-success">
+                        <i class="fas fa-file-pdf"></i>
+                        Download PDF Summary
+                    </button>
+                    <button id="btn-install-pwa" class="btn btn-warning" style="display: none;">
+                        <i class="fas fa-download"></i>
+                        Install for Offline Access
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs no-print" role="navigation">
+                <button class="nav-tab active" data-tab="overview">
+                    <i class="fas fa-home"></i> Executive Overview
+                </button>
+                <button class="nav-tab" data-tab="pillars">
+                    <i class="fas fa-columns"></i> Three Pillars
+                </button>
+                <button class="nav-tab" data-tab="evidence">
+                    <i class="fas fa-chart-bar"></i> Community Pulse Survey
+                </button>
+                <button class="nav-tab" data-tab="pilots">
+                    <i class="fas fa-map-marked-alt"></i> Pilot Communities
+                </button>
+                <button class="nav-tab" data-tab="financial">
+                    <i class="fas fa-dollar-sign"></i> Financial Strategy
+                </button>
+                <button class="nav-tab" data-tab="timeline">
+                    <i class="fas fa-calendar-alt"></i> Implementation Timeline
+                </button>
+            </nav>
+
+            <!-- Tab Content: Executive Overview -->
+            <div id="tab-overview" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Executive Summary</h2>
+                    </div>
+                    <div class="card-body">
+                        <h3>Current State</h3>
+                        <p id="current-state-text"></p>
+                        
+                        <h3>Future Vision</h3>
+                        <p id="future-vision-text"></p>
+                        
+                        <h3>The Evidence</h3>
+                        <p id="evidence-summary-text"></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Required Board Decisions</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="required-decisions-list"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Post-Approval Actions</h2>
+                    </div>
+                    <div class="card-body">
+                        <ul id="post-approval-actions-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Three Pillars Dashboard -->
+            <div id="tab-pillars" class="tab-content">
+                <h2 style="text-align: centre; margin-bottom: 2rem; colour: var(--colour-grey-900);">
+                    Three-Pillar Transformation Framework
+                </h2>
+                <div class="pillars-container" id="pillars-container"></div>
+            </div>
+
+            <!-- Tab Content: Community Pulse Survey -->
+            <div id="tab-evidence" class="tab-content">
+                <h2 style="text-align: centre; margin-bottom: 2rem; colour: var(--colour-grey-900);">
+                    Community Pulse Survey Results
+                </h2>
+                
+                <!-- Stat Cards Grid -->
+                <div class="stat-cards-grid" id="stat-cards-grid"></div>
+                
+                <!-- Community Willingness Chart -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Community Willingness to Contribute</h3>
+                    <canvas id="willingness-chart" class="chart-canvas"></canvas>
+                </div>
+                
+                <!-- Key Insights -->
+                <h3 style="margin-top: 3rem; margin-bottom: 1.5rem; colour: var(--colour-grey-900);">
+                    Key Stakeholder Insights
+                </h3>
+                <div id="stakeholder-quotes"></div>
+            </div>
+
+            <!-- Tab Content: Pilot Communities -->
+            <div id="tab-pilots" class="tab-content">
+                <h2 style="text-align: centre; margin-bottom: 2rem; colour: var(--colour-grey-900);">
+                    Three-Community Strategic Pilot Program
+                </h2>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <p id="pilot-overview-text"></p>
+                    </div>
+                </div>
+                
+                <!-- Map Container -->
+                <div class="chart-container" style="height: 500px;">
+                    <h3 class="chart-title">Pilot Community Locations - Victoria</h3>
+                    <div id="map" style="height: 400px; border-radius: 0.5rem;"></div>
+                </div>
+                
+                <!-- Community Cards -->
+                <div class="communities-grid" id="communities-grid"></div>
+            </div>
+
+            <!-- Tab Content: Financial Strategy -->
+            <div id="tab-financial" class="tab-content">
+                <h2 style="text-align: centre; margin-bottom: 2rem; colour: var(--colour-grey-900);">
+                    Financial Diversification Strategy
+                </h2>
+                
+                <!-- Target Gauge -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Revenue Diversification Target: 25-30% by 2030</h3>
+                    <canvas id="revenue-gauge-chart" class="chart-canvas"></canvas>
+                </div>
+                
+                <!-- Revenue Stream Breakdown -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Revenue Stream Composition</h3>
+                    <canvas id="revenue-breakdown-chart" class="chart-canvas"></canvas>
+                </div>
+                
+                <!-- Timeline Gantt -->
+                <div class="chart-container">
+                    <h3 class="chart-title">Revenue Stream Launch Timeline</h3>
+                    <canvas id="revenue-timeline-chart" class="chart-canvas"></canvas>
+                </div>
+                
+                <!-- Risk Mitigation -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ethical Framework & Risk Mitigation</h3>
+                    </div>
+                    <div class="card-body">
+                        <p id="ethical-framework-text"></p>
+                        <h4>Guiding Principles:</h4>
+                        <ul id="ethical-principles-list"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Implementation Timeline -->
+            <div id="tab-timeline" class="tab-content">
+                <h2 style="text-align: centre; margin-bottom: 2rem; colour: var(--colour-grey-900);">
+                    5-Year Implementation Timeline (2026-2030)
+                </h2>
+                <div class="timeline-container" id="timeline-container"></div>
+            </div>
+        </main>
+
+        <!-- Offline Indicator -->
+        <div id="offline-indicator" class="offline-indicator online">
+            <i class="fas fa-wifi"></i>
+            <span id="online-status">Online</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data-bridge.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('btn-install-pwa').style.display = 'inline-flex';
+        });
+
+        document.getElementById('btn-install-pwa').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to install prompt: ${outcome}`);
+                deferredPrompt = null;
+                document.getElementById('btn-install-pwa').style.display = 'none';
+            }
+        });
+
+        // Online/Offline Detection
+        function updateOnlineStatus() {
+            const indicator = document.getElementById('offline-indicator');
+            const statusText = document.getElementById('online-status');
+            
+            if (navigator.onLine) {
+                indicator.classList.remove('offline');
+                indicator.classList.add('online');
+                statusText.textContent = 'Online';
+            } else {
+                indicator.classList.remove('online');
+                indicator.classList.add('offline');
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+    </script>
+</body>
+</html>
