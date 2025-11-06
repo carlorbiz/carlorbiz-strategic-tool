@@ -218,6 +218,59 @@
             </div>
         </main>
 
+        <!-- VERSION 2: Workshop Interface (hidden by default) -->
+<div id="workshopInterface" class="workshop-interface" style="display: none;">
+    
+    <!-- Facilitator Controls -->
+    <div class="facilitator-panel">
+        <h2>Workshop Facilitator Controls</h2>
+        
+        <!-- QR Upload -->
+        <div class="control-section">
+            <h3>Photo Upload</h3>
+            <button id="generateQRBtn" class="btn-primary">Generate QR Code for Photo Upload</button>
+            <div id="qrCodeDisplay" style="display: none;">
+                <canvas id="qrCanvas"></canvas>
+                <p>Scan with phone to upload photos</p>
+            </div>
+            <input type="file" id="manualPhotoUpload" accept="image/*" style="display: none;">
+            <button id="manualUploadBtn" class="btn-secondary">Or Upload Manually</button>
+        </div>
+        
+        <!-- OCR Processing -->
+        <div class="control-section">
+            <h3>OCR Processing</h3>
+            <div id="ocrStatus">Ready to process photos</div>
+            <div id="ocrResults"></div>
+        </div>
+        
+        <!-- Decision Input -->
+        <div class="control-section">
+            <h3>Board Decisions</h3>
+            <div id="decisionControls"></div>
+        </div>
+        
+        <!-- AI Chatbot -->
+        <div class="control-section">
+            <h3>AI Assistant</h3>
+            <div id="chatbot">
+                <div id="chatMessages"></div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Ask a question...">
+                    <button id="chatSendBtn" class="btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Impact Dashboard -->
+    <div class="impact-dashboard">
+        <h2>Real-Time Impact Analysis</h2>
+        <div id="impactDisplay"></div>
+    </div>
+    
+</div>
+
         <!-- Offline Indicator -->
         <div id="offline-indicator" class="offline-indicator online">
             <i class="fas fa-wifi"></i>
@@ -225,8 +278,19 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/data-bridge.js"></script>
+<!-- Data Loading - Inline (no async) -->
+<script src="js/strategic-data-inline.js"></script>
+
+<!-- VERSION 2 Components -->
+<script src="js/ai-chatbot.js"></script>
+<script src="js/qr-upload.js"></script>
+<script src="js/ocr-engine.js"></script>
+<script src="js/decision-engine.js"></script>
+<script src="js/facilitator-interface.js"></script>
+
+<!-- Decision Logic -->
+<script src="js/logic/rwav-decision-logic.js"></script>
+
     <script src="js/app.js"></script>
     
     <!-- Service Worker Registration -->

@@ -886,3 +886,116 @@ a:hover {
     overflow-x: auto;
   }
 }
+
+/* VERSION 2: Workshop Interface */
+.workshop-interface {
+    padding: 2rem;
+    background: var(--colour-grey-50);
+}
+
+.facilitator-panel {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.control-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--colour-grey-200);
+}
+
+.control-section:last-child {
+    border-bottom: none;
+}
+
+.mode-toggle {
+    margin-left: auto;
+}
+
+#qrCodeDisplay {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+#qrCanvas {
+    border: 2px solid var(--colour-primary);
+    border-radius: 8px;
+}
+
+/* Chatbot */
+#chatbot {
+    border: 1px solid var(--colour-grey-300);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#chatMessages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #f8f9fa;
+}
+
+.chat-message {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    max-width: 80%;
+}
+
+.user-message {
+    background: var(--colour-primary);
+    color: white;
+    margin-left: auto;
+}
+
+.ai-message {
+    background: white;
+    border: 1px solid var(--colour-grey-200);
+}
+
+.chat-input {
+    display: flex;
+    padding: 1rem;
+    background: white;
+    border-top: 1px solid var(--colour-grey-200);
+}
+
+#chatInput {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--colour-grey-300);
+    border-radius: 4px;
+    margin-right: 0.5rem;
+}
+
+/* Impact Dashboard */
+.impact-dashboard {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.impact-pillar {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--colour-primary);
+    background: #f8f9fa;
+}
+
+/* OCR Results */
+#ocrResults ul {
+    list-style: none;
+    padding: 0;
+}
+
+#ocrResults li {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}

@@ -44,7 +44,13 @@ function initializeApp() {
 }
 
 // Start initialization when DOM is ready
-document.addEventListener('DOMContentLoaded', initializeApp);
+document.addEventListener('DOMContentLoaded', function() {
+    // Existing VERSION 1 initialisation
+    initializeApp();
+    
+    // ADD THIS: VERSION 2 initialisation
+    initializeVersion2();
+});
 
 // Also listen for the strategicDataLoaded event
 window.addEventListener('strategicDataLoaded', () => {
@@ -714,3 +720,201 @@ async function exportToPDF() {
 document.getElementById('btn-version-toggle').addEventListener('click', () => {
   alert('Workshop Mode (VERSION 2) with AI photo upload and impact modelling will be available soon!');
 });
+
+/**
+ * Initialise VERSION 2 (Workshop Tool) components
+ */
+function initializeVersion2() {
+    console.log('Initialising VERSION 2 components...');
+    
+    // Mode toggle
+    const toggleBtn = document.getElementById('btn-version-toggle');
+    const workshopInterface = document.getElementById('workshopInterface');
+    const mainContent = document.querySelector('.main-content');
+    let isWorkshopMode = false;
+    
+    toggleBtn.addEventListener('click', function() {
+        isWorkshopMode = !isWorkshopMode;
+        
+        if (isWorkshopMode) {
+            // Switch to Workshop Mode
+            mainContent.style.display = 'none';
+            workshopInterface.style.display = 'block';
+            document.getElementById('version-label').textContent = 'Switch to Briefing Mode';
+            
+            // Initialise workshop components
+            initWorkshopComponents();
+        } else {
+            // Switch back to Briefing Mode
+            mainContent.style.display = 'block';
+            workshopInterface.style.display = 'none';
+            document.getElementById('version-label').textContent = 'Switch to Workshop Mode';
+        }
+    });
+}
+
+/**
+ * Initialise all workshop components when entering Workshop Mode
+ */
+function initWorkshopComponents() {
+    console.log('Initialising workshop components...');
+    
+    // 1. QR Upload System
+    if (typeof QRUploadSystem !== 'undefined') {
+        const qrUpload = new QRUploadSystem();
+        
+        document.getElementById('generateQRBtn').addEventListener('click', function() {
+            qrUpload.generateQRCode();
+            document.getElementById('qrCodeDisplay').style.display = 'block';
+        });
+        
+        document.getElementById('manualUploadBtn').addEventListener('click', function() {
+            document.getElementById('manualPhotoUpload').click();
+        });
+        
+        document.getElementById('manualPhotoUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                qrUpload.handlePhotoUpload(e.target.files[0]);
+            }
+        });
+        
+        // Listen for photo uploads
+        window.addEventListener('photoUploaded', function(e) {
+            processPhoto(e.detail.photoData);
+        });
+    }
+    
+    // 2. AI Chatbot
+    if (typeof AIChatbot !== 'undefined') {
+        const chatbot = new AIChatbot({
+            apiKey: window.OPENAI_API_KEY || '', // Set via environment or prompt user
+            strategicPlanData: window.STRATEGIC_PLAN_DATA
+        });
+        
+        document.getElementById('chatSendBtn').addEventListener('click', function() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (message) {
+                sendChatMessage(chatbot, message);
+                input.value = '';
+            }
+        });
+        
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('chatSendBtn').click();
+            }
+        });
+    }
+    
+    // 3. Decision Engine
+    if (typeof DecisionEngine !== 'undefined') {
+        window.decisionEngine = new DecisionEngine(window.STRATEGIC_PLAN_DATA);
+        console.log('Decision engine initialised');
+    }
+    
+    // 4. Facilitator Interface
+    if (typeof FacilitatorInterface !== 'undefined') {
+        window.facilitatorInterface = new FacilitatorInterface({
+            decisionEngine: window.decisionEngine,
+            strategicData: window.STRATEGIC_PLAN_DATA
+        });
+        console.log('Facilitator interface initialised');
+    }
+}
+
+/**
+ * Process uploaded photo with OCR
+ */
+function processPhoto(photoData) {
+    console.log('Processing photo with OCR...');
+    document.getElementById('ocrStatus').textContent = 'Processing...';
+    
+    if (typeof OCREngine !== 'undefined') {
+        const ocr = new OCREngine();
+        
+        ocr.processImage(photoData).then(results => {
+            console.log('OCR results:', results);
+            displayOCRResults(results);
+            
+            // Pass to decision engine
+            if (window.decisionEngine) {
+                window.decisionEngine.updateFromOCR(results);
+                updateImpactDashboard();
+            }
+        }).catch(error => {
+            console.error('OCR error:', error);
+            document.getElementById('ocrStatus').textContent = 'Error processing image';
+        });
+    }
+}
+
+/**
+ * Display OCR results for user confirmation
+ */
+function displayOCRResults(results) {
+    const container = document.getElementById('ocrResults');
+    container.innerHTML = '<h4>Detected Priorities:</h4>';
+    
+    const list = document.createElement('ul');
+    results.detectedUIDs.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.uid}: ${item.priority} priority`;
+        list.appendChild(li);
+    });
+    
+    container.appendChild(list);
+    document.getElementById('ocrStatus').textContent = 'Processing complete';
+}
+
+/**
+ * Send message to AI chatbot
+ */
+function sendChatMessage(chatbot, message) {
+    const messagesDiv = document.getElementById('chatMessages');
+    
+    // Display user message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-message user-message';
+    userMsg.textContent = message;
+    messagesDiv.appendChild(userMsg);
+    
+    // Get AI response
+    chatbot.sendMessage(message).then(response => {
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message ai-message';
+        aiMsg.textContent = response;
+        messagesDiv.appendChild(aiMsg);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }).catch(error => {
+        console.error('Chatbot error:', error);
+        const errorMsg = document.createElement('div');
+        errorMsg.className = 'chat-message error-message';
+        errorMsg.textContent = 'Error: Could not get response';
+        messagesDiv.appendChild(errorMsg);
+    });
+}
+
+/**
+ * Update impact dashboard with latest decisions
+ */
+function updateImpactDashboard() {
+    if (!window.decisionEngine) return;
+    
+    const impacts = window.decisionEngine.calculateImpacts();
+    const container = document.getElementById('impactDisplay');
+    
+    container.innerHTML = '<h3>Impact Analysis:</h3>';
+    
+    // Display impacts
+    Object.keys(impacts).forEach(pillar => {
+        const pillarDiv = document.createElement('div');
+        pillarDiv.className = 'impact-pillar';
+        pillarDiv.innerHTML = `
+            <h4>${pillar}</h4>
+            <p>Score: ${impacts[pillar].score}/100</p>
+            <p>Status: ${impacts[pillar].status}</p>
+        `;
+        container.appendChild(pillarDiv);
+    });
+}
