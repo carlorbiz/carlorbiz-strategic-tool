@@ -30,7 +30,6 @@ function initializeApp() {
   
   console.log('Strategic data loaded, initializing components...');
   
-  // Initialise all components
   initialiseTabNavigation();
   loadExecutiveOverview();
   loadThreePillarsDashboard();
@@ -100,57 +99,83 @@ function loadExecutiveOverview() {
   // Load text content
   document.getElementById('current-state-text').textContent = data.currentState;
   document.getElementById('future-vision-text').textContent = data.futureVision;
-  document.getElementById('evidence-summary-text').textContent = data.evidenceSummary;
+  document.getElementById('evidence-summary-text').textContent = data.evidence || data.evidenceSummary || '';
   
   // Load required decisions
   const decisionsContainer = document.getElementById('required-decisions-list');
-  data.requiredDecisions.forEach((decision, index) => {
-    const decisionCard = document.createElement('div');
-    decisionCard.className = 'card';
-    decisionCard.style.marginBottom = '1rem';
-    
-    const priorityColour = decision.priority === 'critical' ? 'var(--colour-warning)' : 'var(--colour-orange)';
-    
-    decisionCard.innerHTML = `
-      <div style="display: flex; align-items: start; gap: 1rem;">
-        <div style="background: ${priorityColour}; colour: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: centre; justify-content: centre; font-weight: bold; flex-shrink: 0;">
-          ${index + 1}
-        </div>
-        <div style="flex: 1;">
-          <h4 style="margin-bottom: 0.5rem; colour: var(--colour-grey-900);">${decision.title}</h4>
-          <p style="margin-bottom: 0.5rem; colour: var(--colour-grey-700);">${decision.description}</p>
-          <div style="display: flex; gap: 1rem; font-size: 0.875rem; colour: var(--colour-grey-600);">
-            <span><i class="fas fa-exclamation-circle"></i> Priority: <strong>${decision.priority.toUpperCase()}</strong></span>
-            ${decision.dependencies.length > 0 ? `<span><i class="fas fa-link"></i> Dependencies: ${decision.dependencies.length}</span>` : ''}
+  if (data.requiredDecisions && data.requiredDecisions.length > 0) {
+    data.requiredDecisions.forEach((decision, index) => {
+      const decisionCard = document.createElement('div');
+      decisionCard.className = 'card';
+      decisionCard.style.marginBottom = '1rem';
+      
+      const priorityColour = decision.priority === 'CRITICAL' || decision.priority === 'critical' ? 'var(--colour-warning)' : 'var(--colour-orange)';
+      
+      decisionCard.innerHTML = `
+        <div style="display: flex; align-items: start; gap: 1rem;">
+          <div style="background: ${priorityColour}; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+            ${index + 1}
+          </div>
+          <div style="flex: 1;">
+            <h4 style="margin-bottom: 0.5rem; color: var(--colour-grey-900);">${decision.title}</h4>
+            <p style="margin-bottom: 0.5rem; color: var(--colour-grey-700);">${decision.description}</p>
+            <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--colour-grey-600);">
+              <span><i class="fas fa-exclamation-circle"></i> Priority: <strong>${decision.priority.toUpperCase()}</strong></span>
+              ${decision.dependencies && decision.dependencies.length > 0 ? `<span><i class="fas fa-link"></i> Dependencies: ${decision.dependencies.join(', ')}</span>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-    `;
-    
-    decisionsContainer.appendChild(decisionCard);
-  });
+      `;
+      
+      decisionsContainer.appendChild(decisionCard);
+    });
+  }
   
-  // Load post-approval actions
+  // Load post-approval actions (if they exist)
   const actionsList = document.getElementById('post-approval-actions-list');
-  data.postApprovalActions.forEach(action => {
-    const li = document.createElement('li');
-    li.textContent = action;
-    li.style.marginBottom = '0.5rem';
-    actionsList.appendChild(li);
-  });
+  if (actionsList && data.postApprovalActions && data.postApprovalActions.length > 0) {
+    data.postApprovalActions.forEach(action => {
+      const li = document.createElement('li');
+      li.textContent = action;
+      li.style.marginBottom = '0.5rem';
+      actionsList.appendChild(li);
+    });
+  }
 }
 
 // ========================================
 // THREE PILLARS DASHBOARD
 // ========================================
 function loadThreePillarsDashboard() {
+  console.log('loadThreePillarsDashboard called');
   const pillarsData = STRATEGIC_PLAN_DATA.THREE_PILLARS;
   const container = document.getElementById('pillars-container');
   
-  Object.values(pillarsData).forEach(pillar => {
-    const pillarColumn = createPillarColumn(pillar);
-    container.appendChild(pillarColumn);
+  console.log('Pillars data:', pillarsData);
+  console.log('Container:', container);
+  
+  if (!container) {
+    console.error('pillars-container not found!');
+    return;
+  }
+  
+  if (!pillarsData) {
+    console.error('THREE_PILLARS data not found!');
+    return;
+  }
+  
+  Object.values(pillarsData).forEach((pillar, index) => {
+    console.log(`Creating pillar ${index}:`, pillar.title);
+    try {
+      const pillarColumn = createPillarColumn(pillar);
+      container.appendChild(pillarColumn);
+      console.log(`Successfully added pillar ${index}`);
+    } catch (error) {
+      console.error(`Error creating pillar ${index}:`, error);
+    }
   });
+  
+  console.log('loadThreePillarsDashboard complete, container children:', container.children.length);
 }
 
 function createPillarColumn(pillar) {
