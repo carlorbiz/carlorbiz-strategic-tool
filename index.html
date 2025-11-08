@@ -45,10 +45,7 @@
                         <i class="fas fa-exchange-alt"></i>
                         <span id="version-label">Switch to Workshop Mode</span>
                     </button>
-                    <button id="btn-export-pdf" class="btn btn-success">
-                        <i class="fas fa-file-pdf"></i>
-                        Download PDF Summary
-                    </button>
+
                     <button id="btn-install-pwa" class="btn btn-warning" style="display: none;">
                         <i class="fas fa-download"></i>
                         Install for Offline Access
@@ -269,13 +266,6 @@
     
 </div>
 
-        <!-- Offline Indicator -->
-        <div id="offline-indicator" class="offline-indicator online">
-            <i class="fas fa-wifi"></i>
-            <span id="online-status">Online</span>
-        </div>
-    </div>
-
 <!-- Data Loading - Inline (no async) -->
 <script src="js/strategic-data-inline.js"></script>
 
@@ -325,25 +315,7 @@
             }
         });
 
-        // Online/Offline Detection
-        function updateOnlineStatus() {
-            const indicator = document.getElementById('offline-indicator');
-            const statusText = document.getElementById('online-status');
-            
-            if (navigator.onLine) {
-                indicator.classList.remove('offline');
-                indicator.classList.add('online');
-                statusText.textContent = 'Online';
-            } else {
-                indicator.classList.remove('online');
-                indicator.classList.add('offline');
-                statusText.textContent = 'Offline';
-            }
-        }
 
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-        updateOnlineStatus();
     </script>
 </body>
 </html>
