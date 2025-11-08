@@ -4,7 +4,7 @@
 
 const STRATEGIC_PLAN_DATA = {
   "EXECUTIVE_SUMMARY": {
-    "currentState": "RWAV currently operates as a government-funded workforce placement service, competing with other agencies for limited recruitment success. This model focuses on individual placements rather than systemic solutions, creates dependency on government funding cycles, limits strategic influence and cross-sector collaboration, and underutilises RWAV's unique neutral position and established relationships.",
+    "currentState": "RWAV currently operates as a government-funded workforce placement service, competing with other agencies for short-term workforce solutions. This model focuses on individual placements rather than systemic solutions, creates dependency on government funding cycles, limits strategic influence and cross-sector collaboration, and underutilises RWAV's unique neutral position and established relationships.",
     "futureVision": "The transformation positions RWAV as rural Victoria's trusted systems coordinator, using data intelligence and coalition leadership—leveraging the trust the community and stakeholders already have—to drive retention, workforce planning, and health system reform. This addresses the coordination crisis while establishing sustainable revenue streams aligned with stakeholder needs.",
     "evidence": "Survey data from 120 stakeholders reveals overwhelming support for coordination leadership.",
     "requiredDecisions": [
@@ -91,15 +91,15 @@ const STRATEGIC_PLAN_DATA = {
       ],
       "successMetrics": [
         {
-          "metric": "15% increase in rural health workforce retention",
+          "metric": "Increase in rural health workforce retention",
           "target": "15%"
         },
         {
-          "metric": "25% improvement in workforce planning accuracy",
+          "metric": "Improvement in workforce planning accuracy",
           "target": "25%"
         },
         {
-          "metric": "100% cultural safety compliance",
+          "metric": "Cultural safety compliance",
           "target": "100%"
         }
       ]
@@ -150,7 +150,7 @@ const STRATEGIC_PLAN_DATA = {
           "target": "5 partnerships"
         },
         {
-          "metric": "20% increase in cross-sector collaboration",
+          "metric": "Increase in cross-sector collaboration",
           "target": "20%"
         }
       ]
@@ -193,11 +193,11 @@ const STRATEGIC_PLAN_DATA = {
       ],
       "successMetrics": [
         {
-          "metric": "25-30% non-government revenue",
+          "metric": "Non-government revenue",
           "target": "27.5%"
         },
         {
-          "metric": "90% stakeholder satisfaction with coordination services",
+          "metric": "Stakeholder satisfaction with coordination services",
           "target": "90%"
         }
       ]

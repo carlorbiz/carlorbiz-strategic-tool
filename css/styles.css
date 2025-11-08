@@ -97,7 +97,7 @@ body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   line-height: 1.6;
-  colour: var(--colour-grey-800);
+  color: var(--colour-grey-800);
   background: var(--colour-grey-50);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -109,7 +109,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.2;
-  colour: var(--colour-grey-900);
+  color: var(--colour-grey-900);
   margin-bottom: var(--spacing-md);
 }
 
@@ -125,13 +125,13 @@ p {
 }
 
 a {
-  colour: var(--colour-primary);
+  color: var(--colour-primary);
   text-decoration: none;
   transition: colour var(--transition-fast);
 }
 
 a:hover {
-  colour: var(--colour-primary-dark);
+  color: var(--colour-primary-dark);
 }
 
 /* ========================================
@@ -145,7 +145,7 @@ a:hover {
 
 .app-header {
   background: linear-gradient(135deg, var(--colour-primary) 0%, var(--colour-primary-dark) 100%);
-  colour: white;
+  color: white;
   padding: var(--spacing-xl) var(--spacing-lg);
   box-shadow: var(--shadow-md);
   position: sticky;
@@ -169,13 +169,13 @@ a:hover {
 }
 
 .header-title h1 {
-  colour: white;
+  color: white;
   font-size: var(--font-size-3xl);
   margin-bottom: var(--spacing-xs);
 }
 
 .header-title p {
-  colour: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.9);
   font-size: var(--font-size-sm);
   margin-bottom: 0;
 }
@@ -220,7 +220,7 @@ a:hover {
 
 .btn-primary {
   background: var(--colour-primary);
-  colour: white;
+  color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -230,18 +230,18 @@ a:hover {
 
 .btn-secondary {
   background: white;
-  colour: var(--colour-primary);
+  color: var(--colour-primary);
   border: 2px solid var(--colour-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--colour-primary);
-  colour: white;
+  color: white;
 }
 
 .btn-success {
   background: var(--colour-success);
-  colour: white;
+  color: white;
 }
 
 .btn-success:hover:not(:disabled) {
@@ -251,7 +251,7 @@ a:hover {
 
 .btn-warning {
   background: var(--colour-orange);
-  colour: white;
+  color: white;
 }
 
 .btn-warning:hover:not(:disabled) {
@@ -273,7 +273,7 @@ a:hover {
 .nav-tab {
   padding: var(--spacing-md) var(--spacing-lg);
   font-weight: 500;
-  colour: var(--colour-grey-600);
+  color: var(--colour-grey-600);
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
@@ -283,13 +283,13 @@ a:hover {
 }
 
 .nav-tab:hover {
-  colour: var(--colour-primary);
+  color: var(--colour-primary);
   background: var(--colour-grey-50);
 }
 
 .nav-tab.active {
-  colour: var(--colour-primary);
-  border-bottom-colour: var(--colour-primary);
+  color: var(--colour-primary);
+  border-bottom-color: var(--colour-primary);
   background: white;
 }
 
@@ -330,12 +330,12 @@ a:hover {
 .card-title {
   font-size: var(--font-size-xl);
   font-weight: 600;
-  colour: var(--colour-grey-900);
+  color: var(--colour-grey-900);
   margin-bottom: 0;
 }
 
 .card-body {
-  colour: var(--colour-grey-700);
+  color: var(--colour-grey-700);
 }
 
 /* ========================================
@@ -363,7 +363,7 @@ a:hover {
 
 .pillar-header {
   padding: var(--spacing-xl);
-  colour: white;
+  color: white;
   text-align: centre;
 }
 
@@ -388,7 +388,7 @@ a:hover {
   font-size: var(--font-size-xl);
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
-  colour: white;
+  color: white;
 }
 
 .pillar-objective {
@@ -418,26 +418,26 @@ a:hover {
 }
 
 .initiative-card.doers {
-  border-left-colour: var(--colour-teal);
+  border-left-color: var(--colour-teal);
 }
 
 .initiative-card.drivers {
-  border-left-colour: var(--colour-primary);
+  border-left-color: var(--colour-primary);
 }
 
 .initiative-card.enablers {
-  border-left-colour: var(--colour-orange);
+  border-left-color: var(--colour-orange);
 }
 
 .initiative-name {
   font-weight: 600;
-  colour: var(--colour-grey-900);
+  color: var(--colour-grey-900);
   margin-bottom: var(--spacing-xs);
 }
 
 .initiative-description {
   font-size: var(--font-size-sm);
-  colour: var(--colour-grey-600);
+  color: var(--colour-grey-600);
   line-height: 1.5;
 }
 
@@ -446,7 +446,7 @@ a:hover {
   gap: var(--spacing-md);
   margin-top: var(--spacing-sm);
   font-size: var(--font-size-xs);
-  colour: var(--colour-grey-500);
+  color: var(--colour-grey-500);
 }
 
 .success-metrics {
@@ -459,7 +459,7 @@ a:hover {
 .metrics-title {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  colour: var(--colour-grey-700);
+  color: var(--colour-grey-700);
   margin-bottom: var(--spacing-md);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -471,12 +471,12 @@ a:hover {
   align-items: centre;
   padding: var(--spacing-sm) 0;
   font-size: var(--font-size-sm);
-  colour: var(--colour-grey-700);
+  color: var(--colour-grey-700);
 }
 
 .metric-value {
   font-weight: 600;
-  colour: var(--colour-success);
+  color: var(--colour-success);
 }
 
 /* ========================================
@@ -504,19 +504,19 @@ a:hover {
 }
 
 .stat-card.warning {
-  border-left-colour: var(--colour-warning);
+  border-left-color: var(--colour-warning);
 }
 
 .stat-card.confidence {
-  border-left-colour: var(--colour-success);
+  border-left-color: var(--colour-success);
 }
 
 .stat-card.opportunity {
-  border-left-colour: var(--colour-primary);
+  border-left-color: var(--colour-primary);
 }
 
 .stat-card.action {
-  border-left-colour: var(--colour-orange);
+  border-left-color: var(--colour-orange);
 }
 
 .stat-value {
@@ -525,14 +525,14 @@ a:hover {
   margin-bottom: var(--spacing-sm);
 }
 
-.stat-value.warning { colour: var(--colour-warning); }
-.stat-value.confidence { colour: var(--colour-success); }
-.stat-value.opportunity { colour: var(--colour-primary); }
-.stat-value.action { colour: var(--colour-orange); }
+.stat-value.warning { color: var(--colour-warning); }
+.stat-value.confidence { color: var(--colour-success); }
+.stat-value.opportunity { color: var(--colour-primary); }
+.stat-value.action { color: var(--colour-orange); }
 
 .stat-label {
   font-size: var(--font-size-sm);
-  colour: var(--colour-grey-600);
+  color: var(--colour-grey-600);
   line-height: 1.4;
 }
 
@@ -550,7 +550,7 @@ a:hover {
 .chart-title {
   font-size: var(--font-size-xl);
   font-weight: 600;
-  colour: var(--colour-grey-900);
+  color: var(--colour-grey-900);
   margin-bottom: var(--spacing-lg);
 }
 
@@ -563,7 +563,7 @@ a:hover {
    ======================================== */
 .insight-callout {
   background: linear-gradient(135deg, var(--colour-primary-light) 0%, var(--colour-primary) 100%);
-  colour: white;
+  color: white;
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   margin: var(--spacing-xl) 0;
@@ -614,7 +614,7 @@ a:hover {
 
 .community-header {
   background: linear-gradient(135deg, var(--colour-primary) 0%, var(--colour-primary-dark) 100%);
-  colour: white;
+  color: white;
   padding: var(--spacing-xl);
 }
 
@@ -622,7 +622,7 @@ a:hover {
   font-size: var(--font-size-2xl);
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
-  colour: white;
+  color: white;
 }
 
 .community-meta {
@@ -642,7 +642,7 @@ a:hover {
 
 .community-section h4 {
   font-size: var(--font-size-lg);
-  colour: var(--colour-primary);
+  color: var(--colour-primary);
   margin-bottom: var(--spacing-md);
 }
 
@@ -661,7 +661,7 @@ a:hover {
   content: "→";
   position: absolute;
   left: 0;
-  colour: var(--colour-primary);
+  color: var(--colour-primary);
   font-weight: bold;
 }
 
@@ -695,7 +695,7 @@ a:hover {
 
 .timeline-year-badge {
   background: var(--colour-primary);
-  colour: white;
+  color: white;
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-md);
   font-weight: 600;
@@ -705,7 +705,7 @@ a:hover {
 .timeline-year-title {
   font-size: var(--font-size-2xl);
   font-weight: 600;
-  colour: var(--colour-grey-900);
+  color: var(--colour-grey-900);
   margin-bottom: 0;
 }
 
@@ -733,7 +733,7 @@ a:hover {
 .milestone-quarter {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  colour: var(--colour-primary);
+  color: var(--colour-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: var(--spacing-xs);
@@ -742,13 +742,13 @@ a:hover {
 .milestone-title {
   font-size: var(--font-size-base);
   font-weight: 600;
-  colour: var(--colour-grey-900);
+  color: var(--colour-grey-900);
   margin-bottom: var(--spacing-sm);
 }
 
 .milestone-description {
   font-size: var(--font-size-sm);
-  colour: var(--colour-grey-600);
+  color: var(--colour-grey-600);
   line-height: 1.5;
 }
 
@@ -760,7 +760,7 @@ a:hover {
   bottom: var(--spacing-lg);
   right: var(--spacing-lg);
   background: var(--colour-grey-800);
-  colour: white;
+  color: white;
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -998,4 +998,11 @@ a:hover {
     margin-bottom: 0.5rem;
     background: #f8f9fa;
     border-radius: 4px;
+}
+
+/* ========================================
+   BOARD VERSION - Hide Workshop Features
+   ======================================== */
+.board-version .workshop-only {
+  display: none !important;
 }

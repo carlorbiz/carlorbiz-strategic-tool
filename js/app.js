@@ -184,9 +184,6 @@ function createPillarColumn(pillar) {
   
   column.innerHTML = `
     <div class="pillar-header ${pillar.id}">
-      <div class="pillar-icon">
-        <i class="fas ${pillar.icon}"></i>
-      </div>
       <h3 class="pillar-title">${pillar.title}</h3>
       <p class="pillar-objective">${pillar.objective}</p>
     </div>
@@ -336,7 +333,7 @@ function loadStakeholderQuotes(quotes) {
     callout.className = 'insight-callout';
     callout.innerHTML = `
       <div class="insight-quote">"${quote.quote}"</div>
-      <div class="insight-attribution">— ${quote.source} | Theme: ${quote.theme}</div>
+      <div class="insight-attribution">— ${quote.attribution} | Theme: ${quote.theme}</div>
     `;
     container.appendChild(callout);
   });
@@ -400,9 +397,7 @@ function createCommunityCard(community) {
         </ul>
       </div>
       
-      <button class="btn btn-primary" onclick="expandCommunity('${community.id}')" style="width: 100%; margin-top: 1rem;">
-        <i class="fas fa-expand"></i> View Full Details
-      </button>
+
     </div>
   `;
   
@@ -410,8 +405,7 @@ function createCommunityCard(community) {
 }
 
 function expandCommunity(communityId) {
-  // This will be enhanced in VERSION 2 with full expansion view
-  alert(`Detailed view for ${communityId} will be available in Workshop Mode`);
+  // Removed - all details are now visible in the card
 }
 
 function initialiseMap() {
@@ -673,7 +667,7 @@ function createTimelineYear(yearData) {
     node.innerHTML = `
       <div class="milestone-quarter">${milestone.quarter}</div>
       <div class="milestone-title">${milestone.title}</div>
-      <div class="milestone-description">${milestone.description}</div>
+      ${milestone.description ? `<div class="milestone-description">${milestone.description}</div>` : ''}
     `;
     
     // Add click handler for detail view (VERSION 2 feature)
