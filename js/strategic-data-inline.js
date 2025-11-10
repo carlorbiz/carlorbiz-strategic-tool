@@ -142,11 +142,11 @@ const STRATEGIC_PLAN_DATA = {
       ],
       "successMetrics": [
         {
-          "metric": "3 major policy reforms influenced",
+          "metric": "Major policy reforms influenced",
           "target": "3 reforms"
         },
         {
-          "metric": "5 multi-regional partnerships established",
+          "metric": "Multi-regional partnerships established",
           "target": "5 partnerships"
         },
         {
