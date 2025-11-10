@@ -97,22 +97,22 @@ function loadExecutiveOverview() {
   const data = STRATEGIC_PLAN_DATA.EXECUTIVE_SUMMARY;
   
   // Load text content
-  document.getElementById('current-state-text').textContent = data.currentState;
-  document.getElementById('future-vision-text').textContent = data.futureVision;
-  document.getElementById('evidence-summary-text').textContent = data.evidence || data.evidenceSummary || '';
+  document.getElementById("current-state-text").textContent = data.currentState;
+  document.getElementById("future-vision-text").textContent = data.futureVision;
+  document.getElementById("evidence-summary-text").textContent = data.evidence || data.evidenceSummary || '';
   
   // Load required decisions
   const decisionsContainer = document.getElementById('required-decisions-list');
   if (data.requiredDecisions && data.requiredDecisions.length > 0) {
     data.requiredDecisions.forEach((decision, index) => {
       const decisionCard = document.createElement('div');
-      decisionCard.className = 'card';
+      decisionCard.className = 'card decision-card'; // Added decision-card class
       decisionCard.style.marginBottom = '1rem';
       
       const priorityColour = decision.priority === 'CRITICAL' || decision.priority === 'critical' ? 'var(--colour-warning)' : 'var(--colour-orange)';
       
       decisionCard.innerHTML = `
-        <div style="display: flex; align-items: start; gap: 1rem;">
+        <div class="decision-header" style="display: flex; align-items: start; gap: 1rem; cursor: pointer;">
           <div style="background: ${priorityColour}; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
             ${index + 1}
           </div>
@@ -125,9 +125,22 @@ function loadExecutiveOverview() {
             </div>
           </div>
         </div>
+        ${decision.detailText ? `<div class="detail-content" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--colour-grey-200);">${marked.parse(decision.detailText)}</div>` : ''}
       `;
       
       decisionsContainer.appendChild(decisionCard);
+
+      // Add click listener for expandable content
+      if (decision.detailText) {
+        decisionCard.querySelector('.decision-header').addEventListener('click', function() {
+          const detailContent = decisionCard.querySelector('.detail-content');
+          if (detailContent.style.display === 'none') {
+            detailContent.style.display = 'block';
+          } else {
+            detailContent.style.display = 'none';
+          }
+        });
+      }
     });
   }
   
@@ -142,6 +155,10 @@ function loadExecutiveOverview() {
     });
   }
 }
+
+// Helper function to render markdown (assuming marked.js is loaded)
+// If marked.js is not loaded, this will be a simple pass-through.
+const marked = window.marked || { parse: (text) => text };
 
 // ========================================
 // THREE PILLARS DASHBOARD
@@ -198,25 +215,42 @@ function createPillarColumn(pillar) {
   
   // Populate initiatives
   const initiativesList = column.querySelector(`#${pillar.id}-initiatives`);
-  pillar.initiatives.forEach(initiative => {
-    const initiativeCard = document.createElement('div');
-    initiativeCard.className = `initiative-card ${pillar.id}`;
-    initiativeCard.innerHTML = `
-      <div class="initiative-name">${initiative.name}</div>
-      <div class="initiative-description">${initiative.description}</div>
-      <div class="initiative-meta">
-        <span><i class="fas fa-calendar"></i> ${initiative.timeline}</span>
-        <span><i class="fas fa-chart-line"></i> ${initiative.impact} impact</span>
-      </div>
-    `;
-    
-    // Add hover tooltip showing connections
-    if (initiative.connections && initiative.connections.length > 0) {
-      initiativeCard.title = `Connected to: ${initiative.connections.join(', ')}`;
-    }
-    
-    initiativesList.appendChild(initiativeCard);
-  });
+	  pillar.initiatives.forEach(initiative => {
+	    const initiativeCard = document.createElement('div');
+	    initiativeCard.className = `initiative-card ${pillar.id}`;
+	    initiativeCard.style.cursor = initiative.detailText ? 'pointer' : 'default';
+	    
+	    initiativeCard.innerHTML = `
+	      <div class="initiative-header">
+	        <div class="initiative-name">${initiative.name}</div>
+	        <div class="initiative-description">${initiative.description}</div>
+	        <div class="initiative-meta">
+	          <span><i class="fas fa-calendar"></i> ${initiative.timeline}</span>
+	          <span><i class="fas fa-chart-line"></i> ${initiative.impact} impact</span>
+	        </div>
+	      </div>
+	      ${initiative.detailText ? `<div class="detail-content" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--colour-grey-200);">${marked.parse(initiative.detailText)}</div>` : ''}
+	    `;
+	    
+	    // Add hover tooltip showing connections
+	    if (initiative.connections && initiative.connections.length > 0) {
+	      initiativeCard.title = `Connected to: ${initiative.connections.join(', ')}`;
+	    }
+	    
+	    // Add click listener for expandable content
+	    if (initiative.detailText) {
+	      initiativeCard.addEventListener('click', function() {
+	        const detailContent = initiativeCard.querySelector('.detail-content');
+	        if (detailContent.style.display === 'none') {
+	          detailContent.style.display = 'block';
+	        } else {
+	          detailContent.style.display = 'none';
+	        }
+	      });
+	    }
+	    
+	    initiativesList.appendChild(initiativeCard);
+	  });
   
   // Populate success metrics
   const metricsList = column.querySelector(`#${pillar.id}-metrics`);
@@ -238,6 +272,14 @@ function createPillarColumn(pillar) {
 // ========================================
 function loadCommunityPulseSurvey() {
   const data = STRATEGIC_PLAN_DATA.EVIDENCE_BASE;
+  
+  // Load executive summary
+  if (data.summary) {
+    const summaryContainer = document.getElementById('community-pulse-summary');
+    if (summaryContainer) {
+      summaryContainer.innerHTML = `<p class="executive-summary">${data.summary}</p>`;
+    }
+  }
   
   // Load stat cards
   loadStatCards(data.surveyStats);
@@ -454,6 +496,14 @@ function initialiseMap() {
 function loadFinancialStrategy() {
   const data = STRATEGIC_PLAN_DATA.FINANCIAL_STRATEGY;
   
+  // Load executive summary
+  if (data.summary) {
+    const summaryContainer = document.getElementById('financial-strategy-summary');
+    if (summaryContainer) {
+      summaryContainer.innerHTML = `<p class="executive-summary">${data.summary}</p>`;
+    }
+  }
+  
   // Load ethical framework text
   document.getElementById('ethical-framework-text').textContent = data.ethicalFramework;
   
@@ -664,21 +714,28 @@ function createTimelineYear(yearData) {
   yearData.milestones.forEach(milestone => {
     const node = document.createElement('div');
     node.className = 'milestone-node';
+    node.style.cursor = milestone.detailText ? 'pointer' : 'default';
+    
     node.innerHTML = `
-      <div class="milestone-quarter">${milestone.quarter}</div>
-      <div class="milestone-title">${milestone.title}</div>
-      ${milestone.description ? `<div class="milestone-description">${milestone.description}</div>` : ''}
+      <div class="milestone-header">
+        <div class="milestone-quarter">${milestone.quarter}</div>
+        <div class="milestone-title">${milestone.title}</div>
+        ${milestone.description ? `<div class="milestone-description">${milestone.description}</div>` : ''}
+      </div>
+      ${milestone.detailText ? `<div class="detail-content" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--colour-grey-200);">${marked.parse(milestone.detailText)}</div>` : ''}
     `;
     
-    // Add click handler for detail view (VERSION 2 feature)
-    node.addEventListener('click', () => {
-      node.style.background = 'white';
-      node.style.boxShadow = 'var(--shadow-md)';
-      setTimeout(() => {
-        node.style.background = '';
-        node.style.boxShadow = '';
-      }, 1000);
-    });
+    // Add click listener for expandable content
+    if (milestone.detailText) {
+      node.addEventListener('click', function() {
+        const detailContent = node.querySelector('.detail-content');
+        if (detailContent.style.display === 'none') {
+          detailContent.style.display = 'block';
+        } else {
+          detailContent.style.display = 'none';
+        }
+      });
+    }
     
     milestonesContainer.appendChild(node);
   });
