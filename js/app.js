@@ -163,8 +163,8 @@ function loadExecutiveOverview() {
 }
 
 // Helper function to render markdown (assuming marked.js is loaded)
-// If marked.js is not loaded, this will be a simple pass-through.
-const marked = window.marked || { parse: (text) => text };
+// The marked.js library is now loaded via CDN in index.html.
+const marked = window.marked;
 
 // ========================================
 // THREE PILLARS DASHBOARD
