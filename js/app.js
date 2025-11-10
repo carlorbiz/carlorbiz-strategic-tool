@@ -134,6 +134,12 @@ function loadExecutiveOverview() {
       if (decision.detailText) {
         decisionCard.querySelector('.decision-header').addEventListener('click', function() {
           const detailContent = decisionCard.querySelector('.detail-content');
+          // Collapse all other open detail-content sections
+          document.querySelectorAll('.decision-card .detail-content').forEach(content => {
+            if (content !== detailContent) {
+              content.style.display = 'none';
+            }
+          });
           if (detailContent.style.display === 'none') {
             detailContent.style.display = 'block';
           } else {
