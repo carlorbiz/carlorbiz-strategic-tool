@@ -293,20 +293,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="js/app.js"></script>
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration removed to eliminate "worker" warning on Cloudflare Pages -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-
         // PWA Install Prompt
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -324,8 +312,6 @@
                 document.getElementById('btn-install-pwa').style.display = 'none';
             }
         });
-
-
     </script>
 </body>
 </html>
