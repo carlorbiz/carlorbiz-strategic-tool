@@ -1006,3 +1006,25 @@ a:hover {
 .board-version .workshop-only {
   display: none !important;
 }
+
+/* ========================================
+   FINAL POLISH: EXPANDED CONTENT STYLING
+   ======================================== */
+.detail-content {
+    /* Ensure the main text size is consistent */
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+}
+
+.detail-content p,
+.detail-content li {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Reduce the size of headings within the expanded content */
+.detail-content h2 { font-size: var(--font-size-xl); }
+.detail-content h3 { font-size: var(--font-size-lg); }
+.detail-content h4 { font-size: var(--font-size-base); }
+.detail-content h5 { font-size: var(--font-size-base); }
+.detail-content h6 { font-size: var(--font-size-base); }
