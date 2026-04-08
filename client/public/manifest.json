@@ -1,0 +1,22 @@
+{
+  "name": "Carlorbiz Strategic Planning Toolkit",
+  "short_name": "Strategic Toolkit",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1B4332",
+  "background_color": "#FAFAF5",
+  "icons": [
+    {
+      "src": "/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "description": "A progressive toolkit for strategic planning: from intelligence briefing through stakeholder engagement to live Board workshops."
+}
