@@ -852,6 +852,7 @@ async function logQuery(
     clarification_options?: TriageOption[] | null;
     turn_number: number;
     accumulated_context: Record<string, unknown>;
+    confidence_score?: number | null;
   }
 ): Promise<string | null> {
   const { data, error } = await supabase
@@ -874,6 +875,7 @@ async function logQuery(
       clarification_options: params.clarification_options ?? null,
       turn_number: params.turn_number,
       accumulated_context: params.accumulated_context,
+      confidence_score: params.confidence_score ?? null,
     })
     .select("id")
     .single();
@@ -886,6 +888,24 @@ async function logQuery(
 }
 
 type GapType = "no_explicit_resource" | "partial_coverage" | "terminology_mismatch";
+
+/**
+ * Heuristic confidence score for nera_queries.confidence_score.
+ * Not a probabilistic confidence — a retrieval-quality proxy admin can sort/filter on.
+ *  - triage:                  null  (clarification, not an answer)
+ *  - no_results:              0.0   (rare; explicit bail)
+ *  - no_chunks_interpreted:   0.35  (answered from embedded worldview, not documents)
+ *  - structured_lookup:       0.85 if ≥5 chunks, else 0.65
+ *  - text_search:             0.4 + 0.05*chunks, capped at 0.8
+ */
+function calculateConfidence(retrievalMethod: string, chunkCount: number): number | null {
+  if (retrievalMethod === "triage") return null;
+  if (retrievalMethod === "no_results") return 0.0;
+  if (retrievalMethod === "no_chunks_interpreted") return 0.35;
+  if (retrievalMethod === "structured_lookup") return chunkCount >= 5 ? 0.85 : 0.65;
+  if (retrievalMethod === "text_search") return Math.min(0.4 + chunkCount * 0.05, 0.8);
+  return null;
+}
 
 function detectContentGapSignal(params: {
   queryText: string;
@@ -928,6 +948,20 @@ function detectContentGapSignal(params: {
       confidence: retentionSignal ? 0.9 : 0.75,
       suggested_resource_type: suggested,
       reason: "NERA reported missing explicit resource despite retrieved supporting sources",
+    };
+  }
+
+  if (params.retrievalMethod === "no_chunks_interpreted") {
+    // Nera answered from the embedded Carlorbiz worldview rather than retrieved chunks.
+    // These are high-value gap signals: they tell us which queries needed interpretation
+    // rather than retrieval, and therefore which content might deserve to be added to
+    // the knowledge base as proper chunks.
+    return {
+      gap_type: "no_explicit_resource",
+      topic: params.classified.topic_keywords?.[0] || params.queryText.slice(0, 80),
+      confidence: 0.6,
+      suggested_resource_type: "page_content",
+      reason: "No chunks retrieved; Nera answered from embedded Carlorbiz worldview. Consider whether this query represents content that should be added to the knowledge base.",
     };
   }
 
@@ -1285,10 +1319,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Determine retrieval method used
+    // Determine retrieval method used.
+    // "no_chunks_interpreted" means: zero chunks retrieved, but the LLM is being
+    // given the chance to reason from the embedded Carlorbiz worldview in the
+    // system prompt rather than bailing with a canned "I don't know" message.
     const retrievalMethod =
       chunks.length === 0
-        ? "no_results"
+        ? "no_chunks_interpreted"
         : classified.pathway || classified.classification || classified.mm_category
           ? "structured_lookup"
           : "text_search";
@@ -1335,6 +1372,7 @@ Deno.serve(async (req) => {
         clarification_options: options,
         turn_number: merged.turnNumber,
         accumulated_context: contextWithChunks,
+        confidence_score: calculateConfidence("triage", chunks.length),
       });
 
       return jsonResponse({
@@ -1370,11 +1408,14 @@ Deno.serve(async (req) => {
       ),
     ];
 
-    // No-chunks case: return JSON immediately
-    // BUT: if system_prompt_override is set (interview/survey mode), skip this —
-    // the LLM should respond using the override prompt, not the no-chunks fallback.
+    // Interview/survey mode uses a fully replaced system prompt — let it through
+    // unchanged regardless of chunk count.
     const hasPromptOverride = isPublicQuery && typeof body.system_prompt_override === "string" && body.system_prompt_override.length > 0;
-    if (chunks.length === 0 && !hasPromptOverride) {
+
+    // Edge case: interview mode with zero chunks — keep the original short-circuit
+    // because the override prompt has its own scripted behaviour that doesn't
+    // need worldview interpretation.
+    if (chunks.length === 0 && hasPromptOverride) {
       const latency = Date.now() - startTime;
       await logQuery(supabase, {
         id: answerQueryId,
@@ -1394,6 +1435,7 @@ Deno.serve(async (req) => {
         clarification_options: null,
         turn_number: merged.turnNumber,
         accumulated_context: merged.accumulatedContext,
+        confidence_score: calculateConfidence("no_results", 0),
       });
 
       return jsonResponse({
@@ -1410,6 +1452,34 @@ Deno.serve(async (req) => {
       // Interview/survey mode: just pass the user's response directly.
       // The system_prompt_override contains all the context needed.
       userMessage = effectiveQuery;
+    } else if (chunks.length === 0) {
+      // ── NO CHUNKS — INTERPRETATION PATH ──
+      // Zero documents matched the query, but Nera is still given the chance to
+      // reason from the embedded Carlorbiz worldview in the system prompt above.
+      // This is the difference between "Nera as document search" and "Nera as
+      // Carlorbiz expert who happens to have documents".
+      userMessage = `[NO REFERENCE DOCUMENTS MATCHED THIS QUERY]
+
+The visitor asked: "${effectiveQuery}"
+
+No specific document chunks were retrieved from the Carlorbiz knowledge base for this query. However, your system prompt above contains the full Carlorbiz worldview, methodology, services, voice, proof points, and the three SCOPE categories.
+
+Apply the SCOPE guidance from your system prompt to determine which category this question falls into:
+
+- **Category 1 (core Carlorbiz)** — Answer fully from the worldview baked into your system prompt. Draw on DAIS, Find Your Stage, Transformation Staging, the systems-outlast-engagements ethos, and the Carlorbiz strategic point of view. Give a substantive 3-5 paragraph answer that demonstrates depth.
+
+- **Category 2 (tangential strategic / organisational expertise)** — Engage warmly. Offer a thoughtful initial perspective from the Carlorbiz worldview. Acknowledge that this isn't an off-the-shelf service tile, but note that Carla is genuinely open to a no-pitch conversation about custom work where her expertise fits the need. Invite them to /contact.
+
+- **Category 3 (genuinely out of scope)** — Decline warmly per the Category 3 template in your system prompt.
+
+When in doubt between Category 2 and Category 3, lean toward Category 2.
+
+CRITICAL RULES for this interpretation path:
+- Do NOT say "I don't have documents on this" or any equivalent. Reason from the embedded worldview, not from the absence of retrieval.
+- Do NOT invent specific dollar figures, named clients, or fabricated case studies. Speak from principle and framing.
+- DO use the Carlorbiz voice: direct, Australian English, substantive, not soft-edges.
+- DO reference the relevant Carlorbiz services or methodology by name where they apply.
+- DO link to the relevant page from the URL content map at the end of your answer if it would help.`;
     } else if (triageContext) {
       const chunkContext = formatChunksForContext(chunks);
       userMessage = `REFERENCE MATERIAL:\n\n${chunkContext}\n\n---\n\nORIGINAL QUESTION: ${triageContext.originalQuery}\nUSER CLARIFIED: ${triageContext.userClarification}${triageContext.resolvedPathway ? `\nPATHWAY: ${triageContext.resolvedPathway}` : ""}\n\nAnswer the original question through the lens of what the user clarified. Be specific and targeted.`;
@@ -1466,6 +1536,7 @@ Deno.serve(async (req) => {
         );
 
         let fullText = "";
+        let streamErrMsg: string | null = null;
 
         try {
           for await (const delta of parseStreamDeltas(llmResponse, _currentLLMConfig!.provider)) {
@@ -1473,14 +1544,51 @@ Deno.serve(async (req) => {
             controller.enqueue(encoder.encode(sseEvent("delta", { text: delta.text })));
           }
         } catch (streamErr) {
-          const errMsg = streamErr instanceof Error ? streamErr.message : String(streamErr);
-          console.error("Stream processing error:", errMsg);
-          controller.enqueue(encoder.encode(sseEvent("error", { message: errMsg })));
+          streamErrMsg = streamErr instanceof Error ? streamErr.message : String(streamErr);
+          console.error("Stream processing error:", streamErrMsg);
+        }
+
+        // ── Defensive fallback: if streaming yielded no text, retry non-streaming ──
+        // The streaming parser only catches text_delta events. If the model returned
+        // text via a different event shape, an error event, or stopped immediately
+        // after content_block_start, fullText will be empty. Retry with the same
+        // inputs via non-streaming callLLM as a safety net so the user gets a real
+        // answer instead of a cryptic "Stream error" message.
+        if (fullText.length === 0) {
+          console.error(
+            `[nera-query] Streaming yielded zero text (streamErr=${streamErrMsg ?? "none"}). Retrying non-streaming.`
+          );
+          try {
+            const fallbackText = await callLLM(
+              _currentLLMConfig!,
+              NERA_SYSTEM_PROMPT,
+              llmMessages,
+              hasPromptOverride ? 4096 : 2048
+            );
+            if (fallbackText && fallbackText.trim().length > 0) {
+              fullText = fallbackText;
+              controller.enqueue(encoder.encode(sseEvent("delta", { text: fallbackText })));
+              console.log("[nera-query] Non-streaming fallback succeeded.");
+            } else {
+              console.error("[nera-query] Non-streaming fallback also returned empty.");
+            }
+          } catch (fallbackErr) {
+            const fbMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+            console.error("[nera-query] Non-streaming fallback failed:", fbMsg);
+          }
+        }
+
+        // If we still have no text after both attempts, surface a graceful message
+        // to the user instead of the cryptic placeholder.
+        if (fullText.length === 0) {
+          const gracefulMsg = "I'm having trouble generating a response right now. Please try rephrasing your question, or email Carla directly at carla@carlorbiz.com.au.";
+          fullText = gracefulMsg;
+          controller.enqueue(encoder.encode(sseEvent("delta", { text: gracefulMsg })));
         }
 
         // Log completed query
         const latency = Date.now() - startTime;
-        const finalResponseText = fullText || "Stream error — no content";
+        const finalResponseText = fullText;
         const loggedQueryId = await logQuery(supabase, {
           id: answerQueryId,
           session_id,
@@ -1499,6 +1607,7 @@ Deno.serve(async (req) => {
           clarification_options: null,
           turn_number: merged.turnNumber,
           accumulated_context: merged.accumulatedContext,
+          confidence_score: calculateConfidence(retrievalMethod, chunks.length),
         });
 
         const gapSignal = detectContentGapSignal({

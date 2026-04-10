@@ -8,5 +8,5 @@
 # Update this SHA only when intentionally re-syncing from upstream.
 
 upstream_repo=https://github.com/carlorbiz/carlorbiz-website
-upstream_sha=86be7c281fc65d5a2b2cde83a2589df063095306
-upstream_synced_at=2026-04-10
+upstream_sha=381c7673b3dd4a4bbad88216a917b3f45e2d7154
+upstream_synced_at=2026-04-11

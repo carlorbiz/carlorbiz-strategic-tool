@@ -18,8 +18,8 @@
 upstream:
   repo: https://github.com/carlorbiz/carlorbiz-website
   local_path: ../carlorbiz-website   # relative to this repo's root
-  pinned_sha: 86be7c281fc65d5a2b2cde83a2589df063095306
-  pinned_at: 2026-04-10
+  pinned_sha: 381c7673b3dd4a4bbad88216a917b3f45e2d7154
+  pinned_at: 2026-04-11
 
 # Files the drift check ignores entirely. Two flavours:
 #   (a) Strategic-tool-only files (engagement code, demo seeds, etc.)

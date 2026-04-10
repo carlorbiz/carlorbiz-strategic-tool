@@ -128,9 +128,16 @@ if (applyPath) {
   }
   // Use git's checkout to grab the upstream HEAD blob and write it into our
   // working copy. We do it via a temp file to avoid touching the upstream's
-  // working tree.
-  const blob = git(upstreamRoot, 'cat-file', '-p', `HEAD:${applyPath}`);
-  if (blob === null) {
+  // working tree. We bypass the normal git() helper because it .trim()s
+  // output, which would strip any trailing newline from the blob and break
+  // byte-for-byte equality with the upstream tree.
+  let blob;
+  try {
+    blob = execFileSync('git', ['cat-file', '-p', `HEAD:${applyPath}`], {
+      cwd: upstreamRoot,
+      encoding: 'utf8',
+    });
+  } catch {
     console.error(`✖ upstream HEAD has no file at: ${applyPath}`);
     process.exit(1);
   }

@@ -62,6 +62,9 @@ export async function streamLLM(
 /**
  * Parse a streaming LLM response into text deltas.
  * Yields { text: string } objects for each chunk of generated text.
+ *
+ * Diagnostic: every event type is counted and logged at end-of-stream so we can
+ * see what the provider actually emitted when text comes back empty.
  */
 export async function* parseStreamDeltas(
   response: Response,
@@ -70,6 +73,8 @@ export async function* parseStreamDeltas(
   const reader = response.body!.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  const eventCounts: Record<string, number> = {};
+  let textDeltaCount = 0;
 
   try {
     while (true) {
@@ -87,15 +92,49 @@ export async function* parseStreamDeltas(
 
         try {
           const parsed = JSON.parse(jsonStr);
+
+          // Diagnostic: count event types we see
+          const eventType = (parsed.type as string) || "unknown";
+          eventCounts[eventType] = (eventCounts[eventType] ?? 0) + 1;
+
+          // Surface explicit error events as exceptions so the caller can react
+          if (provider === "anthropic" && parsed.type === "error") {
+            const errPayload = parsed.error as { type?: string; message?: string } | undefined;
+            throw new Error(
+              `Anthropic stream error: ${errPayload?.type || "unknown"} — ${errPayload?.message || JSON.stringify(parsed)}`
+            );
+          }
+
+          // Surface Anthropic message_delta with stop_reason for diagnostics
+          if (provider === "anthropic" && parsed.type === "message_delta") {
+            const delta = parsed.delta as { stop_reason?: string } | undefined;
+            if (delta?.stop_reason && delta.stop_reason !== "end_turn") {
+              console.warn(`[parseStreamDeltas] Anthropic stop_reason=${delta.stop_reason}`);
+            }
+          }
+
           const text = extractDeltaText(parsed, provider);
-          if (text) yield { text };
-        } catch {
-          // Skip malformed events
+          if (text) {
+            textDeltaCount++;
+            yield { text };
+          }
+        } catch (e) {
+          // Re-throw error events; swallow JSON parse errors only
+          if (e instanceof Error && e.message.startsWith("Anthropic stream error:")) {
+            throw e;
+          }
+          // Skip malformed JSON
         }
       }
     }
   } finally {
     reader.releaseLock();
+    // End-of-stream diagnostic — only logs when we got zero text (the bug case)
+    if (textDeltaCount === 0) {
+      console.error(
+        `[parseStreamDeltas] Zero text deltas. Provider=${provider}. Event counts: ${JSON.stringify(eventCounts)}`
+      );
+    }
   }
 }
 
