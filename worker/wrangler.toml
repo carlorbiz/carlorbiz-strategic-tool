@@ -1,0 +1,11 @@
+name = "carlorbiz-prerender"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# This Worker runs in front of the Cloudflare Pages deployment.
+# It intercepts bot requests and serves pre-rendered HTML snapshots.
+# Human visitors get the normal SPA via pass-through.
+
+# Route configuration — applied via Cloudflare dashboard:
+# carlorbiz.com.au/* → this Worker
+# The Worker fetches pre-rendered files from the same Pages deployment.

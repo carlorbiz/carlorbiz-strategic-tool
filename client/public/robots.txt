@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Sitemap: https://carlorbiz.com.au/sitemap.xml
+
+# Block admin portal from indexing
+Disallow: /admin
+Disallow: /admin/
+Disallow: /login
+Disallow: /hub
+Disallow: /feedback/
+Disallow: /follow-up
+Disallow: /reset-password

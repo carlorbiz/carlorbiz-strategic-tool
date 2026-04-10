@@ -1,0 +1,19 @@
+# WordPress 301 redirects — preserve link equity
+/blog /insights/ 301
+/blog/* /insights/ 301
+/dangers-of-playing-safe/ /insights/ 301
+/dangers-of-playing-safe /insights/ 301
+
+# Trailing slash normalisation
+/about-me /about-me/ 301
+/services /services/ 301
+/contact /contact/ 301
+/insights /insights/ 301
+
+# PENDING — Carla to supply remaining WordPress blog post slugs
+# Add one line per post:
+# /[wordpress-slug]/ /insights/ 301
+# /[wordpress-slug] /insights/ 301
+
+# SPA fallback — must be last
+/* /index.html 200

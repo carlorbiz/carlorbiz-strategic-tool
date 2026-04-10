@@ -1,0 +1,610 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* ── Carlorbiz Brand Palette (from Gamma theme) ────────────────── */
+
+  /* Brand Colors (configure per client) */
+  --color-brand-dark: #2E4A3A;
+  /* Dark slate green (text/dark backgrounds) */
+  --color-brand-primary: #2D7E32;
+  /* Brand Green (Headings/Built For Disruption) */
+  --color-brand-accent: #D5B13A;
+  /* Brand Gold (Accent/Buttons) */
+  --color-brand-accent-hover: #C5A028;
+  /* Brand Gold Hover */
+
+  /* Expanded Carlorbiz Palette (Gamma theme) */
+  --cb-green: #2D7E32;
+  /* Primary heading green */
+  --cb-green-dark: #2E4A3A;
+  /* Body text green */
+  --cb-gold: #D5B13A;
+  /* Accent gold */
+  --cb-gold-dark: #D4A017;
+  /* Secondary gold */
+  --cb-silver: #BFC3CD;
+  /* Mid-tone silver */
+  --cb-silver-dark: #AAAEB6;
+  /* Darker silver */
+  --cb-blue-pale: #C4D5EF;
+  /* Cool pale blue */
+  --cb-link: #6E809C;
+  /* Muted blue-grey for links */
+  --cb-neutral-light: #F5F5F5;
+  /* Off-white neutral */
+
+  /* Gradient variables (multi-stop, matching Gamma config) */
+  --gradient-heading: linear-gradient(90deg, #2D7E32 0%, #AAAEB6 100%);
+  /* Green → silver for h1/h2 headings */
+  --gradient-heading-soft: linear-gradient(90deg, #2D7E32 0%, #6B7C73 50%, #AAB2B7 100%);
+  /* Softer 3-stop variant for hero */
+  --gradient-accent: linear-gradient(90deg, #D5B13A 0%, #BFC3CD 85%, #C4D5EF 100%);
+  /* Gold → silver → pale blue for buttons, accent fills */
+  --gradient-accent-vertical: linear-gradient(180deg, #D5B13A 0%, #BFC3CD 85%, #C4D5EF 100%);
+  /* Same accent gradient, vertical */
+  --gradient-divider: linear-gradient(90deg, transparent 0%, #D5B13A 50%, transparent 100%);
+  /* Gold gradient divider line */
+  --gradient-card-top: linear-gradient(90deg, #D5B13A 0%, #D4A017 50%, #D5B13A 100%);
+  /* Gold top-border accent for cards */
+
+  /* Primary: Brand Primary (for headings, key elements) */
+  --primary: var(--color-brand-primary);
+  --primary-foreground: oklch(1.0 0 0);
+  /* White */
+
+  /* Secondary: Brand Dark */
+  --secondary: var(--color-brand-dark);
+  --secondary-foreground: oklch(1.0 0 0);
+  /* White */
+
+  /* Background: Clean White */
+  --background: oklch(1.0 0 0);
+  /* Pure white for professional look */
+  --foreground: oklch(0.15 0 0);
+  /* Near-black text */
+
+  /* Card: Clean White */
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.15 0 0);
+
+  /* Popover */
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  /* Muted: Light Grey */
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+
+  /* Accent: Brand Accent */
+  --accent: var(--color-brand-accent);
+  --accent-foreground: oklch(1.0 0 0);
+
+  /* Destructive */
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  /* Border & Input */
+  --border: oklch(0.90 0 0);
+  --input: oklch(0.90 0 0);
+  --ring: var(--color-brand-accent);
+
+  /* Charts (Green Tones) */
+  --chart-1: oklch(0.35 0.12 140);
+  --chart-2: oklch(0.55 0.10 140);
+  --chart-3: oklch(0.70 0.08 140);
+  --chart-4: oklch(0.40 0.05 280);
+  --chart-5: oklch(0.45 0.10 140);
+
+  /* Sidebar: Brand Dark */
+  --sidebar: var(--color-brand-dark);
+  --sidebar-foreground: oklch(1.0 0 0);
+  /* White text on dark bg */
+  --sidebar-primary: var(--color-brand-accent);
+  --sidebar-primary-foreground: oklch(1.0 0 0);
+  --sidebar-accent: var(--color-brand-accent);
+  --sidebar-accent-foreground: oklch(1.0 0 0);
+  --sidebar-border: oklch(0.30 0.05 155);
+  /* Subtle lighter border */
+  --sidebar-ring: var(--color-brand-accent);
+
+  /* Fonts */
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --radius: 0.5rem;
+  /* Cleaner, more professional radius */
+}
+
+.dark {
+  --primary: var(--color-blue-700);
+  --primary-foreground: var(--color-blue-50);
+  --sidebar-primary: var(--color-blue-500);
+  --sidebar-primary-foreground: var(--color-blue-50);
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.85 0.005 65);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.85 0.005 65);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.85 0.005 65);
+  --secondary: oklch(0.24 0.006 286.033);
+  --secondary-foreground: oklch(0.7 0.005 65);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.92 0.005 65);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.488 0.243 264.376);
+  --chart-1: var(--color-blue-300);
+  --chart-2: var(--color-blue-500);
+  --chart-3: var(--color-blue-600);
+  --chart-4: var(--color-blue-700);
+  --chart-5: var(--color-blue-800);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.85 0.005 65);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.488 0.243 264.376);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer components {
+  /* ── Carlorbiz reusable gradient utilities ──────────────────────── */
+
+  /* Gradient heading text (green → silver) */
+  .cb-heading-gradient {
+    background-image: var(--gradient-heading);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Soft 3-stop heading gradient (hero variant) */
+  .cb-heading-gradient-soft {
+    background-image: var(--gradient-heading-soft);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Gold → silver → blue accent gradient (buttons, pills, accent fills) */
+  .cb-accent-gradient {
+    background-image: var(--gradient-accent);
+  }
+
+  /* Gold accent divider line — use as a horizontal rule */
+  .cb-divider-gold {
+    height: 1px;
+    background-image: var(--gradient-divider);
+    border: none;
+  }
+
+  /* Gold top border for elevated cards */
+  .cb-card-accent-top {
+    border-top: 4px solid transparent;
+    border-image: var(--gradient-card-top) 1;
+  }
+}
+
+@layer base {
+
+  a {
+    color: var(--color-brand-accent);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-brand-accent-hover);
+    text-decoration: underline;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+
+  /**
+   * Custom font utilities using the theme's font variables
+   */
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   *
+   * This overrides Tailwind's default container behavior to:
+   * - Auto-center content (mx-auto)
+   * - Add responsive horizontal padding
+   * - Set max-width for large screens
+   *
+   * Usage: <div className="container">...</div>
+   *
+   * For custom widths, use max-w-* utilities directly:
+   * <div className="max-w-6xl mx-auto px-4">...</div>
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    /* 16px - mobile padding */
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      /* 24px - tablet padding */
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      /* 32px - desktop padding */
+      padding-right: 2rem;
+      max-width: 1280px;
+      /* Standard content width */
+    }
+  }
+}
+
+/* Prose content styling - comprehensive heading and spacing styles */
+/* Using @layer components for higher specificity over base typography */
+@layer components {
+
+  /* Headings - consistent styling with proper hierarchy */
+  .prose h1 {
+    margin-top: 0;
+    margin-bottom: 0.875em;
+    font-family: var(--font-heading);
+    font-size: 2.25em;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #1A5F2A;
+  }
+
+  .prose h2 {
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+    font-family: var(--font-heading);
+    font-size: 1.5em;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #2E7D32;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prose h3 {
+    margin-top: 1.75em;
+    margin-bottom: 0.5em;
+    font-family: var(--font-heading);
+    font-size: 1.25em;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #333333;
+  }
+
+  .prose h4 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-family: var(--font-heading);
+    font-size: 1.125em;
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.4;
+    color: #555555;
+  }
+
+  .prose h5 {
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+    font-family: var(--font-heading);
+    font-size: 1em;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #2E74B5;
+  }
+
+  .prose h6 {
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+    font-family: var(--font-heading);
+    font-size: 0.875em;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1F4D78;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Scroll margin so headings clear the sticky header when navigated to */
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    scroll-margin-top: 6rem;
+  }
+
+  /* Remove top margin from first heading */
+  .prose>h1:first-child,
+  .prose>h2:first-child,
+  .prose>h3:first-child,
+  .prose>h4:first-child,
+  .prose>h5:first-child,
+  .prose>h6:first-child {
+    margin-top: 0;
+  }
+
+  /* Paragraphs - proper spacing for readability */
+  .prose p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    line-height: 1.75;
+  }
+
+  .prose>p:first-child {
+    margin-top: 0;
+  }
+
+  .prose>p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Lists - consistent indentation and spacing */
+  .prose ul,
+  .prose ol {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.75em;
+  }
+
+  .prose ul {
+    list-style-type: disc;
+  }
+
+  .prose ol {
+    list-style-type: decimal;
+  }
+
+  .prose li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.65;
+  }
+
+  .prose li>p {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+  }
+
+  /* Nested lists */
+  .prose ul ul,
+  .prose ol ol,
+  .prose ul ol,
+  .prose ol ul {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  /* Strong/Bold text */
+  .prose strong {
+    font-weight: 700;
+    color: var(--foreground);
+  }
+
+  /* Emphasis/Italic text */
+  .prose em {
+    font-style: italic;
+  }
+
+  /* Blockquotes - styled as callout boxes, not quotes */
+  .prose blockquote {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    padding: 1em 1.25em;
+    border-left: 4px solid var(--primary);
+    font-style: normal !important;
+    color: var(--foreground);
+    background-color: var(--muted);
+    border-radius: 0 0.5rem 0.5rem 0;
+    quotes: none;
+  }
+
+  /* Remove quotation marks added by typography plugin */
+  .prose blockquote::before,
+  .prose blockquote::after {
+    content: none !important;
+  }
+
+  .prose blockquote p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    font-style: normal !important;
+  }
+
+  .prose blockquote p::before,
+  .prose blockquote p::after {
+    content: none !important;
+  }
+
+  .prose blockquote p:first-child {
+    margin-top: 0;
+  }
+
+  .prose blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Code blocks */
+  .prose code {
+    font-size: 0.875em;
+    font-weight: 500;
+    background-color: var(--muted);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+  }
+
+  .prose pre {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    padding: 1em;
+    background-color: var(--muted);
+    border-radius: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .prose pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  /* Horizontal rules */
+  .prose hr {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    border-color: var(--border);
+  }
+
+  /* Links */
+  .prose a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .prose a:hover {
+    color: var(--primary);
+    opacity: 0.8;
+  }
+
+  /* Tables */
+  .prose table {
+    width: 100%;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    border-collapse: collapse;
+  }
+
+  .prose th,
+  .prose td {
+    padding: 0.75em 1em;
+    border: 1px solid var(--border);
+  }
+
+  .prose th {
+    font-weight: 600;
+    background-color: var(--muted);
+    text-align: left;
+  }
+
+  /* Images */
+  .prose img {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    border-radius: 0.5rem;
+  }
+
+  /* Figures */
+  .prose figure {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+  }
+
+  .prose figcaption {
+    margin-top: 0.75em;
+    font-size: 0.875em;
+    color: var(--muted-foreground);
+    text-align: center;
+  }
+}

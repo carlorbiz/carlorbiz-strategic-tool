@@ -1,0 +1,12 @@
+# Upstream snapshot pin
+#
+# This file records the carlorbiz-website commit that this repo's
+# foundation was snapshotted from. It's used by scripts/check-upstream-drift.mjs
+# (forthcoming) to detect drift between this repo and upstream and to anchor
+# pull-forward syncs.
+#
+# Update this SHA only when intentionally re-syncing from upstream.
+
+upstream_repo=https://github.com/carlorbiz/carlorbiz-website
+upstream_sha=86be7c281fc65d5a2b2cde83a2589df063095306
+upstream_synced_at=2026-04-10
