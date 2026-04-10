@@ -1,0 +1,216 @@
+# Upstream sync manifest
+#
+# Strategic-tool was snapshotted from carlorbiz-website on 10 Apr 2026.
+# This manifest tells scripts/check-upstream-drift.mjs which paths to keep
+# in sync with upstream, which to leave intentionally diverged, and which
+# are local-only additions for the strategic-tool product.
+#
+# Run: npm run sync:check                 (read-only drift report)
+#      npm run sync:apply -- <path>       (pull a specific upstream-ahead file
+#                                          forward into our tree)
+#
+# Globs follow micromatch syntax. First-match wins, in order:
+#   1. local_only  -> never touch (path exists only here OR we deliberately ignore)
+#   2. diverged    -> never touch (we forked it; report drift but don't suggest pulls)
+#   3. shared      -> drift-check tracks
+# Anything not matched by any list is reported as "untracked" so you can decide.
+
+upstream:
+  repo: https://github.com/carlorbiz/carlorbiz-website
+  local_path: ../carlorbiz-website   # relative to this repo's root
+  pinned_sha: 86be7c281fc65d5a2b2cde83a2589df063095306
+  pinned_at: 2026-04-10
+
+# Files the drift check ignores entirely. Two flavours:
+#   (a) Strategic-tool-only files (engagement code, demo seeds, etc.)
+#   (b) Files in upstream that we deliberately don't want here (carlorbiz-website
+#       internal docs, _archive content, vendored cli caches, scratch files).
+local_only:
+  # Drift tooling itself
+  - .upstream-snapshot
+  - .upstream-sync.yml
+  - scripts/check-upstream-drift.mjs
+
+  # Strategic-tool docs
+  - docs/migration-brief.md
+  - docs/upstream-sync.md
+  - docs/supabase-strategy.md
+  - docs/extraction-plan.md
+
+  # Upstream-only stuff we don't want pulled in
+  - _archive/**
+  - CLAUDE_CONTEXT.md
+  - PLAN_UPDATE.md
+  - carlorbiz-webpage.md
+  - carlorbiz-website.md
+  - temp.html
+  - urls.txt
+  - supabase/.temp/**
+
+  # Strategic-tool feature surfaces — added below as we build them:
+  # - client/src/pages/Engagement*.tsx
+  # - client/src/pages/StageEditor.tsx
+  # - client/src/components/engagement/**
+  # - migrations/strategic-tool/**
+  # - supabase/functions/st-*/**
+
+# Files we have intentionally forked from upstream and never want overwritten.
+# Drift-check will tell us if upstream changes them so we can decide whether
+# to lift any of the changes by hand, but it won't suggest sync:apply.
+diverged:
+  # Identity & metadata
+  - README.md
+  - package.json                      # name differs (carlorbiz-strategic-tool)
+  - package-lock.json                 # devDeps will diverge as we add tooling
+  - .env.example                      # may add tool-specific env vars
+
+  # App shell that we'll restructure for engagement routing
+  - client/src/App.tsx                # routes will diverge
+  - client/src/pages/Home.tsx         # landing page will be product-specific
+  - client/src/pages/Admin.tsx        # admin panel will get stage-editor surfaces
+
+  # Carlorbiz-website branded assets we'll replace with strategic-tool branding
+  - client/index.html                 # page title, meta, social tags
+  - client/public/manifest.json       # PWA name and icons
+  - client/public/robots.txt
+  - client/public/sitemap.xml
+  - client/public/hero-logo.png
+  - client/public/icon-192.png
+  - client/public/icon-512.png
+  - client/public/og-image.png
+  - client/public/images/**           # all the carla-*.webp portraits etc.
+  - client/public/prerendered/**      # prerendered Carlorbiz-website pages
+
+  # Carlorbiz-website-specific copy/data/pages we'll either delete or replace
+  - client/src/const.ts
+  - client/src/data/campaigns.ts
+  - client/src/pages/AboutMe.tsx
+  - client/src/pages/CampaignLanding.tsx
+  - client/src/pages/Contact.tsx
+  - client/src/pages/Landing.tsx
+  - client/src/pages/Services.tsx
+  - client/supabase/seeds/services_page_tabs.sql
+
+  # Cloudflare Worker for the carlorbiz-website contact form — strategic-tool
+  # doesn't ship a worker (or will ship its own with a different purpose)
+  - worker/**
+
+  # Schema baseline — we'll layer st_* engagement tables on top
+  - DEFINITIVE_MIGRATION.sql
+
+# Files kept in sync with upstream. Drift here is "upstream got better,
+# consider pulling forward" — the script flags it as upstream_ahead.
+shared:
+  # ── Generic React/UI infra ──
+  - client/src/main.tsx
+  - client/src/components/ui/**           # shadcn primitives, no product logic
+  - client/src/components/ErrorBoundary.tsx
+  - client/src/components/BackToTop.tsx
+  - client/src/components/SEO.tsx
+  - client/src/components/UpdatePrompt.tsx
+  - client/src/components/SidebarNavigation.tsx
+  - client/src/components/TableOfContents.tsx
+  - client/src/components/SearchBar.tsx
+  - client/src/components/ProtectedRoute.tsx
+  - client/src/components/PDFViewer.tsx
+  - client/src/components/Map.tsx
+  - client/src/components/AccordionPage.tsx
+  - client/src/components/DecisionTreeViewer.tsx
+  - client/src/components/WelcomePage.tsx
+  - client/src/components/layout/**
+  - client/src/components/admin/**        # admin UI primitives reused for stage editor
+  - client/src/hooks/**
+
+  # ── Nera chat stack (THE thing we want pulled forward over time) ──
+  - client/src/components/chat/**
+  - client/src/components/viewers/Nera*.tsx
+  - client/src/components/viewers/EnquiryIntake.tsx
+  - client/src/components/viewers/DecisionTreeInlineViewer.tsx
+  - client/src/components/viewers/MarkdownViewer.tsx
+  - client/src/components/viewers/CardGrid.tsx
+  - client/src/components/viewers/VideoViewer.tsx
+  - client/src/components/feedback/**
+
+  # ── Contexts and lib (auth, supabase client, Nera API, CMS plumbing) ──
+  - client/src/contexts/AuthContext.tsx
+  - client/src/contexts/ChatContext.tsx
+  - client/src/contexts/ThemeContext.tsx
+  - client/src/contexts/CMSContext.tsx     # promote to diverged: if we
+                                            # add engagement state to it
+  - client/src/lib/supabase.ts
+  - client/src/lib/neraApi.ts
+  - client/src/lib/utils.ts
+  - client/src/lib/data.ts
+  - client/src/lib/feedbackApi.ts
+  - client/src/lib/insightsApi.ts
+  - client/src/lib/followUpApi.ts
+
+  # ── Generic auth/routing pages reused as-is ──
+  - client/src/pages/Login.tsx
+  - client/src/pages/ResetPassword.tsx
+  - client/src/pages/NotFound.tsx
+  - client/src/pages/NeraDemoPage.tsx
+  - client/src/pages/FeedbackPage.tsx
+  - client/src/pages/FollowUpPage.tsx
+  - client/src/pages/Insights.tsx
+
+  # ── Types ──
+  - client/src/types/auth.ts
+  - client/src/types/chat.ts
+  - client/src/types/cms.ts
+  - shared/**
+
+  # ── Design tokens (the cb-* CSS vars and Poppins/Quicksand setup) ──
+  - client/src/index.css
+
+  # ── Config and tooling ──
+  - components.json
+  - tsconfig.json
+  - tsconfig.node.json
+  - vite.config.ts
+  - vercel.json
+  - .prettierrc
+  - .prettierignore
+  - .gitignore
+  - .gitkeep
+  - client/public/.gitkeep
+  - client/public/_redirects
+  - client/public/sw.js
+  - client/public/pdf.worker.min.mjs
+  - scripts/prerender.mjs
+  - scripts/seed-accordion-tabs.ts
+
+  # ── Edge functions (vendored as reference; deployed by carlorbiz-website CI,
+  #    NOT by strategic-tool — see docs/supabase-strategy.md) ──
+  - supabase/functions/_shared/**
+  - supabase/functions/nera-query/**
+  - supabase/functions/feedback-chat/**
+  - supabase/functions/branch-classify/**
+  - supabase/functions/extract-tab-chunks/**
+  - supabase/functions/convert-pdf-to-markdown/**
+  - supabase/functions/process-pdf/**
+  - supabase/functions/process-media/**
+  - supabase/functions/ingest-url/**
+  - supabase/functions/insight-extract/**
+  - supabase/functions/generate-insights/**
+  - supabase/functions/regenerate-insights/**
+  - supabase/functions/generate-summary/**
+  - supabase/functions/notify-follow-up/**
+
+  # ── Schema migrations from upstream (we layer ours under migrations/strategic-tool/) ──
+  - migrations/**
+  - client/supabase/migrations/**
+  - supabase/migrations/**
+  - supabase_schema.sql
+  - supabase_knowledge_schema.sql
+  - auto-chunking-migration.sql
+  - content-gap-signals-migration.sql
+  - feedback-tables-migration.sql
+  - follow-up-migration.sql
+  - insights-pipeline-migration.sql
+
+  # ── Docs that originated upstream ──
+  - docs/DEPLOYMENT_GUIDE.md
+  - docs/brief-admin-reporting-dashboard.md
+  - docs/brief-url-resource-ingestion.md
+  - docs/media-hosting-requirements.md
