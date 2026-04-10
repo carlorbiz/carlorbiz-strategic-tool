@@ -1,0 +1,18 @@
+# Pointer file for the app-status Claude skill
+#
+# When a Claude session starts in this repo, the app-status skill reads
+# this file to identify which row in the App Development & Maintenance
+# Database belongs to this project. The database itself is the source
+# of truth — this file just tells the skill where to look.
+#
+# See ~/.claude/skills/app-status/SKILL.md for the full procedure.
+
+app_name: carlorbiz-strategic-tool
+notion_database_id: 24b9440556f78036acf5d36a93e55a46
+notion_page_id: 33e94405-56f7-8116-8a0b-f1732f969e01
+notion_page_url: https://www.notion.so/33e9440556f781168a0bf1732f969e01
+
+# Drift sync metadata — the skill reads these to populate Performance Metrics
+upstream_repo: https://github.com/carlorbiz/carlorbiz-website
+upstream_pin_file: .upstream-snapshot
+drift_check_command: npm run sync:check -- --json

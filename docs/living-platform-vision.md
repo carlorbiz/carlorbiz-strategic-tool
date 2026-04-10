@@ -18,7 +18,7 @@ The consulting engagement (discovery interviews → workshops → deliverable) r
 
 **Lived proof points from Carla's own career**:
 
-- **Zuki** — CEO of a company running 135 small retail and café outlets across Australia, all inside hospital government contracts. Governance and compliance for 135 separate small businesses with one CEO, no assistant, three directors, and a couple of accountants. The team wore ten hats each. A tool like this would have been transformational.
+- **Zouki** — CEO of a company running 135 small retail and café outlets across Australia, all inside hospital government contracts. Governance and compliance for 135 separate small businesses with one CEO, no assistant, three directors, and a couple of accountants. The team wore ten hats each. A tool like this would have been transformational.
 - **GPSA** — CEO of a national healthcare peak body. Sole full-time employee for the first 18 months, later a team of 5 FTE made up of many part-timers. A $3M government grant with full reporting obligations, a voluntary board larger than the staff, stakeholder reporting across all levels of government. The tool would have made the role sustainable.
 
 Both contexts — retail-in-healthcare and healthcare-peak-body — had the same structural shape: small permanent team, large accountability surface, heavy cyclical reporting, documents flowing in and out daily, no one with time to synthesise any of it. The tool is designed for that shape. The vertical is secondary.
@@ -199,7 +199,7 @@ A single deployment serves one organisation, but one organisation has multiple a
 
 ### The problem
 
-In the lived examples (§2): the Zuki board saw the same business as the CEO did, but needed a different lens (strategic risk across 135 outlets, aggregate compliance status, fiduciary concerns). The GPSA board and CEO had the same grant obligations but needed different views — the CEO needed operational tracking and drafting help, the board needed governance assurance that nothing was drifting. Funders needed yet another view — narrative reporting against agreed KPIs. Staff needed a fourth view — "what am I supposed to be doing and against which commitment".
+In the lived examples (§2): the Zouki board saw the same business as the CEO did, but needed a different lens (strategic risk across 135 outlets, aggregate compliance status, fiduciary concerns). The GPSA board and CEO had the same grant obligations but needed different views — the CEO needed operational tracking and drafting help, the board needed governance assurance that nothing was drifting. Funders needed yet another view — narrative reporting against agreed KPIs. Staff needed a fourth view — "what am I supposed to be doing and against which commitment".
 
 If the tool makes each audience feel they're getting a purpose-built experience, adoption is easy. If it makes everyone fight through a single admin panel designed for someone else, adoption fails.
 

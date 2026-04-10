@@ -17,7 +17,11 @@ build/
 # IDE and editor files
 .vscode/
 .idea/
-.claude/
+# .claude/ — ignore everything except the project-app.yml pointer file
+# used by the app-status skill (must un-ignore the directory itself first
+# for negation to work)
+.claude/*
+!.claude/project-app.yml
 *.swp
 *.swo
 *~
