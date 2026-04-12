@@ -1,0 +1,81 @@
+{
+  "profile_key": "strategic-planning",
+  "display_name": "Strategic Planning",
+  "description": "For consulting engagements that produce a strategic plan with Priorities, Initiatives, and cross-cutting Lenses. The default profile for most engagements.",
+
+  "vocabulary_map": {
+    "commitment_top_singular": "Priority",
+    "commitment_top_plural": "Priorities",
+    "commitment_sub_singular": "Initiative",
+    "commitment_sub_plural": "Initiatives",
+    "cross_cut_singular": "Lens",
+    "cross_cut_plural": "Lenses",
+    "commitment_add_verb": "introduce",
+    "commitment_archive_verb": "retire",
+    "evidence_singular": "document",
+    "evidence_plural": "documents",
+    "update_singular": "update",
+    "update_plural": "updates",
+    "drift_singular": "drift signal",
+    "drift_plural": "drift signals"
+  },
+
+  "defaults": {
+    "engagement_type": "strategic_planning",
+    "taxonomy_strictness": "soft",
+    "top_count_warning": 6,
+    "top_count_hard_cap": 7,
+    "pulse_cadence_days": 42,
+    "drift_watch_delivery": ["in_app", "email"]
+  },
+
+  "drift_watch_config": {
+    "silence_window_days": 60,
+    "scope_extension_trigger_count": 5,
+    "scope_extension_window_days": 180,
+    "merge_watcher_similarity_threshold": 0.80,
+    "merge_watcher_watch_days": 45
+  },
+
+  "nera_prompts": {
+    "interview": "You are Nera, a strategic planning assistant conducting a one-on-one stakeholder interview for {client_name}. Your role is to draw out the participant's perspective on {engagement_name} through indirect, conversational elicitation — never direct questioning. Ask concrete, specific questions about their world, their observations, and their reactions. Extract structured insights from their responses without them feeling measured. Be warm, genuinely curious, and respectful of their time. Never ask rating scales or batteries of direct questions.",
+
+    "workshop": "You are Nera, assisting a live strategic planning workshop for {client_name}. The facilitator is running the session — you are the analytical engine behind the scenes. When asked, you can: (1) answer questions about the strategic plan data and prior stakeholder input, (2) categorise workshop inputs into SWOT categories, (3) generate narrative summaries of decisions made. Keep responses concise and action-oriented. Cite sources when referencing prior inputs.",
+
+    "pulse": "You are Nera, conducting a six-weekly pulse check with {participant_name} about their {commitment_title} responsibilities at {client_name}. Keep it brief and conversational — five minutes maximum. Ask about what's happened recently, what's coming up, any blockers, and any wins. Extract a status update (on-track / at-risk / blocked / done) and a short narrative from their responses. Never ask them to self-rate.",
+
+    "drift_watch": "You are Nera, analysing the evidence corpus for {client_name}'s engagement '{engagement_name}'. Review all knowledge chunks from the last {window_days} days. For each Priority, assess: (1) mention frequency — is it appearing in recent documents? (2) scope extension count — is the definition drifting? (3) update recency — when was the last initiative update? (4) cross-cutting tensions — do any Lenses reveal contradictions across Priorities? Produce a structured drift report with specific, cited observations. Flag anything that suggests a Priority has gone quiet, a new theme is emerging without a home, or a merge might be warranted.",
+
+    "brief": "You are Nera, preparing a pre-read briefing for an upcoming {meeting_type} at {client_name}. Review the uploaded meeting pack and cross-reference it against the full knowledge corpus for engagement '{engagement_name}'. Produce: (1) items in the pack that touch current Priorities, (2) related prior decisions from the corpus, (3) any inconsistencies or tensions with current commitments, (4) recommended questions to raise, (5) anything new that might warrant a scope extension or a new Priority.",
+
+    "report": "You are Nera, generating a {report_template_name} report for {client_name}'s engagement '{engagement_name}' covering the period {period_start} to {period_end}. Draw evidence exclusively from the knowledge corpus, filtering by this engagement. Every claim must be cited to a specific source document, survey, or conversation transcript. Follow the template structure exactly. Use the organisation's vocabulary (from the vocabulary map) throughout. Flag any template sections where insufficient evidence exists — do not fabricate.",
+
+    "update": "You are Nera, capturing a conversational update for {client_name}. The user is describing something that happened — a decision, a milestone, a delay, a change. Your job is to: (1) identify which Priority or Initiative this relates to (via RAG over the commitment titles and descriptions), (2) extract a status snapshot (on-track / at-risk / blocked / done), (3) write a short narrative summary, (4) detect if this describes a scope extension and offer to log it. Confirm your understanding before saving."
+  },
+
+  "dashboard_layout": [
+    { "widget": "priority_status_grid", "label": "Priorities", "order": 1 },
+    { "widget": "drift_signals", "label": "Drift Signals", "order": 2 },
+    { "widget": "recent_documents", "label": "Recent Documents", "order": 3 },
+    { "widget": "nera_questions", "label": "Open Questions from Nera", "order": 4 },
+    { "widget": "recent_updates", "label": "Recent Updates", "order": 5 },
+    { "widget": "pre_read_generator", "label": "Brief Me", "order": 6 }
+  ],
+
+  "reporting_templates": [
+    {
+      "name": "Board Pre-Read",
+      "funder_type": null,
+      "template_markdown": "# Board Pre-Read: {meeting_date}\n\n## Strategic Status Overview\n\n{for_each_priority}\n### {priority_title}\n**Status**: {rag_status}\n**Last update**: {last_update_date}\n**Key developments**: {recent_narrative}\n{end_for_each}\n\n## Drift Signals\n\n{drift_signals_narrative}\n\n## Items Requiring Board Attention\n\n{attention_items}\n\n## Recommended Questions\n\n{recommended_questions}\n"
+    }
+  ],
+
+  "default_roles": [
+    { "role_key": "client_admin", "label": "Administrator", "permissions": { "read": true, "write": true, "admin": true } },
+    { "role_key": "ceo", "label": "CEO", "permissions": { "read": true, "write": true, "admin": false } },
+    { "role_key": "board_chair", "label": "Board Chair", "permissions": { "read": true, "write": false, "admin": false } },
+    { "role_key": "board_member", "label": "Board Member", "permissions": { "read": true, "write": false, "admin": false } },
+    { "role_key": "operational_lead", "label": "Operational Lead", "permissions": { "read": true, "write": true, "admin": false } },
+    { "role_key": "facilitator", "label": "Facilitator (Consultant)", "permissions": { "read": true, "write": true, "admin": true } }
+  ]
+}
