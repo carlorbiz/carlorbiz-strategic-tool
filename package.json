@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "echo \"VITE_SUPABASE_URL=$VITE_SUPABASE_URL\" && vite build",
+    "build": "vite build",
     "build:prerender": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "check": "tsc --noEmit",
