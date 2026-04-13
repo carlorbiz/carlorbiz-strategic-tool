@@ -35,8 +35,28 @@ Strategic-tool **shares** the carlorbiz-website Supabase project (cost-conscious
 - Multi-LLM via `_shared/llm.ts` (Anthropic / Gemini / OpenRouter)
 - SSE streaming for Nera responses
 
+## Current status (updated 2026-04-13)
+
+Phase 1 (schema) + all Phase 2 sub-phases (routing, admin, documents, dashboard) complete and deployed. The tool has a complete working surface from engagement list through to living dashboard. Schema applied to live Supabase. `st-ingest-document` edge function deployed. Two demo engagements loaded.
+
+Phase 3 is split into two sessions:
+- **Phase 3a** — conversational surfaces + survey ingestion + drift-watch + handover flow. CRITICAL: must use the shared Conversational Interview Engine from `V2_ARCHITECTURE_BRIEF.md` (in knowledge-lake-source). Do not inline chat logic.
+- **Phase 3b** — deliverable composer + report generator + Cloudflare Pages deployment
+
+Fork points in Notion Chat Fork Points DB:
+- Phase 3a: https://www.notion.so/3419440556f781ca9312eeb5e421f696
+- Phase 3b: https://www.notion.so/3419440556f7818cb92cccec8bbe056b
+
+## Cross-PWA findings from this build
+
+1. **The V2 Conversational Interview Engine** (knowledge-lake-source/V2_ARCHITECTURE_BRIEF.md) is the canonical spec for all CJ and Nera conversational surfaces. Any new conversational surface in any repo should build against this spec rather than inlining chat logic. First build targets exec-reclaim CJ-on-Slack.
+2. **Nera/CLAUDE.md strategic-tool entry (lines 88-99) is stale** — still describes the old RWAV static HTML version. Needs rewriting to match the living platform vision. Flagged in Notion.
+3. **The st_* prefix discipline** (docs/supabase-strategy.md) is a reusable pattern for any product that shares a Supabase project temporarily but needs clean extraction later.
+4. **The vocabulary map pattern** (useVocabulary hook + st_ai_config.vocabulary_map) is reusable for any multi-tenant product where different deployments need different UI labels without code changes.
+5. **The upstream drift tooling** (scripts/check-upstream-drift.mjs + .upstream-sync.yml) is reusable for any repo that snapshots from another and wants deliberate pull-forward rather than continuous merge.
+
 ## Getting started
 
-1. Copy `.env.example` to `.env`
+1. Copy `.env.example` to `.env` (point at the carlorbiz-website Supabase project)
 2. `npm install`
 3. `npm run dev`
