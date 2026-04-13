@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node -e \"const fs=require('fs');const lines=Object.entries(process.env).filter(([k])=>k.startsWith('VITE_')).map(([k,v])=>k+'='+v).join('\\n');if(lines)fs.writeFileSync('.env.production',lines);console.log('Wrote',lines.split('\\n').length,'VITE_ vars to .env.production')\" && vite build",
     "build:prerender": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "check": "tsc --noEmit",
