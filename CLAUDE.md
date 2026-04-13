@@ -40,7 +40,7 @@ Strategic-tool **shares** the carlorbiz-website Supabase project (cost-conscious
 Phase 1 (schema) + all Phase 2 sub-phases (routing, admin, documents, dashboard) complete and deployed. The tool has a complete working surface from engagement list through to living dashboard. Schema applied to live Supabase. `st-ingest-document` edge function deployed. Two demo engagements loaded.
 
 Phase 3 is split into two sessions:
-- **Phase 3a** — conversational surfaces + survey ingestion + drift-watch + handover flow. CRITICAL: must use the shared Conversational Interview Engine from `V2_ARCHITECTURE_BRIEF.md` (in knowledge-lake-source). Do not inline chat logic.
+- **Phase 3a** — conversational surfaces + survey ingestion + drift-watch + handover flow + **shared Conversational Interview Engine (Option A — first consumer)**. The engine is built here as `interview-engine/*` edge functions with `ie_*` tables, designed for extraction. Exec-reclaim and all other CJ/Nera surfaces consume the same functions — do NOT rebuild elsewhere. Full spec: `knowledge-lake-source/V2_ARCHITECTURE_BRIEF.md`.
 - **Phase 3b** — deliverable composer + report generator + Cloudflare Pages deployment
 
 Fork points in Notion Chat Fork Points DB:
