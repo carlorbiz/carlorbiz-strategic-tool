@@ -700,7 +700,7 @@ BEGIN
     'st_commitments',
     'st_commitment_change_log',
     'st_documents',
-    'st_commitment_document_links',
+    -- st_commitment_document_links excluded: no engagement_id column, handled manually below
     'st_stakeholder_inputs',
     'st_workshop_decisions',
     'st_workshop_photos',
@@ -832,18 +832,7 @@ CREATE POLICY st_survey_question_summaries_update ON st_survey_question_summarie
 CREATE POLICY st_survey_question_summaries_delete ON st_survey_question_summaries
   FOR DELETE USING (st_is_admin());
 
--- ── st_commitment_document_links: needs special handling (no engagement_id column) ──
--- Already handled in the macro above since it does have a path through
--- commitment_id → st_commitments.engagement_id... but wait, the macro
--- assumed a direct engagement_id column. Let me fix this.
-
--- Drop the macro-generated policies for st_commitment_document_links
-DROP POLICY IF EXISTS st_commitment_document_links_select ON st_commitment_document_links;
-DROP POLICY IF EXISTS st_commitment_document_links_insert ON st_commitment_document_links;
-DROP POLICY IF EXISTS st_commitment_document_links_update ON st_commitment_document_links;
-DROP POLICY IF EXISTS st_commitment_document_links_delete ON st_commitment_document_links;
-
--- The table doesn't have engagement_id directly — access via commitment's engagement
+-- ── st_commitment_document_links: no engagement_id column — access via commitment's engagement ──
 CREATE POLICY st_commitment_document_links_select ON st_commitment_document_links
   FOR SELECT USING (
     st_user_has_engagement_access(
