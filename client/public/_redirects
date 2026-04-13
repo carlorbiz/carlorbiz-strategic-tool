@@ -1,4 +1,7 @@
-# Intentionally empty — Cloudflare Pages serves index.html for all
-# unmatched routes by default (SPA mode). No explicit redirects needed.
-# The /* /index.html 200 pattern triggers Cloudflare's infinite loop
-# detection and gets silently ignored, so we don't use it.
+# SPA fallback for client-side routing
+# Cloudflare Pages rejects /* /index.html 200 as an infinite loop,
+# but accepts /index 200 rewrites for specific path patterns.
+/e/*  /index 200
+/admin  /index 200
+/login  /index 200
+/reset-password  /index 200
