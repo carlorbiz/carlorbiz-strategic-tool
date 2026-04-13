@@ -47,12 +47,21 @@ local_only:
   - urls.txt
   - supabase/.temp/**
 
-  # Strategic-tool feature surfaces — added below as we build them:
-  # - client/src/pages/Engagement*.tsx
-  # - client/src/pages/StageEditor.tsx
-  # - client/src/components/engagement/**
-  # - migrations/strategic-tool/**
-  # - supabase/functions/st-*/**
+  # Strategic-tool feature surfaces
+  - client/src/types/engagement.ts
+  - client/src/lib/engagementApi.ts
+  - client/src/lib/commitmentApi.ts
+  - client/src/lib/documentApi.ts
+  - client/src/contexts/EngagementContext.tsx
+  - client/src/hooks/useVocabulary.ts
+  - client/src/pages/EngagementList.tsx
+  - client/src/pages/EngagementShell.tsx
+  - client/src/pages/engagement/**
+  - client/src/components/engagement/**
+  - migrations/strategic-tool/**
+  - supabase/seed/profiles/**
+  - supabase/seed/demo/**
+  - supabase/functions/st-*/**
 
 # Files we have intentionally forked from upstream and never want overwritten.
 # Drift-check will tell us if upstream changes them so we can decide whether

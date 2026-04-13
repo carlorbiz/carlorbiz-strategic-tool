@@ -69,7 +69,7 @@ This is the working checklist for extracting strategic-tool from the shared carl
 
 *Format: `st-function-name` — purpose — secrets required*
 
-- (none yet — Phase 2+)
+- `st-ingest-document` — accepts a `document_id`, downloads the file from `st-documents` bucket, extracts text (md/txt/csv/json natively, PDF/DOCX with caveats noted in code), runs LLM chunk extraction via `_shared/llm.ts`, writes chunks to `knowledge_chunks` with `source_app='strategic-tool'` + `engagement_id`, generates a one-sentence summary, updates `st_documents` status. Secrets: `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 ### Storage buckets (4)
 

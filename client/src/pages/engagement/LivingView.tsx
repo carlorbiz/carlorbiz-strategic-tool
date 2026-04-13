@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,8 @@ import { CommitmentEditor } from '@/components/engagement/CommitmentEditor';
 import { CommitmentChangeLog } from '@/components/engagement/CommitmentChangeLog';
 import { StageEditor } from '@/components/engagement/StageEditor';
 import { EngagementSettings } from '@/components/engagement/EngagementSettings';
+import { DocumentUpload } from '@/components/engagement/DocumentUpload';
+import { DocumentList } from '@/components/engagement/DocumentList';
 
 /**
  * Living view — the engagement is handed over and the organisation
@@ -14,13 +17,14 @@ import { EngagementSettings } from '@/components/engagement/EngagementSettings';
  * Shown when engagement.status === 'living'.
  *
  * Two layers:
- *   1. Dashboard (default tab) — priority cards, future widgets
+ *   1. Dashboard (default tab) — priority cards, document list, future widgets
  *   2. Admin tabs (for users with admin permissions) — taxonomy editor,
- *      stages, change log, settings, document upload (Phase 2c)
+ *      stages, documents, change log, settings
  */
 export function EngagementLivingView() {
   const { engagement, commitments, isEngagementAdmin } = useEngagement();
   const v = useVocabulary();
+  const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
 
   if (!engagement) return null;
 
@@ -42,6 +46,7 @@ export function EngagementLivingView() {
       <Tabs defaultValue="dashboard">
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           {isEngagementAdmin && (
             <>
               <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
@@ -96,11 +101,17 @@ export function EngagementLivingView() {
             </>
           )}
 
-          <div className="p-4 border rounded-lg bg-muted/50 text-sm text-muted-foreground">
-            The full dashboard with RAG status badges, drift signals, recent documents,
-            and Nera pre-read generator will be built in Phase 2d. Document upload and
-            the chunking pipeline are coming in Phase 2c.
-          </div>
+          {/* Recent documents on the dashboard */}
+          <h2 className="text-lg font-semibold mb-3">Recent {v.evidence_plural}</h2>
+          <DocumentList refreshTrigger={docRefreshTrigger} />
+        </TabsContent>
+
+        {/* ── Documents tab (upload + full list) ────────────── */}
+        <TabsContent value="documents" className="mt-4 space-y-6">
+          {isEngagementAdmin && (
+            <DocumentUpload onUploadComplete={() => setDocRefreshTrigger(n => n + 1)} />
+          )}
+          <DocumentList refreshTrigger={docRefreshTrigger} />
         </TabsContent>
 
         {/* ── Admin tabs ────────────────────────────────────── */}

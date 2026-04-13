@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Badge } from '@/components/ui/badge';
@@ -6,15 +7,18 @@ import { CommitmentEditor } from '@/components/engagement/CommitmentEditor';
 import { CommitmentChangeLog } from '@/components/engagement/CommitmentChangeLog';
 import { StageEditor } from '@/components/engagement/StageEditor';
 import { EngagementSettings } from '@/components/engagement/EngagementSettings';
+import { DocumentUpload } from '@/components/engagement/DocumentUpload';
+import { DocumentList } from '@/components/engagement/DocumentList';
 
 /**
  * Draft view — admin setup surface.
  * Shown when engagement.status === 'draft'.
- * Tabbed: Taxonomy | Stages | Change Log | Settings
+ * Tabbed: Taxonomy | Stages | Documents | Change Log | Settings
  */
 export function EngagementDraftView() {
   const { engagement } = useEngagement();
   const v = useVocabulary();
+  const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
 
   if (!engagement) return null;
 
@@ -34,6 +38,7 @@ export function EngagementDraftView() {
         <TabsList>
           <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
           <TabsTrigger value="stages">Stages</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="changelog">Change Log</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -44,6 +49,11 @@ export function EngagementDraftView() {
 
         <TabsContent value="stages" className="mt-4">
           <StageEditor />
+        </TabsContent>
+
+        <TabsContent value="documents" className="mt-4 space-y-6">
+          <DocumentUpload onUploadComplete={() => setDocRefreshTrigger(n => n + 1)} />
+          <DocumentList refreshTrigger={docRefreshTrigger} />
         </TabsContent>
 
         <TabsContent value="changelog" className="mt-4">
