@@ -9,6 +9,8 @@ import { StageEditor } from '@/components/engagement/StageEditor';
 import { EngagementSettings } from '@/components/engagement/EngagementSettings';
 import { DocumentUpload } from '@/components/engagement/DocumentUpload';
 import { DocumentList } from '@/components/engagement/DocumentList';
+import { SurveyUpload } from '@/components/engagement/SurveyUpload';
+import { SurveyList } from '@/components/engagement/SurveyList';
 
 /**
  * Draft view — admin setup surface.
@@ -19,6 +21,7 @@ export function EngagementDraftView() {
   const { engagement } = useEngagement();
   const v = useVocabulary();
   const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
+  const [surveyRefreshTrigger, setSurveyRefreshTrigger] = useState(0);
 
   if (!engagement) return null;
 
@@ -39,6 +42,7 @@ export function EngagementDraftView() {
           <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
           <TabsTrigger value="stages">Stages</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="surveys">Surveys</TabsTrigger>
           <TabsTrigger value="changelog">Change Log</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -54,6 +58,11 @@ export function EngagementDraftView() {
         <TabsContent value="documents" className="mt-4 space-y-6">
           <DocumentUpload onUploadComplete={() => setDocRefreshTrigger(n => n + 1)} />
           <DocumentList refreshTrigger={docRefreshTrigger} />
+        </TabsContent>
+
+        <TabsContent value="surveys" className="mt-4 space-y-6">
+          <SurveyUpload onUploadComplete={() => setSurveyRefreshTrigger(n => n + 1)} />
+          <SurveyList refreshTrigger={surveyRefreshTrigger} />
         </TabsContent>
 
         <TabsContent value="changelog" className="mt-4">

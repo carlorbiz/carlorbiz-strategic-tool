@@ -170,6 +170,36 @@ export interface StDocument {
   processed_at: string | null;
 }
 
+// ── Surveys ─────────────────────────────────────────────────────────────────
+
+export interface StSurvey {
+  id: string;
+  engagement_id: string;
+  name: string;
+  period: string | null;
+  file_path: string | null;
+  file_type: string | null;
+  status: SurveyStatus;
+  contains_pii: boolean;
+  response_count: number | null;
+  overall_summary: string | null;
+  uploaded_by: string | null;
+  created_at: string;
+  processed_at: string | null;
+}
+
+export interface StSurveyQuestionSummary {
+  id: string;
+  survey_id: string;
+  question_header: string;
+  response_count: number | null;
+  themes: unknown[];
+  sentiment: Record<string, number>;
+  notable_quotes: string[];
+  summary: string | null;
+  created_at: string;
+}
+
 // ── Initiative updates ──────────────────────────────────────────────────────
 
 export interface InitiativeUpdate {

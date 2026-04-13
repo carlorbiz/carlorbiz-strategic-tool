@@ -163,3 +163,28 @@ export async function fetchLatestDriftReport(
   if (error) throw error;
   return data as DriftReport | null;
 }
+
+export async function triggerDriftWatch(engagementId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const neraApiBase = import.meta.env.VITE_SUPABASE_URL;
+  if (!neraApiBase) throw new Error('VITE_SUPABASE_URL not set');
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+
+  const resp = await fetch(`${neraApiBase}/functions/v1/st-drift-watch`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ engagement_id: engagementId }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Drift watch failed (${resp.status}): ${body}`);
+  }
+}

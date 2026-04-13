@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
+import { triggerDriftWatch } from '@/lib/engagementApi';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { Loader2, Radar } from 'lucide-react';
 import { CommitmentEditor } from '@/components/engagement/CommitmentEditor';
 import { CommitmentChangeLog } from '@/components/engagement/CommitmentChangeLog';
 import { StageEditor } from '@/components/engagement/StageEditor';
 import { EngagementSettings } from '@/components/engagement/EngagementSettings';
 import { DocumentUpload } from '@/components/engagement/DocumentUpload';
 import { DocumentList } from '@/components/engagement/DocumentList';
+import { SurveyUpload } from '@/components/engagement/SurveyUpload';
+import { SurveyList } from '@/components/engagement/SurveyList';
+import { ConversationalUpdate } from '@/components/engagement/ConversationalUpdate';
 import { PriorityStatusGrid } from '@/components/engagement/dashboard/PriorityStatusGrid';
 import { DriftSignals } from '@/components/engagement/dashboard/DriftSignals';
 import { RecentUpdates } from '@/components/engagement/dashboard/RecentUpdates';
@@ -23,6 +30,24 @@ export function EngagementLivingView() {
   const { engagement, commitments, isEngagementAdmin } = useEngagement();
   const v = useVocabulary();
   const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
+  const [surveyRefreshTrigger, setSurveyRefreshTrigger] = useState(0);
+  const [driftRunning, setDriftRunning] = useState(false);
+  const [driftRefresh, setDriftRefresh] = useState(0);
+
+  const handleRunDriftWatch = async () => {
+    if (!engagement) return;
+    setDriftRunning(true);
+    try {
+      await triggerDriftWatch(engagement.id);
+      toast.success('Drift watch complete — signals updated');
+      setDriftRefresh(n => n + 1);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Drift watch failed';
+      toast.error(msg);
+    } finally {
+      setDriftRunning(false);
+    }
+  };
 
   if (!engagement) return null;
 
@@ -44,6 +69,7 @@ export function EngagementLivingView() {
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="surveys">Surveys</TabsTrigger>
           {isEngagementAdmin && (
             <>
               <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
@@ -72,10 +98,30 @@ export function EngagementLivingView() {
           )}
 
           {/* Drift signals */}
-          <DriftSignals />
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold">{v.drift_plural ?? 'Drift Signals'}</h3>
+            {isEngagementAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRunDriftWatch}
+                disabled={driftRunning}
+              >
+                {driftRunning ? (
+                  <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Running...</>
+                ) : (
+                  <><Radar className="w-3 h-3 mr-1" /> Run Drift Watch</>
+                )}
+              </Button>
+            )}
+          </div>
+          <DriftSignals key={driftRefresh} />
 
           {/* Nera's open questions (only shows if there are any) */}
           <NeraQuestions />
+
+          {/* Conversational update */}
+          <ConversationalUpdate />
 
           {/* Recent updates */}
           <RecentUpdates />
@@ -93,6 +139,14 @@ export function EngagementLivingView() {
             <DocumentUpload onUploadComplete={() => setDocRefreshTrigger(n => n + 1)} />
           )}
           <DocumentList refreshTrigger={docRefreshTrigger} />
+        </TabsContent>
+
+        {/* ── Surveys tab ──────────────────────────────────── */}
+        <TabsContent value="surveys" className="mt-4 space-y-6">
+          {isEngagementAdmin && (
+            <SurveyUpload onUploadComplete={() => setSurveyRefreshTrigger(n => n + 1)} />
+          )}
+          <SurveyList refreshTrigger={surveyRefreshTrigger} />
         </TabsContent>
 
         {/* ── Admin tabs ────────────────────────────────────── */}

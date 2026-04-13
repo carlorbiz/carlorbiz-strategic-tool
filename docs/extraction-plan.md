@@ -70,6 +70,17 @@ This is the working checklist for extracting strategic-tool from the shared carl
 *Format: `st-function-name` — purpose — secrets required*
 
 - `st-ingest-document` — accepts a `document_id`, downloads the file from `st-documents` bucket, extracts text (md/txt/csv/json natively, PDF/DOCX with caveats noted in code), runs LLM chunk extraction via `_shared/llm.ts`, writes chunks to `knowledge_chunks` with `source_app='strategic-tool'` + `engagement_id`, generates a one-sentence summary, updates `st_documents` status. Secrets: `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- `st-ingest-survey` — accepts a `survey_id`, downloads the file from `st-surveys` bucket, parses Excel (SheetJS)/CSV/JSON, normalises into `st_survey_responses`, runs per-question LLM analysis → `st_survey_question_summaries`, overall LLM summary → `st_surveys.overall_summary`, chunks into `knowledge_chunks` with `source_type='survey'`. Secrets: same as st-ingest-document.
+- `st-drift-watch` — accepts `engagement_id`, analyses knowledge_chunks + scope extensions + initiative updates over a configurable window, LLM synthesis into structured drift signals, writes to `st_drift_reports`. Secrets: same as st-ingest-document.
+
+### Interview Engine edge functions (shared, product-agnostic — ie_* prefix)
+
+*These extract independently of st_* functions. First consumer: strategic-tool. Second: exec-reclaim.*
+
+- `interview-engine-select-prompt` — given user state + coverage gaps + prompt library, selects the contextually best next indirect prompt. Uses LLM for disambiguation among top candidates. Secrets: `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+- `interview-engine-extract` — given conversation history + user message + extraction schema, infers structured data with confidence scores and quoted justifications, writes messages to `ie_messages`, updates `ie_prompt_coverage`. Secrets: same.
+- `interview-engine-evaluate-state` — given conversation history, evaluates user capacity (length, specificity, affect, engagement quality), upserts `ie_user_state` with capacity_score and sentiment_trend. Secrets: same.
+- `interview-engine-summarise-session` — given a completed conversation, produces a summary and extracts key entities, updates `ie_conversations.summary`, upserts `ie_entity_memory`. Secrets: same.
 
 ### Storage buckets (4)
 
@@ -91,6 +102,19 @@ Exceptions:
 - `st_scope_extensions`, `st_survey_responses`, `st_survey_question_summaries`, `st_commitment_document_links` — access resolved through parent table FK chain
 - Storage bucket policies — gated by `auth.role() = 'authenticated'` and bucket_id
 
+### Interview Engine tables (6) — ie_* prefix
+
+*These extract independently of st_* tables. They are the shared Conversational Interview Engine, consumed by strategic-tool (first consumer, Option A, 13 Apr 2026) and exec-reclaim (second consumer via same edge functions). Migration: `migrations/strategic-tool/0003_interview_engine.sql`.*
+
+- `ie_conversations` — conversation sessions: user_id, product_id, engagement_id (nullable), goal, cadence_mode, status, summary
+- `ie_messages` — individual messages: conversation_id, role, content, extracted_data (JSONB), confidence_scores, justifications
+- `ie_user_state` — per-user capacity model: user_id, product_id (UNIQUE), engagement_mode, capacity_score, sentiment_trend
+- `ie_prompt_coverage` — per-user per-conversation field coverage: user_id, product_id, field_name, last_confidence, decay_rate_days
+- `ie_prompt_library` — prompt definitions: product_id, prompt_text, elicits_dimensions (TEXT[]), cadence_modes, energy_level_fit
+- `ie_entity_memory` — cross-session memory: user_id, product_id, entity_type, entity_value, mention_count
+
+RLS pattern: `auth.uid() = user_id` on all user-scoped tables. `ie_prompt_library` is read-all, write-admin.
+
 ### Extensions to shared tables
 
 - `knowledge_chunks` gains `source_app TEXT` and `engagement_id UUID` columns
@@ -100,7 +124,7 @@ Exceptions:
   - **NOTE**: existing RLS policies on knowledge_chunks are NOT modified (backward compat with carlorbiz-website's public read)
   - **At extraction**: the new project's knowledge_chunks gets stricter RLS
 
-### Triggers (7)
+### Triggers (8)
 
 - `trg_st_engagements_updated_at`
 - `trg_st_engagement_stages_updated_at`
@@ -109,6 +133,7 @@ Exceptions:
 - `trg_st_compliance_reports_updated_at`
 - `trg_st_reporting_templates_updated_at`
 - `trg_st_ai_config_updated_at`
+- `trg_ie_user_state_updated_at` — reuses `st_set_updated_at()` function
 
 ### Migrations
 
@@ -116,6 +141,7 @@ All migration files under `migrations/strategic-tool/` are extracted as-is.
 
 - `0001_init.sql` — all st_* tables, enums, RLS, indexes, storage buckets, helper functions, triggers
 - `0002_extend_knowledge_chunks.sql` — source_app + engagement_id columns on shared table
+- `0003_interview_engine.sql` — all ie_* tables (6), RLS, indexes, triggers for the shared Conversational Interview Engine
 
 ### Frontend env vars
 

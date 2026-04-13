@@ -37,7 +37,14 @@ Strategic-tool **shares** the carlorbiz-website Supabase project (cost-conscious
 
 ## Current status (updated 2026-04-13)
 
-Phase 1 (schema) + all Phase 2 sub-phases (routing, admin, documents, dashboard) complete and deployed. The tool has a complete working surface from engagement list through to living dashboard. Schema applied to live Supabase. `st-ingest-document` edge function deployed. Two demo engagements loaded.
+Phase 1 (schema) + all Phase 2 sub-phases (routing, admin, documents, dashboard) complete and deployed. Phase 3a in progress: survey ingestion, drift-watch, shared Conversational Interview Engine (Option A — first consumer), conversational update mode all built. Pulse check system, handover flow, engagement wizard still pending.
+
+**New in Phase 3a:**
+- `st-ingest-survey` edge function + SurveyUpload/SurveyList UI + surveyApi.ts
+- `st-drift-watch` edge function + "Run Drift Watch" button in LivingView dashboard
+- Interview engine: 6 ie_* tables (migration 0003), 4 edge functions (select-prompt, extract, evaluate-state, summarise-session), shared helpers, client API, TypeScript types
+- Conversational update mode: ConversationalUpdate component + useConversationalUpdate hook in LivingView dashboard
+- All new objects documented in docs/extraction-plan.md
 
 Phase 3 is split into two sessions:
 - **Phase 3a** — conversational surfaces + survey ingestion + drift-watch + handover flow + **shared Conversational Interview Engine (Option A — first consumer)**. The engine is built here as `interview-engine/*` edge functions with `ie_*` tables, designed for extraction. Exec-reclaim and all other CJ/Nera surfaces consume the same functions — do NOT rebuild elsewhere. Full spec: `knowledge-lake-source/V2_ARCHITECTURE_BRIEF.md`.
