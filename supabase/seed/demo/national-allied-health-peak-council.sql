@@ -118,11 +118,11 @@ INSERT INTO st_commitments (id, engagement_id, kind, title, description, order_i
 -- ─── Seed engagement stages ─────────────────────────────────────────────────
 
 INSERT INTO st_engagement_stages (id, engagement_id, title, stage_type, status, order_index) VALUES
-  ('s0000001-0002-4000-8000-000000000001', 'a1b2c3d4-0002-4000-8000-000000000001',
+  ('50000001-0002-4000-8000-000000000001', 'a1b2c3d4-0002-4000-8000-000000000001',
    'Stakeholder Interviews — Board & Staff', 'interview', 'closed', 1),
-  ('s0000001-0002-4000-8000-000000000002', 'a1b2c3d4-0002-4000-8000-000000000001',
+  ('50000001-0002-4000-8000-000000000002', 'a1b2c3d4-0002-4000-8000-000000000001',
    'Vision & Priorities Workshop', 'workshop', 'closed', 2),
-  ('s0000001-0002-4000-8000-000000000003', 'a1b2c3d4-0002-4000-8000-000000000001',
+  ('50000001-0002-4000-8000-000000000003', 'a1b2c3d4-0002-4000-8000-000000000001',
    'Grant Alignment Review', 'checkpoint', 'closed', 3);
 
 

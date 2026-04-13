@@ -120,7 +120,7 @@ INSERT INTO st_commitments (id, engagement_id, kind, title, description, order_i
 INSERT INTO st_engagement_stages (
   id, engagement_id, title, stage_type, status, order_index
 ) VALUES (
-  's0000001-0001-4000-8000-000000000001',
+  '50000001-0001-4000-8000-000000000001',
   'a1b2c3d4-0001-4000-8000-000000000001',
   'Foundation Workshop — Board Strategic Planning Day',
   'workshop',
