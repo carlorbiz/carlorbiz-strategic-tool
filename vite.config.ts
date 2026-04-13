@@ -20,4 +20,12 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
   },
+  // Explicitly forward VITE_* from process.env into import.meta.env.
+  // Cloudflare Pages sets build-time env vars on process.env but Vite
+  // doesn't always pick them up when envDir differs from root.
+  define: {
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL ?? ''),
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY ?? ''),
+    'import.meta.env.VITE_NERA_API_URL': JSON.stringify(process.env.VITE_NERA_API_URL ?? ''),
+  },
 });
