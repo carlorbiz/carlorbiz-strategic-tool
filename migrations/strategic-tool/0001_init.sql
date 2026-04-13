@@ -694,7 +694,7 @@ DECLARE
 BEGIN
   FOR tbl IN SELECT unnest(ARRAY[
     'st_engagement_stages',
-    'st_stage_participants',
+    -- st_stage_participants excluded: no engagement_id column, handled manually below
     'st_engagement_roles',
     'st_engagement_profiles',
     'st_commitments',
@@ -744,6 +744,28 @@ CREATE POLICY st_user_engagement_roles_update ON st_user_engagement_roles
   FOR UPDATE USING (st_is_admin());
 
 CREATE POLICY st_user_engagement_roles_delete ON st_user_engagement_roles
+  FOR DELETE USING (st_is_admin());
+
+-- ── st_stage_participants: access via stage's engagement ──
+
+CREATE POLICY st_stage_participants_select ON st_stage_participants
+  FOR SELECT USING (
+    st_user_has_engagement_access(
+      (SELECT engagement_id FROM st_engagement_stages WHERE id = stage_id)
+    )
+  );
+
+CREATE POLICY st_stage_participants_insert ON st_stage_participants
+  FOR INSERT WITH CHECK (
+    st_user_has_engagement_access(
+      (SELECT engagement_id FROM st_engagement_stages WHERE id = stage_id)
+    )
+  );
+
+CREATE POLICY st_stage_participants_update ON st_stage_participants
+  FOR UPDATE USING (st_is_admin());
+
+CREATE POLICY st_stage_participants_delete ON st_stage_participants
   FOR DELETE USING (st_is_admin());
 
 -- ── st_scope_extensions: access via commitment's engagement ──
