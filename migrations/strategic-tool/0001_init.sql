@@ -638,7 +638,7 @@ RETURNS BOOLEAN AS $$
   )
   OR EXISTS (
     SELECT 1 FROM user_profiles
-    WHERE id = auth.uid()
+    WHERE user_id = auth.uid()
       AND role = 'internal_admin'
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
@@ -648,7 +648,7 @@ CREATE OR REPLACE FUNCTION st_is_admin()
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM user_profiles
-    WHERE id = auth.uid()
+    WHERE user_id = auth.uid()
       AND role = 'internal_admin'
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
