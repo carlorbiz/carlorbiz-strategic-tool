@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "printenv | grep ^VITE_ > .env.production 2>/dev/null || true; vite build --mode production",
     "build:prerender": "vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "check": "tsc --noEmit",
