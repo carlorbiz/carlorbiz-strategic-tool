@@ -226,6 +226,75 @@ export interface DriftReport {
   created_at: string;
 }
 
+// ── Reporting templates ────────────────────────────────────────────────────
+
+export interface ReportingTemplate {
+  id: string;
+  engagement_id: string | null;
+  name: string;
+  description: string | null;
+  template_markdown: string;
+  funder_type: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Compliance reports ─────────────────────────────────────────────────────
+
+export interface ComplianceReport {
+  id: string;
+  engagement_id: string;
+  template_id: string | null;
+  title: string;
+  period_start: string | null;
+  period_end: string | null;
+  content_markdown: string | null;
+  citations: ReportCitation[];
+  status: ReportStatus;
+  delivered_at: string | null;
+  delivery_metadata: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReportCitation {
+  claim: string;
+  source_chunk_id: string;
+  source_document: string | null;
+  source_type: string | null;
+}
+
+// ── Engagement deliverables ────────────────────────────────────────────────
+
+export interface EngagementDeliverable {
+  id: string;
+  engagement_id: string;
+  title: string;
+  content_markdown: string | null;
+  content_structured: Record<string, unknown>;
+  render_mode: 'full' | 'summary' | 'executive';
+  is_published: boolean;
+  published_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Stage insights ─────────────────────────────────────────────────────────
+
+export interface StageInsight {
+  id: string;
+  stage_id: string;
+  engagement_id: string;
+  themes: Array<{ title: string; description: string; strength: string }>;
+  tensions: Array<{ description: string; between: string[] }>;
+  emerging_commitments: Array<{ title: string; kind: string; rationale: string }>;
+  recommendations: Array<{ action: string; rationale: string; priority: string }>;
+  narrative: string | null;
+  created_at: string;
+}
+
 // ── Default vocabulary (used as fallback when no config is loaded) ───────────
 
 export const DEFAULT_VOCABULARY: VocabularyMap = {

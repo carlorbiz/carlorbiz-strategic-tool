@@ -1,47 +1,81 @@
 import { useEngagement } from '@/contexts/EngagementContext';
+import { useVocabulary } from '@/hooks/useVocabulary';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HandoverFlow } from '@/components/engagement/HandoverFlow';
+import { ReportGenerator } from '@/components/engagement/ReportGenerator';
+import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEditor';
+import { CommitmentEditor } from '@/components/engagement/CommitmentEditor';
+import { DocumentList } from '@/components/engagement/DocumentList';
+import { EngagementSettings } from '@/components/engagement/EngagementSettings';
 
 /**
- * Delivered view — the deliverable has been produced but the engagement
- * hasn't yet transitioned to living mode.
+ * Delivered view — the deliverable has been produced and the engagement
+ * is ready for handover to the client.
  * Shown when engagement.status === 'delivered'.
- *
- * The deliverable composer and the deliverable renderer will be built
- * in Phase 3. For now, this is a placeholder that shows the engagement
- * metadata and a note about the handover flow.
  */
 export function EngagementDeliveredView() {
   const { engagement, isEngagementAdmin } = useEngagement();
+  const v = useVocabulary();
 
   if (!engagement) return null;
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
           {engagement.name}
         </h1>
         <Badge variant="secondary">Delivered</Badge>
       </div>
-
       {engagement.client_name && (
         <p className="text-muted-foreground mb-6">{engagement.client_name}</p>
       )}
 
-      <div className="mt-4 p-4 border rounded-lg bg-muted/50 text-sm text-muted-foreground">
-        <p className="mb-2">
-          This engagement has been <strong>delivered</strong>. The deliverable document
-          has been produced and is ready for review.
-        </p>
+      <Tabs defaultValue="handover">
+        <TabsList>
+          <TabsTrigger value="handover">Handover</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          {isEngagementAdmin && (
+            <>
+              <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </>
+          )}
+        </TabsList>
+
+        {/* ── Handover tab ─────────────────────────────── */}
+        <TabsContent value="handover" className="mt-4">
+          <HandoverFlow />
+        </TabsContent>
+
+        {/* ── Reports tab ──────────────────────────────── */}
+        <TabsContent value="reports" className="mt-4">
+          <ReportGenerator />
+        </TabsContent>
+
+        {/* ── Documents tab ────────────────────────────── */}
+        <TabsContent value="documents" className="mt-4">
+          <DocumentList refreshTrigger={0} />
+        </TabsContent>
+
+        {/* ── Admin tabs ───────────────────────────────── */}
         {isEngagementAdmin && (
-          <p>
-            When the client is ready to begin using the tool independently, transition
-            this engagement to <strong>living</strong> mode. This will hand over ownership
-            to the client admin and open the document upload, drift-watch, and
-            reporting surfaces. The handover flow will be built in Phase 3.
-          </p>
+          <>
+            <TabsContent value="taxonomy" className="mt-4">
+              <CommitmentEditor />
+            </TabsContent>
+            <TabsContent value="templates" className="mt-4">
+              <ReportTemplateEditor />
+            </TabsContent>
+            <TabsContent value="settings" className="mt-4">
+              <EngagementSettings />
+            </TabsContent>
+          </>
         )}
-      </div>
+      </Tabs>
     </div>
   );
 }

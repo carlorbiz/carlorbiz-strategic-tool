@@ -20,6 +20,8 @@ import { PriorityStatusGrid } from '@/components/engagement/dashboard/PrioritySt
 import { DriftSignals } from '@/components/engagement/dashboard/DriftSignals';
 import { RecentUpdates } from '@/components/engagement/dashboard/RecentUpdates';
 import { NeraQuestions } from '@/components/engagement/dashboard/NeraQuestions';
+import { ReportGenerator } from '@/components/engagement/ReportGenerator';
+import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEditor';
 
 /**
  * Living view — the engagement is handed over and the organisation
@@ -70,11 +72,13 @@ export function EngagementLivingView() {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
           {isEngagementAdmin && (
             <>
               <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
               <TabsTrigger value="stages">Stages</TabsTrigger>
               <TabsTrigger value="changelog">Change Log</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </>
           )}
@@ -149,6 +153,11 @@ export function EngagementLivingView() {
           <SurveyList refreshTrigger={surveyRefreshTrigger} />
         </TabsContent>
 
+        {/* ── Reports tab ───────────────────────────────────── */}
+        <TabsContent value="reports" className="mt-4">
+          <ReportGenerator />
+        </TabsContent>
+
         {/* ── Admin tabs ────────────────────────────────────── */}
         {isEngagementAdmin && (
           <>
@@ -160,6 +169,9 @@ export function EngagementLivingView() {
             </TabsContent>
             <TabsContent value="changelog" className="mt-4">
               <CommitmentChangeLog />
+            </TabsContent>
+            <TabsContent value="templates" className="mt-4">
+              <ReportTemplateEditor />
             </TabsContent>
             <TabsContent value="settings" className="mt-4">
               <EngagementSettings />

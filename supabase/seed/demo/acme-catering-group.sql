@@ -129,9 +129,79 @@ INSERT INTO st_engagement_stages (
 );
 
 
+-- ─── Reporting templates ────────────────────────────────────────────────────
+
+INSERT INTO st_reporting_templates (
+  id, engagement_id, name, description, template_markdown, funder_type
+) VALUES (
+  '70000001-0001-4000-8000-000000000001',
+  'a1b2c3d4-0001-4000-8000-000000000001',
+  'Board Pre-Read',
+  'Strategic status overview for quarterly board meetings. Covers each Priority with RAG status, drift signals, and recommended questions.',
+  '# Board Pre-Read: {meeting_date}
+
+## Strategic Status Overview
+
+{for_each_priority}
+### {priority_title}
+**Status**: {rag_status}
+**Last update**: {last_update_date}
+**Key developments**: {recent_narrative}
+{end_for_each}
+
+## Drift Signals
+
+{drift_signals_narrative}
+
+## Items Requiring Board Attention
+
+{attention_items}
+
+## Recommended Questions
+
+{recommended_questions}
+',
+  NULL
+), (
+  '70000001-0001-4000-8000-000000000002',
+  'a1b2c3d4-0001-4000-8000-000000000001',
+  'Quarterly Compliance Summary',
+  'Summary report for contract KPI compliance across all outlets. Designed for government contract managers.',
+  '# Quarterly Compliance Summary: {period_start} to {period_end}
+
+## Executive Summary
+
+{executive_summary}
+
+## KPI Performance by Priority
+
+{for_each_priority}
+### {priority_title}
+**Compliance status**: {rag_status}
+**Evidence base**: {evidence_count} documents, {survey_count} surveys
+**Key findings**: {findings_narrative}
+{end_for_each}
+
+## Risk Register
+
+{risk_items}
+
+## Recommendations
+
+{recommendations}
+
+## Appendix: Evidence Sources
+
+{source_list}
+',
+  'Government contract quarterly'
+);
+
+
 -- =============================================================================
 -- End of Acme Catering Group demo seed.
 -- This engagement is in 'living' status with 5 Priorities, 10 Initiatives,
--- 3 Lenses, and 1 closed workshop stage. It's ready for document uploads,
--- pulse checks, and drift-watch runs.
+-- 3 Lenses, 1 closed workshop stage, and 2 reporting templates (Board Pre-Read
+-- and Quarterly Compliance Summary). It's ready for document uploads,
+-- pulse checks, drift-watch runs, and report generation.
 -- =============================================================================

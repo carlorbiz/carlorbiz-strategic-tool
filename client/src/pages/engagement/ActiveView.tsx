@@ -2,6 +2,7 @@ import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { DeliverableComposer } from '@/components/engagement/DeliverableComposer';
 
 /**
  * Active view — the engagement is in progress.
@@ -14,7 +15,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
  * stage list with status badges.
  */
 export function EngagementActiveView() {
-  const { engagement, stages, commitments } = useEngagement();
+  const { engagement, stages, commitments, isEngagementAdmin } = useEngagement();
   const v = useVocabulary();
 
   if (!engagement) return null;
@@ -68,10 +69,12 @@ export function EngagementActiveView() {
         </div>
       )}
 
-      <div className="mt-8 p-4 border rounded-lg bg-muted/50 text-sm text-muted-foreground">
-        This engagement is <strong>active</strong>. Stage participation surfaces (Nera interviews,
-        workshop facilitation, photo upload) will be built in Phase 2b.
-      </div>
+      {/* Deliverable composer — shown when the engagement is ready to deliver */}
+      {isEngagementAdmin && (
+        <div className="mt-8">
+          <DeliverableComposer />
+        </div>
+      )}
     </div>
   );
 }
