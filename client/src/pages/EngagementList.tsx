@@ -93,7 +93,7 @@ export default function EngagementList() {
         {engagements.map(eng => {
           const badge = STATUS_BADGE[eng.status];
           return (
-            <Link key={eng.id} href={`/e/${eng.id}`}>
+            <Link key={eng.id} href={`/e/${eng.short_code}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">

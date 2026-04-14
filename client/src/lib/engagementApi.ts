@@ -22,12 +22,17 @@ export async function fetchEngagements(): Promise<Engagement[]> {
   return (data ?? []) as Engagement[];
 }
 
-export async function fetchEngagement(id: string): Promise<Engagement | null> {
+export async function fetchEngagement(idOrCode: string): Promise<Engagement | null> {
   if (!supabase) return null;
+
+  // If it looks like a UUID, query by id; otherwise query by short_code
+  const isUuid = idOrCode.length > 8 && idOrCode.includes('-');
+  const column = isUuid ? 'id' : 'short_code';
+
   const { data, error } = await supabase
     .from('st_engagements')
     .select('*')
-    .eq('id', id)
+    .eq(column, idOrCode)
     .single();
   if (error) {
     if (error.code === 'PGRST116') return null; // not found

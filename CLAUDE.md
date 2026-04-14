@@ -35,20 +35,35 @@ Strategic-tool **shares** the carlorbiz-website Supabase project (cost-conscious
 - Multi-LLM via `_shared/llm.ts` (Anthropic / Gemini / OpenRouter)
 - SSE streaming for Nera responses
 
-## Current status (updated 2026-04-13)
+## Current status (updated 2026-04-14)
 
-Phase 1 (schema) + all Phase 2 sub-phases (routing, admin, documents, dashboard) complete and deployed. Phase 3a in progress: survey ingestion, drift-watch, shared Conversational Interview Engine (Option A — first consumer), conversational update mode all built. Pulse check system, handover flow, engagement wizard still pending.
+Phase 1 (schema) + all Phase 2 sub-phases (routing, admin, documents, dashboard) + Phase 3a (conversational surfaces, survey ingestion, drift-watch, shared Conversational Interview Engine) + Phase 3b (deliverables, reporting, handover) all complete and built. Cloudflare Pages deployment exists; subdomain (`strategy.carlorbiz.com.au`) pending user DNS configuration. Edge functions need deploying to live Supabase.
 
-**New in Phase 3a:**
+**Phase 3a (complete):**
 - `st-ingest-survey` edge function + SurveyUpload/SurveyList UI + surveyApi.ts
 - `st-drift-watch` edge function + "Run Drift Watch" button in LivingView dashboard
 - Interview engine: 6 ie_* tables (migration 0003), 4 edge functions (select-prompt, extract, evaluate-state, summarise-session), shared helpers, client API, TypeScript types
 - Conversational update mode: ConversationalUpdate component + useConversationalUpdate hook in LivingView dashboard
-- All new objects documented in docs/extraction-plan.md
 
-Phase 3 is split into two sessions:
-- **Phase 3a** — conversational surfaces + survey ingestion + drift-watch + handover flow + **shared Conversational Interview Engine (Option A — first consumer)**. The engine is built here as `interview-engine/*` edge functions with `ie_*` tables, designed for extraction. Exec-reclaim and all other CJ/Nera surfaces consume the same functions — do NOT rebuild elsewhere. Full spec: `knowledge-lake-source/V2_ARCHITECTURE_BRIEF.md`.
-- **Phase 3b** — deliverable composer + report generator + Cloudflare Pages deployment
+**Phase 3b (complete):**
+- `st-generate-report` edge function — template-constrained, cited report generation from evidence corpus
+- `st-synthesise-stage` edge function — closes a stage, produces themed insights for the next
+- ReportTemplateEditor component — CRUD for report templates in admin panel
+- ReportGenerator component — template selection, period picker, LLM generation trigger, side-by-side review editor (draft left, citations right), status workflow (draft → review → approved → delivered), PDF export
+- DeliverableComposer component — active → delivered transition, creates deliverable document, chunks into knowledge_chunks, auto-populates from commitment taxonomy
+- HandoverFlow component — delivered → living transition with role flip (consultant revoked, client admin granted), per §15 of living-platform-vision.md
+- Reports tab wired into LivingView and DeliveredView; Templates tab in admin sections
+- Board Pre-Read + Quarterly Compliance Summary templates seeded in Acme demo data
+- reportApi.ts — full client API for templates, reports, deliverables, edge function calls
+- Types: ReportingTemplate, ComplianceReport, EngagementDeliverable, StageInsight, ReportCitation added to engagement.ts
+- docs/extraction-plan.md updated with both new edge functions
+
+**Still pending (not Phase 3 scope):**
+- Pulse check system (st-nera-stage-conversation + PulseResponse page)
+- Engagement creation wizard
+- Deploy new edge functions to live Supabase
+- Subdomain DNS setup (strategy.carlorbiz.com.au)
+- Seed Board Pre-Read template into live database
 
 Fork points in Notion Chat Fork Points DB:
 - Phase 3a: https://www.notion.so/3419440556f781ca9312eeb5e421f696

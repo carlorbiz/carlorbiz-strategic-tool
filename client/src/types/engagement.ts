@@ -27,6 +27,7 @@ export type UpdateRagStatus = 'on_track' | 'at_risk' | 'blocked' | 'done';
 
 export interface Engagement {
   id: string;
+  short_code: string;
   name: string;
   client_name: string | null;
   description: string | null;
