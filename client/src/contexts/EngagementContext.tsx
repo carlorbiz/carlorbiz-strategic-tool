@@ -54,21 +54,31 @@ export function EngagementProvider({ engagementId, children }: EngagementProvide
     setError(null);
 
     try {
-      const [eng, stg, cmt, cfg] = await Promise.all([
-        fetchEngagement(engagementId),
-        fetchStages(engagementId),
-        fetchCommitments(engagementId),
-        fetchAiConfig(engagementId),
-      ]);
+      // Fetch engagement first (supports both UUID and short_code)
+      const eng = await fetchEngagement(engagementId);
+      if (!eng) {
+        setError('Engagement not found');
+        setIsLoading(false);
+        return;
+      }
 
       setEngagement(eng);
+
+      // Use the engagement's UUID for all subsequent queries
+      const uuid = eng.id;
+      const [stg, cmt, cfg] = await Promise.all([
+        fetchStages(uuid),
+        fetchCommitments(uuid),
+        fetchAiConfig(uuid),
+      ]);
+
       setStages(stg);
       setCommitments(cmt);
       setAiConfig(cfg);
 
       // Fetch user roles if authenticated
       if (user?.id) {
-        const roles = await fetchUserRoles(user.id, engagementId);
+        const roles = await fetchUserRoles(user.id, uuid);
         setUserRoles(roles);
       }
     } catch (err) {
