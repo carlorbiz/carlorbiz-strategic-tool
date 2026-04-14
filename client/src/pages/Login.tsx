@@ -55,13 +55,11 @@ export default function Login() {
     }
   }, []);
 
-  // If already authenticated, redirect based on role
-  // But skip if auth is still loading (user may have just signed out)
+  // If already authenticated, go to engagement list
   useEffect(() => {
     if (isLoading) return;
     if (isAuthenticated && profile) {
-      const isAdmin = profile.role === 'internal_admin' || profile.role === 'client_admin';
-      window.location.href = isAdmin ? '/admin' : '/';
+      setLocation('/');
     }
   }, [isAuthenticated, profile, isLoading]);
 

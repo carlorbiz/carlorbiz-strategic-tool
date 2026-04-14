@@ -22,7 +22,12 @@ export default function EngagementList() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || !isAuthenticated) return;
+    if (authLoading) return;
+
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
 
     fetchEngagements()
       .then(setEngagements)
