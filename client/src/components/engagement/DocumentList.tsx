@@ -5,14 +5,7 @@ import { fetchDocuments, triggerIngestion } from '@/lib/documentApi';
 import type { StDocument, DocumentStatus } from '@/types/engagement';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { RefreshCw, FileText, AlertTriangle, CheckCircle2, Loader2, Clock } from 'lucide-react';
 
@@ -28,7 +21,7 @@ const STATUS_CONFIG: Record<DocumentStatus, {
 };
 
 interface DocumentListProps {
-  refreshTrigger?: number; // increment to force refresh
+  refreshTrigger?: number;
 }
 
 export function DocumentList({ refreshTrigger }: DocumentListProps) {
@@ -59,7 +52,6 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
   useEffect(() => {
     const hasIngesting = documents.some(d => d.status === 'ingesting');
     if (!hasIngesting) return;
-
     const interval = setInterval(loadDocuments, 10000);
     return () => clearInterval(interval);
   }, [documents]);
@@ -80,8 +72,7 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
 
   const getCommitmentTitle = (commitmentId: string | null): string | null => {
     if (!commitmentId) return null;
-    const c = commitments.find(c => c.id === commitmentId);
-    return c?.title ?? null;
+    return commitments.find(c => c.id === commitmentId)?.title ?? null;
   };
 
   if (!engagement) return null;
@@ -114,87 +105,61 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
         </Button>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead className="w-24">Type</TableHead>
-              <TableHead className="w-32">{v.commitment_top_singular}</TableHead>
-              <TableHead className="w-24">Status</TableHead>
-              <TableHead className="w-20 text-right">Chunks</TableHead>
-              <TableHead className="w-28">Date</TableHead>
-              <TableHead className="w-16"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.map(doc => {
-              const statusConf = STATUS_CONFIG[doc.status];
-              const StatusIcon = statusConf.icon;
-              const commitmentTitle = getCommitmentTitle(doc.primary_commitment_id);
+      <div className="space-y-2">
+        {documents.map(doc => {
+          const statusConf = STATUS_CONFIG[doc.status];
+          const StatusIcon = statusConf.icon;
+          const commitmentTitle = getCommitmentTitle(doc.primary_commitment_id);
 
-              return (
-                <TableRow key={doc.id}>
-                  <TableCell>
-                    <div>
-                      <span className="font-medium text-sm">{doc.title}</span>
-                      {doc.summary && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                          {doc.summary}
-                        </p>
-                      )}
-                      {doc.contains_pii && (
-                        <Badge variant="outline" className="text-xs mt-0.5">PII flagged</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {doc.file_type ?? '—'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {commitmentTitle ? (
-                      <span className="text-xs">{commitmentTitle}</span>
+          return (
+            <Card key={doc.id}>
+              <CardContent className="flex items-center gap-3 py-3 px-4">
+                <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm truncate">{doc.title}</span>
+                    <Badge variant="outline" className="text-xs shrink-0">{doc.file_type ?? '?'}</Badge>
+                  </div>
+                  {doc.summary && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{doc.summary}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    {commitmentTitle && (
+                      <span className="text-xs text-muted-foreground">{commitmentTitle}</span>
+                    )}
+                    {doc.chunk_count > 0 && (
+                      <span className="text-xs text-muted-foreground">{doc.chunk_count} chunks</span>
+                    )}
+                    {doc.contains_pii && (
+                      <Badge variant="outline" className="text-xs">PII</Badge>
+                    )}
+                  </div>
+                </div>
+                <Badge variant={statusConf.variant} className="text-xs gap-1 shrink-0">
+                  <StatusIcon className={`w-3 h-3 ${doc.status === 'ingesting' ? 'animate-spin' : ''}`} />
+                  {statusConf.label}
+                </Badge>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {new Date(doc.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
+                </span>
+                {doc.status === 'failed' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleRetry(doc.id)}
+                    disabled={retrying === doc.id}
+                  >
+                    {retrying === doc.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <RefreshCw className="w-3 h-3" />
                     )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusConf.variant} className="text-xs gap-1">
-                      <StatusIcon className={`w-3 h-3 ${doc.status === 'ingesting' ? 'animate-spin' : ''}`} />
-                      {statusConf.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-sm">
-                    {doc.chunk_count > 0 ? doc.chunk_count : '—'}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {new Date(doc.created_at).toLocaleDateString('en-AU', {
-                      day: 'numeric', month: 'short',
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    {doc.status === 'failed' && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleRetry(doc.id)}
-                        disabled={retrying === doc.id}
-                      >
-                        {retrying === doc.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <RefreshCw className="w-3 h-3" />
-                        )}
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
