@@ -14,7 +14,7 @@ export function ChatInput({
   onSend,
   isLoading = false,
   disabled = false,
-  placeholder = 'Ask about Carlorbiz services or methodology...',
+  placeholder = 'Ask Nera about this engagement...',
 }: ChatInputProps) {
   const [input, setInput] = useState('');
 

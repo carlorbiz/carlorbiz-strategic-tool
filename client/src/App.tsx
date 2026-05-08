@@ -1,11 +1,10 @@
 import { Switch, Route } from "wouter";
 import { lazy, Suspense } from "react";
 import { CMSProvider } from "@/contexts/CMSContext";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "@/components/ui/sonner";
-import { NeraChatbot } from "@/components/chat";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 // ── Strategic-tool pages ────────────────────────────────────────────────────
@@ -23,13 +22,6 @@ const Loading = () => (
     <p className="text-muted-foreground">Loading...</p>
   </div>
 );
-
-/** Nera chatbot for authenticated users */
-function AuthenticatedNera() {
-  const { user } = useAuth();
-  if (!user) return null;
-  return <NeraChatbot />;
-}
 
 function App() {
   return (
@@ -72,7 +64,6 @@ function App() {
             </Route>
           </Switch>
           <Toaster />
-          <AuthenticatedNera />
         </CMSProvider>
       </ChatProvider>
     </AuthProvider>

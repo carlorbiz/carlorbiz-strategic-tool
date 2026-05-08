@@ -1,9 +1,11 @@
 import { useParams, Link } from 'wouter';
 import { EngagementProvider, useEngagement } from '@/contexts/EngagementContext';
+import { StrategicChatProvider } from '@/contexts/StrategicChatContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, LogOut } from 'lucide-react';
+import { EngagementNeraChatbot } from '@/components/chat/EngagementNeraChatbot';
 
 // Status-specific views
 import { EngagementDraftView } from '@/pages/engagement/DraftView';
@@ -120,8 +122,11 @@ export default function EngagementShell() {
 
   return (
     <EngagementProvider engagementId={engagementId}>
-      <EngagementNav />
-      <EngagementContent />
+      <StrategicChatProvider>
+        <EngagementNav />
+        <EngagementContent />
+        <EngagementNeraChatbot />
+      </StrategicChatProvider>
     </EngagementProvider>
   );
 }
