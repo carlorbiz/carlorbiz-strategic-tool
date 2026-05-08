@@ -6,6 +6,7 @@ import { ChatProvider } from "@/contexts/ChatContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "@/components/ui/sonner";
 import { NeraChatbot } from "@/components/chat";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // ── Strategic-tool pages ────────────────────────────────────────────────────
 import EngagementList from "@/pages/EngagementList";
@@ -49,9 +50,11 @@ function App() {
 
             {/* ── Engagement shell (the status/role router) ──── */}
             <Route path="/e/:engagementId">
-              <Suspense fallback={<Loading />}>
-                <EngagementShell />
-              </Suspense>
+              <ErrorBoundary>
+                <Suspense fallback={<Loading />}>
+                  <EngagementShell />
+                </Suspense>
+              </ErrorBoundary>
             </Route>
 
             {/* ── Global admin (internal_admin only) ─────────── */}

@@ -21,6 +21,9 @@ import { Upload, FileUp, Loader2, AlertTriangle } from 'lucide-react';
 
 const ACCEPTED_TYPES = '.pdf,.doc,.docx,.md,.txt,.xlsx,.xls,.csv,.json,.png,.jpg,.jpeg,.webp';
 
+// Radix Select disallows empty-string item values, so use a sentinel for "no primary"
+const NONE_VALUE = '__none__';
+
 interface DocumentUploadProps {
   onUploadComplete?: () => void;
 }
@@ -106,17 +109,13 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         containsPii,
       });
 
-      // 2. Link to additional commitments (lenses + any extra selections)
-      const allLinks = [...additionalCommitmentIds];
+      // 2. Link to commitments — primary as 'primary', lenses/extras as 'tagged'
       if (primaryCommitmentId) {
-        allLinks.push(primaryCommitmentId);
+        await linkDocumentToCommitments(doc.id, [primaryCommitmentId], 'primary');
       }
-      if (allLinks.length > 0) {
-        await linkDocumentToCommitments(
-          doc.id,
-          allLinks,
-          primaryCommitmentId ? 'tagged' : 'tagged'
-        );
+      const taggedLinks = Array.from(additionalCommitmentIds).filter(id => id !== primaryCommitmentId);
+      if (taggedLinks.length > 0) {
+        await linkDocumentToCommitments(doc.id, taggedLinks, 'tagged');
       }
 
       toast.success('Document uploaded successfully');
@@ -229,15 +228,15 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         <div>
           <Label>Primary {v.commitment_top_singular} / {v.commitment_sub_singular}</Label>
           <Select
-            value={primaryCommitmentId}
-            onValueChange={setPrimaryCommitmentId}
+            value={primaryCommitmentId || NONE_VALUE}
+            onValueChange={val => setPrimaryCommitmentId(val === NONE_VALUE ? '' : val)}
             disabled={isWorking}
           >
             <SelectTrigger>
               <SelectValue placeholder={`Select a ${v.commitment_top_singular.toLowerCase()}...`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value={NONE_VALUE}>None</SelectItem>
               {commitmentOptions.map(opt => (
                 <SelectItem key={opt.id} value={opt.id}>
                   {opt.indent ? `  ↳ ${opt.label}` : opt.label}
