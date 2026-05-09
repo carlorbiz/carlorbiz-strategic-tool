@@ -188,7 +188,10 @@ Deno.serve(async (req) => {
           source_type: "document",
           source_id: document_id,
           document_source: doc.title,
-          section_reference: doc.file_path,
+          // section_reference left NULL: storage paths leak filename hints into
+          // the LLM context. Proper section refs (markdown headings, page nums)
+          // will be added when chunking is heading-aware.
+          section_reference: null,
           chunk_text: chunk.chunk_text,
           chunk_summary: chunk.chunk_summary,
           topic_tags: chunk.topic_tags,
