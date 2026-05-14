@@ -427,9 +427,8 @@ async function processOne(meta: AbstractMeta, index: number, total: number): Pro
     console.log(`  • linked to 1 theme + ${meta.disciplineIds.length} discipline(s)`);
   }
 
-  // 5. Trigger ingestion
-  console.log(`  • calling st-ingest-document...`);
-  const ingestStart = Date.now();
+  // 5. Trigger background ingestion (function returns 202 immediately;
+  //    chunking continues in EdgeRuntime.waitUntil).
   const ingestResp = await fetch(`${SUPABASE_URL}/functions/v1/st-ingest-document`, {
     method: 'POST',
     headers: {
@@ -438,14 +437,44 @@ async function processOne(meta: AbstractMeta, index: number, total: number): Pro
     },
     body: JSON.stringify({ document_id: doc.id }),
   });
-  const ingestSeconds = ((Date.now() - ingestStart) / 1000).toFixed(1);
-  if (!ingestResp.ok) {
+  if (!ingestResp.ok && ingestResp.status !== 202) {
     const errBody = await ingestResp.text();
-    console.error(`  ✗ ingest failed in ${ingestSeconds}s: ${ingestResp.status} ${errBody.slice(0, 200)}`);
+    console.error(`  ✗ ingest trigger failed: ${ingestResp.status} ${errBody.slice(0, 200)}`);
     return;
   }
-  const result = await ingestResp.json();
-  console.log(`  ✓ ingested in ${ingestSeconds}s — ${result.chunks_created} chunks`);
+  console.log(`  • ingestion queued, polling status...`);
+
+  // 6. Poll st_documents.status until ingested or failed (max 8 minutes —
+  //    typical case 60–180s, long papers can take ~5 minutes)
+  const pollStart = Date.now();
+  const maxPollMs = 8 * 60 * 1000;
+  while (true) {
+    await new Promise((r) => setTimeout(r, 5000));
+    const { data: status } = await supabase
+      .from('st_documents')
+      .select('status, chunk_count, summary')
+      .eq('id', doc.id)
+      .single();
+    const elapsed = ((Date.now() - pollStart) / 1000).toFixed(0);
+    if (!status) {
+      console.error(`  ✗ poll lost row after ${elapsed}s`);
+      return;
+    }
+    if (status.status === 'ingested') {
+      console.log(`  ✓ ingested in ${elapsed}s — ${status.chunk_count} chunks`);
+      if (status.summary) console.log(`    summary: ${status.summary}`);
+      return;
+    }
+    if (status.status === 'failed') {
+      console.error(`  ✗ failed in ${elapsed}s — ${status.summary ?? 'no reason recorded'}`);
+      return;
+    }
+    process.stdout.write(`    ${elapsed}s elapsed (status=${status.status})\r`);
+    if (Date.now() - pollStart > maxPollMs) {
+      console.error(`\n  ✗ poll timed out after ${elapsed}s (still ${status.status}). Background work may still complete.`);
+      return;
+    }
+  }
 }
 
 async function main() {

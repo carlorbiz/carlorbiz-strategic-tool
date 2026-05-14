@@ -68,14 +68,137 @@ Return ONLY the JSON array, no other text.`;
 // ─── Summary generation prompt ────────────────────────────────
 const SUMMARY_PROMPT = `Write a single sentence (under 150 characters) summarising what this document is about. Be specific — mention the organisation, topic, or decision if apparent. Return ONLY the sentence, no quotes, no prefix.`;
 
+// ─── Background ingestion job ─────────────────────────────────
+// Heavy LLM work that runs after the 202 response is returned, kept alive by
+// EdgeRuntime.waitUntil so the Supabase gateway's 150s idle timeout cannot
+// kill an in-progress chunking job. The bulk-seed script (and the upload UI's
+// auto-refresh loop) polls st_documents.status until it transitions to
+// 'ingested' or 'failed'.
+
+async function runIngestion(
+  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  doc: any,
+): Promise<void> {
+  const documentId = doc.id;
+  try {
+    // 1. Fetch the file from storage
+    const { data: fileData, error: fileErr } = await supabase.storage
+      .from("st-documents")
+      .download(doc.file_path);
+
+    if (fileErr || !fileData) {
+      await markFailed(supabase, documentId, "Failed to download file from storage");
+      return;
+    }
+
+    // 2. Extract text content based on file type
+    let textContent: string;
+    try {
+      textContent = await extractText(fileData, doc.file_type, doc.file_path);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown extraction error";
+      await markFailed(supabase, documentId, msg);
+      return;
+    }
+
+    if (!textContent || textContent.trim().length < 10) {
+      await markFailed(supabase, documentId, "Extracted text too short or empty");
+      return;
+    }
+
+    const llmConfig: LLMConfig = {
+      provider: "anthropic",
+      model: "claude-sonnet-4-20250514",
+      apiKey: ANTHROPIC_API_KEY,
+    };
+
+    // 3. Generate document summary
+    let summary: string;
+    try {
+      summary = await callLLM(
+        llmConfig,
+        SUMMARY_PROMPT,
+        [{ role: "user", content: textContent.slice(0, 4000) }],
+        200,
+      );
+      summary = summary.trim().replace(/^["']|["']$/g, "");
+    } catch {
+      summary = doc.title;
+    }
+
+    // 4. Extract chunks via LLM (sequential — keeps token budget predictable)
+    const segments = splitIntoSegments(textContent, 10000);
+    const chunks: Array<{ chunk_text: string; chunk_summary: string; topic_tags: string[] }> = [];
+
+    try {
+      for (const segment of segments) {
+        const result = await callLLM(
+          llmConfig,
+          CHUNK_EXTRACTION_PROMPT,
+          [{ role: "user", content: segment }],
+          8000,
+        );
+        chunks.push(...parseChunksFromLLM(result));
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Chunk extraction failed";
+      await markFailed(supabase, documentId, msg);
+      return;
+    }
+
+    // 5. Write chunks to knowledge_chunks
+    let insertedCount = 0;
+    for (const chunk of chunks) {
+      const { error: chunkErr } = await supabase
+        .from("knowledge_chunks")
+        .insert({
+          source_app: "strategic-tool",
+          engagement_id: doc.engagement_id,
+          source_type: "document",
+          source_id: documentId,
+          document_source: doc.title,
+          section_reference: null,
+          chunk_text: chunk.chunk_text,
+          chunk_summary: chunk.chunk_summary,
+          topic_tags: chunk.topic_tags,
+          content_type: "governance",
+          is_active: true,
+          extraction_version: "st-1.0",
+        });
+      if (!chunkErr) insertedCount++;
+    }
+
+    // 6. Mark complete
+    await supabase
+      .from("st_documents")
+      .update({
+        status: "ingested",
+        chunk_count: insertedCount,
+        summary,
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", documentId);
+
+    console.log(`[st-ingest-document] ${documentId} → ${insertedCount} chunks (background)`);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Background ingestion crashed";
+    console.error(`[st-ingest-document] ${documentId} crashed:`, msg);
+    await markFailed(supabase, documentId, msg);
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────
-Deno.serve(async (req) => {
+// Returns 202 immediately and runs ingestion in the background via
+// EdgeRuntime.waitUntil. Callers poll st_documents.status to detect completion.
+
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const userId = await requireAuth(req);
+    await requireAuth(req);
     const { document_id } = await req.json();
 
     if (!document_id) {
@@ -84,7 +207,6 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Fetch the document record
     const { data: doc, error: docErr } = await supabase
       .from("st_documents")
       .select("*")
@@ -95,133 +217,32 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Document not found" }, 404);
     }
 
-    // 2. Mark as ingesting
+    // Mark ingesting BEFORE returning so the caller can immediately observe
+    // the status transition by polling.
     await supabase
       .from("st_documents")
       .update({ status: "ingesting" })
       .eq("id", document_id);
 
-    // 3. Fetch the file from storage
-    const { data: fileData, error: fileErr } = await supabase.storage
-      .from("st-documents")
-      .download(doc.file_path);
-
-    if (fileErr || !fileData) {
-      await markFailed(supabase, document_id, "Failed to download file from storage");
-      return jsonResponse({ error: "Failed to download file" }, 500);
+    // Kick off background work. EdgeRuntime.waitUntil keeps the runtime alive
+    // after the response is sent, sidestepping the 150s gateway idle timeout
+    // that would otherwise kill long-running chunking jobs.
+    const work = runIngestion(supabase, doc);
+    // deno-lint-ignore no-explicit-any
+    const er = (globalThis as any).EdgeRuntime;
+    if (er && typeof er.waitUntil === "function") {
+      er.waitUntil(work);
+    } else {
+      // Local / non-Supabase fallback: await synchronously.
+      await work;
     }
-
-    // 4. Extract text content based on file type
-    let textContent: string;
-    try {
-      textContent = await extractText(fileData, doc.file_type, doc.file_path);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unknown extraction error";
-      await markFailed(supabase, document_id, msg);
-      return jsonResponse({ error: `Text extraction failed: ${msg}` }, 500);
-    }
-
-    if (!textContent || textContent.trim().length < 10) {
-      await markFailed(supabase, document_id, "Extracted text too short or empty");
-      return jsonResponse({ error: "Document produced no extractable text" }, 400);
-    }
-
-    // 5. LLM config — default to Anthropic Claude Sonnet
-    // In future, read from st_ai_config for the engagement
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
-      apiKey: ANTHROPIC_API_KEY,
-    };
-
-    // 6. Generate document summary
-    let summary: string;
-    try {
-      summary = await callLLM(
-        llmConfig,
-        SUMMARY_PROMPT,
-        [{ role: "user", content: textContent.slice(0, 4000) }],
-        200
-      );
-      summary = summary.trim().replace(/^["']|["']$/g, "");
-    } catch {
-      summary = doc.title; // fallback to title if summary fails
-    }
-
-    // 7. Extract chunks via LLM
-    let chunks: Array<{
-      chunk_text: string;
-      chunk_summary: string;
-      topic_tags: string[];
-    }>;
-
-    try {
-      // Split long documents into segments
-      const segments = splitIntoSegments(textContent, 10000);
-      chunks = [];
-
-      for (const segment of segments) {
-        const result = await callLLM(
-          llmConfig,
-          CHUNK_EXTRACTION_PROMPT,
-          [{ role: "user", content: segment }],
-          8000
-        );
-
-        // Parse JSON from LLM response
-        const parsed = parseChunksFromLLM(result);
-        chunks.push(...parsed);
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Chunk extraction failed";
-      await markFailed(supabase, document_id, msg);
-      return jsonResponse({ error: msg }, 500);
-    }
-
-    // 8. Write chunks to knowledge_chunks with strategic-tool scoping
-    let insertedCount = 0;
-    for (const chunk of chunks) {
-      const { error: chunkErr } = await supabase
-        .from("knowledge_chunks")
-        .insert({
-          source_app: "strategic-tool",
-          engagement_id: doc.engagement_id,
-          source_type: "document",
-          source_id: document_id,
-          document_source: doc.title,
-          // section_reference left NULL: storage paths leak filename hints into
-          // the LLM context. Proper section refs (markdown headings, page nums)
-          // will be added when chunking is heading-aware.
-          section_reference: null,
-          chunk_text: chunk.chunk_text,
-          chunk_summary: chunk.chunk_summary,
-          topic_tags: chunk.topic_tags,
-          content_type: "governance",
-          is_active: true,
-          extraction_version: "st-1.0",
-        });
-
-      if (!chunkErr) insertedCount++;
-    }
-
-    // 9. Update document record with results
-    await supabase
-      .from("st_documents")
-      .update({
-        status: "ingested",
-        chunk_count: insertedCount,
-        summary,
-        processed_at: new Date().toISOString(),
-      })
-      .eq("id", document_id);
 
     return jsonResponse({
-      success: true,
+      accepted: true,
       document_id,
-      chunks_created: insertedCount,
-      summary,
-    });
-
+      status: "ingesting",
+      message: "Ingestion queued; poll st_documents.status for completion.",
+    }, 202);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Internal error";
     console.error("st-ingest-document error:", e);
