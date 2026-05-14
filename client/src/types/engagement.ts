@@ -169,6 +169,13 @@ export interface StDocument {
   uploaded_by: string | null;
   created_at: string;
   processed_at: string | null;
+  // Research metadata (migration 0006) — optional, used by research-vertical engagements
+  authors: string | null;
+  institution: string | null;
+  publication_year: number | null;
+  journal: string | null;
+  doi: string | null;
+  external_link: string | null;
 }
 
 // ── Surveys ─────────────────────────────────────────────────────────────────

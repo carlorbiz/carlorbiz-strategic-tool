@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { RefreshCw, FileText, AlertTriangle, CheckCircle2, Loader2, Clock } from 'lucide-react';
+import { RefreshCw, FileText, AlertTriangle, CheckCircle2, Loader2, Clock, ExternalLink } from 'lucide-react';
 
 const STATUS_CONFIG: Record<DocumentStatus, {
   label: string;
@@ -119,7 +119,24 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm truncate">{doc.title}</span>
                     <Badge variant="outline" className="text-xs shrink-0">{doc.file_type ?? '?'}</Badge>
+                    {doc.external_link && (
+                      <a
+                        href={doc.external_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground shrink-0"
+                        title="Open source"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
                   </div>
+                  {(doc.authors || doc.journal || doc.publication_year) && (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {[doc.authors, doc.journal, doc.publication_year].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
                   {doc.summary && (
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{doc.summary}</p>
                   )}
@@ -129,6 +146,9 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
                     )}
                     {doc.chunk_count > 0 && (
                       <span className="text-xs text-muted-foreground">{doc.chunk_count} chunks</span>
+                    )}
+                    {doc.institution && (
+                      <span className="text-xs text-muted-foreground">{doc.institution}</span>
                     )}
                     {doc.contains_pii && (
                       <Badge variant="outline" className="text-xs">PII</Badge>

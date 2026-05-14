@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
 import { callLLM } from "../_shared/llm.ts";
 import type { LLMConfig } from "../_shared/llm.ts";
 
@@ -252,20 +253,12 @@ async function extractText(
     }
 
     case "pdf": {
-      // For PDFs, we call the existing convert-pdf-to-markdown function
-      // or extract raw text. For now, use a simple text extraction.
-      // The proper pipeline would chain to convert-pdf-to-markdown,
-      // but that requires the file to be in a specific bucket format.
-      // Phase 2c ships with basic text extraction; PDF-to-markdown
-      // chaining will be added when the pipeline is proven.
-      const text = await blob.text();
-      if (text && text.trim().length > 50) return text;
-      // Binary PDF — can't extract directly in Deno without a PDF library.
-      // Return a placeholder that tells the caller to use the PDF pipeline.
-      throw new Error(
-        "Binary PDF detected. Use the convert-pdf-to-markdown pipeline for this file type. " +
-        "Direct binary PDF extraction is not yet supported in st-ingest-document."
-      );
+      // Binary PDFs: route through Claude's Document API in 8-page chunks
+      // (pattern ported from acrrm-resources-pwa/supabase/functions/convert-pdf-to-markdown).
+      // Each chunk returns Markdown which is concatenated and fed downstream
+      // to the same semantic chunker used for plaintext.
+      const pdfBytes = new Uint8Array(await blob.arrayBuffer());
+      return await convertPdfToMarkdown(pdfBytes);
     }
 
     case "docx": {
@@ -289,6 +282,110 @@ async function extractText(
       // Try as plaintext
       return await blob.text();
   }
+}
+
+// ─── PDF → Markdown (Claude Document API, 8-page chunks) ──────
+// Ported from acrrm-resources-pwa/supabase/functions/convert-pdf-to-markdown.
+// Loads the PDF with pdf-lib, slices into 8-page sub-PDFs, base64-encodes each,
+// and sends to Claude via the Document API. Returns the concatenated Markdown.
+
+const PDF_CONVERT_PROMPT = `Convert this PDF document to clean Markdown. Preserve ALL substantive content precisely:
+
+1. Use ## for major section headings and ### for sub-sections
+2. Preserve all tables using Markdown table syntax
+3. Keep exact figures, rates, percentages, sample sizes, p-values, and dollar amounts verbatim
+4. Preserve numbered and bulleted lists exactly as they appear
+5. Include ALL substantive content — abstract, body sections, tables, figures' captions, conclusions, references
+6. Do NOT summarise, skip, or paraphrase any content
+7. STRIP repeating page headers, footers, page numbers, journal banners, and PDF watermarks — these are artefacts, not content
+8. Use Australian English spelling
+
+Return ONLY the Markdown. No commentary, no explanations, no markdown fences wrapping the output.`;
+
+function toBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
+async function callDocumentApiWithRetry(
+  base64Pdf: string,
+  promptText: string,
+  maxRetries = 2,
+): Promise<string> {
+  let lastErr: string = "";
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 32000,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: {
+                  type: "base64",
+                  media_type: "application/pdf",
+                  data: base64Pdf,
+                },
+              },
+              { type: "text", text: promptText },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const text = data?.content?.[0]?.text;
+      if (typeof text === "string" && text.length > 0) return text;
+      lastErr = "Claude returned empty content";
+    } else {
+      lastErr = `Claude API ${resp.status}: ${(await resp.text()).slice(0, 300)}`;
+    }
+
+    if (attempt < maxRetries) {
+      const backoffMs = 1000 * Math.pow(2, attempt);
+      await new Promise((r) => setTimeout(r, backoffMs));
+    }
+  }
+  throw new Error(`PDF→Markdown failed after ${maxRetries + 1} attempts: ${lastErr}`);
+}
+
+async function convertPdfToMarkdown(pdfBytes: Uint8Array): Promise<string> {
+  const srcDoc = await PDFDocument.load(pdfBytes);
+  const totalPages = srcDoc.getPageCount();
+  const chunkSize = 8;
+
+  const parts: string[] = [];
+  for (let start = 0; start < totalPages; start += chunkSize) {
+    const end = Math.min(start + chunkSize - 1, totalPages - 1);
+    const newDoc = await PDFDocument.create();
+    const indices = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    const copied = await newDoc.copyPages(srcDoc, indices);
+    for (const p of copied) newDoc.addPage(p);
+    const chunkBytes = new Uint8Array(await newDoc.save());
+
+    const base64 = toBase64(chunkBytes);
+    const promptSuffix = `\n\nNote: This is pages ${start + 1}–${end + 1} of a ${totalPages}-page document. Convert all content on these pages. Do not add any preamble about the page range.`;
+    const md = await callDocumentApiWithRetry(base64, PDF_CONVERT_PROMPT + promptSuffix);
+    parts.push(md.trim());
+  }
+
+  return parts.join("\n\n");
 }
 
 function splitIntoSegments(text: string, maxChars: number): string[] {

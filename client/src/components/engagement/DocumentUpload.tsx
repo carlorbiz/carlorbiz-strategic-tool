@@ -16,8 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
-import { Upload, FileUp, Loader2, AlertTriangle } from 'lucide-react';
+import { Upload, FileUp, Loader2, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
 const ACCEPTED_TYPES = '.pdf,.doc,.docx,.md,.txt,.xlsx,.xls,.csv,.json,.png,.jpg,.jpeg,.webp';
 
@@ -41,6 +42,15 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
   const [containsPii, setContainsPii] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [ingesting, setIngesting] = useState(false);
+
+  // Research metadata (optional — surfaced via collapsible section)
+  const [showResearchMeta, setShowResearchMeta] = useState(false);
+  const [authors, setAuthors] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [publicationYear, setPublicationYear] = useState('');
+  const [journal, setJournal] = useState('');
+  const [doi, setDoi] = useState('');
+  const [externalLink, setExternalLink] = useState('');
 
   if (!engagement) return null;
 
@@ -102,11 +112,18 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
     setUploading(true);
     try {
       // 1. Upload file and create st_documents row
+      const parsedYear = publicationYear.trim() ? Number(publicationYear) : undefined;
       const doc = await uploadDocument(engagement.id, file, {
         title: title.trim(),
         description: description.trim() || undefined,
         primaryCommitmentId: primaryCommitmentId || undefined,
         containsPii,
+        authors: authors.trim() || undefined,
+        institution: institution.trim() || undefined,
+        publicationYear: Number.isFinite(parsedYear) ? parsedYear : undefined,
+        journal: journal.trim() || undefined,
+        doi: doi.trim() || undefined,
+        externalLink: externalLink.trim() || undefined,
       });
 
       // 2. Link to commitments — primary as 'primary', lenses/extras as 'tagged'
@@ -141,6 +158,13 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
       setPrimaryCommitmentId('');
       setAdditionalCommitmentIds(new Set());
       setContainsPii(false);
+      setAuthors('');
+      setInstitution('');
+      setPublicationYear('');
+      setJournal('');
+      setDoi('');
+      setExternalLink('');
+      setShowResearchMeta(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
 
       onUploadComplete?.();
@@ -267,6 +291,89 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
             </div>
           </div>
         )}
+
+        {/* Research metadata (optional) */}
+        <Collapsible open={showResearchMeta} onOpenChange={setShowResearchMeta}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              disabled={isWorking}
+            >
+              {showResearchMeta ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              Research metadata (optional)
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3 space-y-3 border-l-2 border-muted pl-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="authors">Authors</Label>
+                <Input
+                  id="authors"
+                  value={authors}
+                  onChange={e => setAuthors(e.target.value)}
+                  placeholder="Smith J, Lee K, et al."
+                  disabled={isWorking}
+                />
+              </div>
+              <div>
+                <Label htmlFor="institution">Institution</Label>
+                <Input
+                  id="institution"
+                  value={institution}
+                  onChange={e => setInstitution(e.target.value)}
+                  placeholder="Macquarie University"
+                  disabled={isWorking}
+                />
+              </div>
+              <div>
+                <Label htmlFor="publication_year">Year</Label>
+                <Input
+                  id="publication_year"
+                  type="number"
+                  inputMode="numeric"
+                  min={1900}
+                  max={2100}
+                  value={publicationYear}
+                  onChange={e => setPublicationYear(e.target.value)}
+                  placeholder="2025"
+                  disabled={isWorking}
+                />
+              </div>
+              <div>
+                <Label htmlFor="journal">Journal / venue</Label>
+                <Input
+                  id="journal"
+                  value={journal}
+                  onChange={e => setJournal(e.target.value)}
+                  placeholder="The Australian Journal of Rural Health"
+                  disabled={isWorking}
+                />
+              </div>
+              <div>
+                <Label htmlFor="doi">DOI</Label>
+                <Input
+                  id="doi"
+                  value={doi}
+                  onChange={e => setDoi(e.target.value)}
+                  placeholder="10.1111/ajr.13144"
+                  disabled={isWorking}
+                />
+              </div>
+              <div>
+                <Label htmlFor="external_link">External link</Label>
+                <Input
+                  id="external_link"
+                  type="url"
+                  value={externalLink}
+                  onChange={e => setExternalLink(e.target.value)}
+                  placeholder="https://doi.org/..."
+                  disabled={isWorking}
+                />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* PII checkbox */}
         <div className="flex items-start gap-2 p-3 rounded border bg-muted/50">

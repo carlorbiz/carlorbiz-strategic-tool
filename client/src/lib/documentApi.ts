@@ -3,15 +3,24 @@ import type { StDocument } from '@/types/engagement';
 
 // ── Upload a document to st-documents bucket + create st_documents row ──────
 
+export interface UploadDocumentMetadata {
+  title: string;
+  description?: string;
+  primaryCommitmentId?: string;
+  containsPii?: boolean;
+  // Research metadata (optional — used by research-vertical engagements)
+  authors?: string;
+  institution?: string;
+  publicationYear?: number;
+  journal?: string;
+  doi?: string;
+  externalLink?: string;
+}
+
 export async function uploadDocument(
   engagementId: string,
   file: File,
-  metadata: {
-    title: string;
-    description?: string;
-    primaryCommitmentId?: string;
-    containsPii?: boolean;
-  }
+  metadata: UploadDocumentMetadata,
 ): Promise<StDocument> {
   if (!supabase) throw new Error('Supabase not configured');
 
@@ -44,6 +53,12 @@ export async function uploadDocument(
       primary_commitment_id: metadata.primaryCommitmentId ?? null,
       contains_pii: metadata.containsPii ?? false,
       status: 'uploaded',
+      authors: metadata.authors ?? null,
+      institution: metadata.institution ?? null,
+      publication_year: metadata.publicationYear ?? null,
+      journal: metadata.journal ?? null,
+      doi: metadata.doi ?? null,
+      external_link: metadata.externalLink ?? null,
     })
     .select()
     .single();

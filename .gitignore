@@ -114,3 +114,6 @@ temp/
 
 # Scripts
 extract_chunks.py
+
+# Demo seed material - PDFs live locally, never in git
+docs/demo-3-abstracts/
