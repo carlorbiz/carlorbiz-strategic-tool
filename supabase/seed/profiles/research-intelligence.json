@@ -1,0 +1,86 @@
+{
+  "profile_key": "research-intelligence",
+  "display_name": "Research Intelligence Hub",
+  "description": "For organisations that run conference programmes, abstract calls, or research repositories and need to turn one-off contributions into accumulated, queryable knowledge. Use this profile when the corpus is published research (abstracts, papers, posters) rather than internal strategic documents.",
+
+  "vocabulary_map": {
+    "commitment_top_singular": "Theme",
+    "commitment_top_plural": "Themes",
+    "commitment_sub_singular": "Stream",
+    "commitment_sub_plural": "Streams",
+    "cross_cut_singular": "Discipline",
+    "cross_cut_plural": "Disciplines",
+    "commitment_add_verb": "introduce",
+    "commitment_archive_verb": "retire",
+    "evidence_singular": "abstract",
+    "evidence_plural": "abstracts",
+    "update_singular": "follow-up",
+    "update_plural": "follow-ups",
+    "drift_singular": "repetition signal",
+    "drift_plural": "repetition signals"
+  },
+
+  "defaults": {
+    "engagement_type": "strategic_planning",
+    "taxonomy_strictness": "soft",
+    "top_count_warning": 6,
+    "top_count_hard_cap": 8,
+    "pulse_cadence_days": 90,
+    "drift_watch_delivery": ["in_app", "email"]
+  },
+
+  "drift_watch_config": {
+    "silence_window_days": 180,
+    "scope_extension_trigger_count": 5,
+    "scope_extension_window_days": 365,
+    "merge_watcher_similarity_threshold": 0.78,
+    "merge_watcher_watch_days": 60
+  },
+
+  "nera_prompts": {
+    "interview": "You are Nera, a research-intelligence assistant conducting a one-on-one conversation with a researcher who has contributed an abstract or paper to {client_name}. Draw out the substantive contribution of their work in conversational, indirect terms — not a survey of direct questions. Surface: the specific gap their research addresses, the most actionable finding for practitioners, the unresolved questions they think are most important, and where their work intersects with other research already in the corpus (you may reference titles you know about). Be warm and respectful of their time.",
+
+    "workshop": "You are Nera, supporting a live conference panel or programme committee discussion for {client_name}. Drawing on the abstracts and papers already in the corpus, when asked you can: (1) surface what the corpus already says about a topic, (2) identify which researchers have presented on adjacent questions, (3) flag where contributions appear to overlap or repeat, (4) suggest follow-up questions for a panel session. Keep responses concise and source-cited.",
+
+    "pulse": "You are Nera, conducting a quarterly research-pipeline check with {participant_name} about the {commitment_title} theme at {client_name}. Keep it brief and conversational. Ask what new contributions have come in, what unresolved questions are still open, whether anything's been actioned by practitioners, and whether the theme still feels alive or has gone quiet. Extract a status (on-track / at-risk / blocked / done) and a short narrative.",
+
+    "drift_watch": "You are Nera, scanning {client_name}'s abstract corpus for engagement '{engagement_name}'. Review all abstracts ingested in the last {window_days} days. For each Theme, assess: (1) submission volume — are new contributions coming in? (2) repetition signals — have the same authors returned with materially overlapping content, or are different authors converging on identical conclusions without new evidence? (3) silent themes — Themes that received no new abstracts in the window. (4) emerging cross-cuts — disciplines or framings appearing in multiple abstracts that don't fit current Themes. Produce a structured signals report with specific citations. The goal is to help the programme committee see what's accumulating, what's repeating, and what's missing.",
+
+    "brief": "You are Nera, preparing a pre-read briefing for an upcoming {meeting_type} at {client_name}. Cross-reference the meeting pack against the full abstract corpus for engagement '{engagement_name}'. Produce: (1) items in the pack that touch current Themes, (2) prior abstracts in the corpus relevant to each item, (3) any contradictions or tensions across contributions, (4) recommended questions for the session, (5) anything that suggests a new Theme should be introduced or an old one retired.",
+
+    "report": "You are Nera, generating a {report_template_name} report for {client_name}'s engagement '{engagement_name}' covering the period {period_start} to {period_end}. Draw evidence exclusively from the abstract corpus, filtering by this engagement. Every claim must cite a specific abstract by author and year. Follow the template structure exactly. Use the engagement's vocabulary (from the vocabulary map) throughout — say Themes, Streams, Disciplines, abstracts. Flag any template sections where insufficient evidence exists — do not fabricate.",
+
+    "update": "You are Nera, capturing a follow-up about a researcher's contribution to {client_name}. The user is describing what's happened since an abstract was submitted or presented — a publication update, a practitioner adoption, a methodology revision, a collaboration spawned. Your job is to: (1) identify which Theme or Stream the follow-up relates to, (2) extract a status snapshot (on-track / at-risk / blocked / done), (3) write a short narrative summary, (4) flag if the follow-up suggests a Theme has matured or a new Theme is emerging. Confirm your understanding before saving."
+  },
+
+  "dashboard_layout": [
+    { "widget": "priority_status_grid", "label": "Themes", "order": 1 },
+    { "widget": "drift_signals", "label": "Repetition & Silence Signals", "order": 2 },
+    { "widget": "recent_documents", "label": "Recent Abstracts", "order": 3 },
+    { "widget": "nera_questions", "label": "Open Questions from Nera", "order": 4 },
+    { "widget": "recent_updates", "label": "Researcher Follow-ups", "order": 5 },
+    { "widget": "pre_read_generator", "label": "Brief Me on a Theme", "order": 6 }
+  ],
+
+  "reporting_templates": [
+    {
+      "name": "Conference Research Roundup",
+      "funder_type": null,
+      "template_markdown": "# {client_name} Research Roundup\n\n**Period:** {period_start} – {period_end}\n**Themes covered:** {theme_count}\n**Abstracts in corpus:** {abstract_count}\n\n---\n\n## Executive synthesis\n\n{executive_synthesis}\n\n## Theme-by-theme summary\n\n{for_each_theme}\n### {theme_title}\n\n**Contributions this period:** {abstracts_this_period}\n**Cumulative:** {abstracts_total}\n**Key institutions:** {top_institutions}\n\n**What the corpus says:**\n\n{theme_synthesis}\n\n**Notable abstracts:**\n\n{notable_abstracts_list}\n\n**Open questions surfaced:**\n\n{open_questions}\n{end_for_each}\n\n## Repetition and silence signals\n\n{repetition_signals_narrative}\n\n## Recommended actions for the programme committee\n\n{recommended_actions}\n\n---\n\n*This report was synthesised by Nera from the {client_name} abstract corpus. Every claim cites a specific abstract by author and year. Source list available on request.*\n"
+    },
+    {
+      "name": "Speaker Follow-up Brief",
+      "funder_type": null,
+      "template_markdown": "# Speaker Follow-up Brief: {researcher_name}\n\n**Affiliation:** {institution}\n**Total contributions in corpus:** {abstract_count}\n**Years active:** {years_active}\n**Primary Themes:** {primary_themes}\n**Disciplines:** {disciplines}\n\n---\n\n## Contribution summary\n\n{contribution_summary}\n\n## Abstracts in the corpus\n\n{for_each_abstract}\n### {abstract_title}\n\n**Year:** {year}\n**Journal:** {journal}\n**Theme:** {theme_title}\n\n**Key takeaway:** {takeaway}\n\n**How it relates to other corpus contributions:** {cross_references}\n{end_for_each}\n\n## Suggested questions for a follow-up conversation\n\n{follow_up_questions}\n\n## Where their work could advance current Themes\n\n{theme_advancement_opportunities}\n\n---\n\n*Generated by Nera from the abstract corpus. Cross-references confirmed against ingested abstracts only.*\n"
+    }
+  ],
+
+  "default_roles": [
+    { "role_key": "client_admin", "label": "Programme Director", "permissions": { "read": true, "write": true, "admin": true } },
+    { "role_key": "events_admin", "label": "Events & Conference Lead", "permissions": { "read": true, "write": true, "admin": true } },
+    { "role_key": "programme_chair", "label": "Programme Chair", "permissions": { "read": true, "write": true, "admin": false } },
+    { "role_key": "panel_member", "label": "Panel / Committee Member", "permissions": { "read": true, "write": false, "admin": false } },
+    { "role_key": "researcher", "label": "Researcher", "permissions": { "read": true, "write": false, "admin": false } },
+    { "role_key": "facilitator", "label": "Facilitator (Consultant)", "permissions": { "read": true, "write": true, "admin": true } }
+  ]
+}
