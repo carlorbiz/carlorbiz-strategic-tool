@@ -35,7 +35,12 @@ if (!SERVICE_KEY) {
 const ENGAGEMENT_ID = 'a1b2c3d4-0003-4000-8000-000000000001';
 const PDF_DIR = 'docs/demo-3-abstracts';
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+// Recreated per paper to avoid long-lived client connection issues that
+// caused the previous bulk run to cascade "fetch failed" errors after the
+// first long-polling paper.
+function freshClient() {
+  return createClient(SUPABASE_URL!, SERVICE_KEY!);
+}
 
 // ── Theme + discipline commitment IDs (from seed SQL) ──────────────────────
 
@@ -335,21 +340,43 @@ function parseArgs() {
   return { limit, only };
 }
 
-async function alreadyIngested(doi: string): Promise<boolean> {
+async function alreadyIngested(supabase: ReturnType<typeof createClient>, doi: string): Promise<boolean> {
   const { data } = await supabase
     .from('st_documents')
     .select('id, status')
     .eq('engagement_id', ENGAGEMENT_ID)
     .eq('doi', doi)
     .maybeSingle();
-  return data?.status === 'ingested' || data?.status === 'ingesting';
+  // Only skip if fully ingested. 'ingesting' rows from prior failed runs
+  // should be cleaned up by the cleanup step before re-running, not skipped.
+  return data?.status === 'ingested';
+}
+
+async function withRetry<T>(label: string, attempts: number, fn: () => Promise<T>): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) {
+        const backoffMs = 1000 * Math.pow(2, i);
+        console.warn(`  ! ${label} attempt ${i + 1} failed: ${(err as Error).message}; retrying in ${backoffMs}ms`);
+        await new Promise((r) => setTimeout(r, backoffMs));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 async function processOne(meta: AbstractMeta, index: number, total: number): Promise<void> {
   const tag = `[${index + 1}/${total}]`;
   console.log(`\n${tag} ${meta.authors.split(',')[0].trim()} ${meta.year} — ${meta.title.slice(0, 80)}...`);
 
-  if (await alreadyIngested(meta.doi)) {
+  // Fresh client per paper — sidesteps connection-state issues from long polls
+  const supabase = freshClient();
+
+  if (await alreadyIngested(supabase, meta.doi)) {
     console.log(`  ⤳ already ingested for DOI ${meta.doi}, skipping`);
     return;
   }
@@ -363,20 +390,22 @@ async function processOne(meta: AbstractMeta, index: number, total: number): Pro
     console.error(`  ✗ PDF not found at ${pdfPath}: ${(err as Error).message}`);
     return;
   }
-  console.log(`  • read ${Math.round(pdfBytes.length / 1024)}KB from disk`);
+  const sizeKB = Math.round(pdfBytes.length / 1024);
+  console.log(`  • read ${sizeKB}KB from disk`);
 
-  // 2. Upload to storage
+  // 2. Upload to storage (with retry on transient fetch failures)
   const timestamp = Date.now();
   const safeName = meta.filename.replace(/[^\w.\-]/g, '_');
   const storagePath = `${ENGAGEMENT_ID}/${timestamp}-${safeName}`;
-  const { error: uploadErr } = await supabase.storage
-    .from('st-documents')
-    .upload(storagePath, pdfBytes, {
-      contentType: 'application/pdf',
-      upsert: false,
+  try {
+    await withRetry('storage upload', 3, async () => {
+      const { error } = await supabase.storage
+        .from('st-documents')
+        .upload(storagePath, pdfBytes, { contentType: 'application/pdf', upsert: false });
+      if (error) throw new Error(error.message);
     });
-  if (uploadErr) {
-    console.error(`  ✗ storage upload failed: ${uploadErr.message}`);
+  } catch (err) {
+    console.error(`  ✗ storage upload failed after retries: ${(err as Error).message}`);
     return;
   }
   console.log(`  • uploaded → st-documents/${storagePath}`);
@@ -401,7 +430,7 @@ async function processOne(meta: AbstractMeta, index: number, total: number): Pro
       doi: meta.doi,
       external_link: meta.externalLink,
     })
-    .select('id')
+    .select('id, chunk_count')
     .single();
   if (insertErr || !doc) {
     console.error(`  ✗ st_documents insert failed: ${insertErr?.message ?? 'unknown'}`);
@@ -409,7 +438,7 @@ async function processOne(meta: AbstractMeta, index: number, total: number): Pro
   }
   console.log(`  • inserted doc ${doc.id}`);
 
-  // 4. Insert commitment links (primary theme + discipline lenses)
+  // 4. Commitment links
   const links = [
     { document_id: doc.id, commitment_id: meta.primaryThemeId, link_type: 'primary' as const },
     ...meta.disciplineIds.map((cid) => ({
@@ -421,59 +450,64 @@ async function processOne(meta: AbstractMeta, index: number, total: number): Pro
   const { error: linkErr } = await supabase
     .from('st_commitment_document_links')
     .upsert(links, { onConflict: 'commitment_id,document_id' });
-  if (linkErr) {
-    console.warn(`  ! link warning: ${linkErr.message}`);
-  } else {
-    console.log(`  • linked to 1 theme + ${meta.disciplineIds.length} discipline(s)`);
-  }
+  if (linkErr) console.warn(`  ! link warning: ${linkErr.message}`);
+  else console.log(`  • linked to 1 theme + ${meta.disciplineIds.length} discipline(s)`);
 
-  // 5. Trigger background ingestion (function returns 202 immediately;
-  //    chunking continues in EdgeRuntime.waitUntil).
-  const ingestResp = await fetch(`${SUPABASE_URL}/functions/v1/st-ingest-document`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ document_id: doc.id }),
-  });
-  if (!ingestResp.ok && ingestResp.status !== 202) {
-    const errBody = await ingestResp.text();
-    console.error(`  ✗ ingest trigger failed: ${ingestResp.status} ${errBody.slice(0, 200)}`);
-    return;
-  }
-  console.log(`  • ingestion queued, polling status...`);
+  // 5. Iterate chunk_index calls until is_last. Each call is bounded ~60s by
+  //    the function (one 8-page slice + semantic chunking + DB inserts). No
+  //    polling — the call returns synchronously with chunks_inserted.
+  let chunkIndex = 0;
+  let totalSlices: number | null = null;
+  let totalChunksInserted = 0;
+  const docStart = Date.now();
 
-  // 6. Poll st_documents.status until ingested or failed (max 8 minutes —
-  //    typical case 60–180s, long papers can take ~5 minutes)
-  const pollStart = Date.now();
-  const maxPollMs = 8 * 60 * 1000;
   while (true) {
-    await new Promise((r) => setTimeout(r, 5000));
-    const { data: status } = await supabase
-      .from('st_documents')
-      .select('status, chunk_count, summary')
-      .eq('id', doc.id)
-      .single();
-    const elapsed = ((Date.now() - pollStart) / 1000).toFixed(0);
-    if (!status) {
-      console.error(`  ✗ poll lost row after ${elapsed}s`);
+    const sliceStart = Date.now();
+    let result: {
+      chunks_inserted: number;
+      page_range: string;
+      total_pages: number;
+      total_chunks: number;
+      is_last: boolean;
+      error?: string;
+    };
+    try {
+      result = await withRetry(`slice ${chunkIndex}`, 2, async () => {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/st-ingest-document`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${SERVICE_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ document_id: doc.id, chunk_index: chunkIndex }),
+        });
+        if (!resp.ok) {
+          const txt = await resp.text().catch(() => '');
+          throw new Error(`HTTP ${resp.status}: ${txt.slice(0, 200)}`);
+        }
+        return await resp.json();
+      });
+    } catch (err) {
+      console.error(`  ✗ slice ${chunkIndex} failed after retries: ${(err as Error).message}`);
+      // Leave the doc in 'ingesting' state — manual retry can resume from the
+      // failed chunk_index. Other slices already inserted stay in knowledge_chunks.
       return;
     }
-    if (status.status === 'ingested') {
-      console.log(`  ✓ ingested in ${elapsed}s — ${status.chunk_count} chunks`);
-      if (status.summary) console.log(`    summary: ${status.summary}`);
+
+    const sliceSeconds = ((Date.now() - sliceStart) / 1000).toFixed(0);
+    totalChunksInserted += result.chunks_inserted;
+    if (totalSlices === null) totalSlices = result.total_chunks;
+    console.log(
+      `    slice ${chunkIndex + 1}/${result.total_chunks} (pages ${result.page_range}) ` +
+      `→ ${result.chunks_inserted} chunks in ${sliceSeconds}s`,
+    );
+
+    if (result.is_last) {
+      const totalSeconds = ((Date.now() - docStart) / 1000).toFixed(0);
+      console.log(`  ✓ ingested in ${totalSeconds}s — ${totalChunksInserted} chunks across ${result.total_chunks} slice(s)`);
       return;
     }
-    if (status.status === 'failed') {
-      console.error(`  ✗ failed in ${elapsed}s — ${status.summary ?? 'no reason recorded'}`);
-      return;
-    }
-    process.stdout.write(`    ${elapsed}s elapsed (status=${status.status})\r`);
-    if (Date.now() - pollStart > maxPollMs) {
-      console.error(`\n  ✗ poll timed out after ${elapsed}s (still ${status.status}). Background work may still complete.`);
-      return;
-    }
+    chunkIndex++;
   }
 }
 

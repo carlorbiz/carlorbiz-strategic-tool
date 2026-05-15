@@ -55,7 +55,7 @@ export function PriorityStatusGrid() {
   };
 
   return (
-    <div>
+    <div data-tour="themes-grid">
       <h2 className="text-lg font-semibold mb-3">{v.commitment_top_plural}</h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {priorities.map(p => {

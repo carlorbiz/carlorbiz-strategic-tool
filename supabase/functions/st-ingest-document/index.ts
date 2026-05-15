@@ -188,9 +188,155 @@ async function runIngestion(
   }
 }
 
+// ─── Per-slice processor (chunk_index pattern) ────────────────
+// Processes ONE 8-page slice of a PDF in a single synchronous call. Bounded
+// ~60s. Caller orchestrates by iterating chunk_index from 0 to totalChunks-1.
+// Each call is independent and idempotent — failing in the middle of a batch
+// leaves prior slices' chunks persisted in knowledge_chunks.
+
+async function processSlice(
+  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  doc: any,
+  chunkIndex: number,
+): Promise<{
+  chunks_inserted: number;
+  page_range: string;
+  total_pages: number;
+  total_chunks: number;
+  is_last: boolean;
+}> {
+  if (doc.file_type !== "pdf") {
+    throw new Error(
+      `chunk_index is only supported for PDF files. File type is "${doc.file_type}" — call without chunk_index for single-shot ingestion of this file type.`,
+    );
+  }
+
+  // 1. Download the PDF (could be optimised with caching across calls; for
+  //    one-time bulk seeding it's cheap enough to re-fetch per slice)
+  const { data: fileData, error: fileErr } = await supabase.storage
+    .from("st-documents")
+    .download(doc.file_path);
+  if (fileErr || !fileData) {
+    throw new Error(`Failed to download file: ${fileErr?.message ?? "unknown"}`);
+  }
+  const pdfBytes = new Uint8Array(await fileData.arrayBuffer());
+
+  // 2. Convert just this slice to Markdown
+  const slice = await convertPdfSliceToMarkdown(pdfBytes, chunkIndex);
+  const totalChunks = Math.max(1, Math.ceil(slice.totalPages / PAGES_PER_CHUNK));
+  const isLast = chunkIndex === totalChunks - 1;
+
+  if (!slice.markdown || slice.markdown.trim().length < 10) {
+    return {
+      chunks_inserted: 0,
+      page_range: `${slice.startPage}-${slice.endPage}`,
+      total_pages: slice.totalPages,
+      total_chunks: totalChunks,
+      is_last: isLast,
+    };
+  }
+
+  const llmConfig: LLMConfig = {
+    provider: "anthropic",
+    model: "claude-sonnet-4-20250514",
+    apiKey: ANTHROPIC_API_KEY,
+  };
+
+  // 3. Run semantic chunker on this slice's markdown. Typically 1-2 LLM calls
+  //    since 8 pages produce ~10-20k chars of markdown.
+  const segments = splitIntoSegments(slice.markdown, 10000);
+  const newChunks: Array<{ chunk_text: string; chunk_summary: string; topic_tags: string[] }> = [];
+  for (const segment of segments) {
+    const result = await callLLM(
+      llmConfig,
+      CHUNK_EXTRACTION_PROMPT,
+      [{ role: "user", content: segment }],
+      8000,
+    );
+    newChunks.push(...parseChunksFromLLM(result));
+  }
+
+  // 4. Insert the chunks immediately (idempotency-friendly: each slice's
+  //    chunks land in the DB before this function returns)
+  let inserted = 0;
+  for (const chunk of newChunks) {
+    const { error: chunkErr } = await supabase
+      .from("knowledge_chunks")
+      .insert({
+        source_app: "strategic-tool",
+        engagement_id: doc.engagement_id,
+        source_type: "document",
+        source_id: doc.id,
+        document_source: doc.title,
+        section_reference: null,
+        chunk_text: chunk.chunk_text,
+        chunk_summary: chunk.chunk_summary,
+        topic_tags: chunk.topic_tags,
+        content_type: "governance",
+        is_active: true,
+        extraction_version: "st-1.0",
+      });
+    if (!chunkErr) inserted++;
+  }
+
+  // 5. Update doc chunk_count (additive across slices)
+  await supabase
+    .from("st_documents")
+    .update({ chunk_count: (doc.chunk_count ?? 0) + inserted })
+    .eq("id", doc.id);
+
+  // 6. On the first slice, generate the doc summary from the first ~4k chars
+  //    of markdown. Cheap (~5s) and avoids needing a separate finalize call.
+  if (chunkIndex === 0) {
+    try {
+      let summary = await callLLM(
+        llmConfig,
+        SUMMARY_PROMPT,
+        [{ role: "user", content: slice.markdown.slice(0, 4000) }],
+        200,
+      );
+      summary = summary.trim().replace(/^["']|["']$/g, "");
+      await supabase.from("st_documents").update({ summary }).eq("id", doc.id);
+    } catch {
+      // Non-fatal — summary stays NULL
+    }
+  }
+
+  // 7. On the last slice, mark the doc ingested
+  if (isLast) {
+    await supabase
+      .from("st_documents")
+      .update({
+        status: "ingested",
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", doc.id);
+  }
+
+  return {
+    chunks_inserted: inserted,
+    page_range: `${slice.startPage}-${slice.endPage}`,
+    total_pages: slice.totalPages,
+    total_chunks: totalChunks,
+    is_last: isLast,
+  };
+}
+
 // ─── Main handler ─────────────────────────────────────────────
-// Returns 202 immediately and runs ingestion in the background via
-// EdgeRuntime.waitUntil. Callers poll st_documents.status to detect completion.
+//
+// Two modes:
+//
+//   Mode A — no chunk_index (whole-document, background)
+//     For UI uploads of typical-length documents. Returns 202 immediately and
+//     runs the full ingestion (download → extract → chunk → insert → mark)
+//     inside EdgeRuntime.waitUntil. UI polls st_documents.status.
+//
+//   Mode B — chunk_index provided (per-slice, synchronous)
+//     For long PDFs and bulk-seed orchestration. Processes exactly ONE 8-page
+//     slice and returns 200 with chunks_inserted, page_range, total_chunks,
+//     is_last. Caller iterates chunk_index from 0 to total_chunks - 1. Each
+//     call is bounded ~60s. Matches ACRRM's convert-pdf-to-markdown contract.
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -199,7 +345,9 @@ Deno.serve(async (req: Request) => {
 
   try {
     await requireAuth(req);
-    const { document_id } = await req.json();
+    const body = await req.json();
+    const document_id = body.document_id as string | undefined;
+    const chunkIndex = typeof body.chunk_index === "number" ? body.chunk_index : null;
 
     if (!document_id) {
       return jsonResponse({ error: "document_id is required" }, 400);
@@ -217,23 +365,39 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Document not found" }, 404);
     }
 
-    // Mark ingesting BEFORE returning so the caller can immediately observe
-    // the status transition by polling.
-    await supabase
-      .from("st_documents")
-      .update({ status: "ingesting" })
-      .eq("id", document_id);
+    // Mark ingesting on first contact regardless of mode.
+    if (doc.status !== "ingesting") {
+      await supabase
+        .from("st_documents")
+        .update({ status: "ingesting" })
+        .eq("id", document_id);
+    }
 
-    // Kick off background work. EdgeRuntime.waitUntil keeps the runtime alive
-    // after the response is sent, sidestepping the 150s gateway idle timeout
-    // that would otherwise kill long-running chunking jobs.
+    // ── Mode B: per-slice ──
+    if (chunkIndex !== null) {
+      try {
+        const result = await processSlice(supabase, doc, chunkIndex);
+        return jsonResponse({
+          document_id,
+          chunk_index: chunkIndex,
+          ...result,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Slice processing failed";
+        // Don't mark the whole doc failed on a single slice error — the caller
+        // can decide to retry that slice or move on. But surface the error
+        // clearly in the response.
+        return jsonResponse({ error: msg, chunk_index: chunkIndex }, 500);
+      }
+    }
+
+    // ── Mode A: whole-document via waitUntil (legacy / UI path) ──
     const work = runIngestion(supabase, doc);
     // deno-lint-ignore no-explicit-any
     const er = (globalThis as any).EdgeRuntime;
     if (er && typeof er.waitUntil === "function") {
       er.waitUntil(work);
     } else {
-      // Local / non-Supabase fallback: await synchronously.
       await work;
     }
 
@@ -333,79 +497,123 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-async function callDocumentApiWithRetry(
-  base64Pdf: string,
-  promptText: string,
-  maxRetries = 2,
-): Promise<string> {
-  let lastErr: string = "";
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 32000,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "document",
-                source: {
-                  type: "base64",
-                  media_type: "application/pdf",
-                  data: base64Pdf,
-                },
+// Single-attempt Document API call. The caller (the bulk-seed script) retries
+// at the slice level if needed. Internal retries waste the function's wall-clock
+// budget — if the first call doesn't complete in time, a second attempt won't
+// either within the same 150s gateway window.
+//
+// max_tokens lowered to 8000: 3-page slices produce at most ~4-6k tokens of
+// Markdown output, and capping output length is the most direct way to keep
+// generation latency predictable.
+async function callDocumentApi(base64Pdf: string, promptText: string): Promise<string> {
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 8000,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: base64Pdf,
               },
-              { type: "text", text: promptText },
-            ],
-          },
-        ],
-      }),
-    });
+            },
+            { type: "text", text: promptText },
+          ],
+        },
+      ],
+    }),
+  });
 
-    if (resp.ok) {
-      const data = await resp.json();
-      const text = data?.content?.[0]?.text;
-      if (typeof text === "string" && text.length > 0) return text;
-      lastErr = "Claude returned empty content";
-    } else {
-      lastErr = `Claude API ${resp.status}: ${(await resp.text()).slice(0, 300)}`;
-    }
-
-    if (attempt < maxRetries) {
-      const backoffMs = 1000 * Math.pow(2, attempt);
-      await new Promise((r) => setTimeout(r, backoffMs));
-    }
+  if (!resp.ok) {
+    throw new Error(`Claude API ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
   }
-  throw new Error(`PDF→Markdown failed after ${maxRetries + 1} attempts: ${lastErr}`);
+  const data = await resp.json();
+  const text = data?.content?.[0]?.text;
+  if (typeof text !== "string" || text.length === 0) {
+    throw new Error("Claude returned empty content");
+  }
+  return text;
 }
 
-async function convertPdfToMarkdown(pdfBytes: Uint8Array): Promise<string> {
+// PAGES_PER_CHUNK is the architectural unit: one function call processes
+// exactly one slice of this many pages. ACRRM defaults to 8; we use 2 here
+// because dense systematic reviews (Bradford 2016, Krahe 2024, Hamiduzzaman
+// 2025) made 3-page slices run 90-130s — close to and sometimes over the
+// 150s gateway timeout. At 2 pages, typical slice times are 40-80s with
+// safe margin. The trade-off is more slices per paper (a 50-page review =
+// 25 slices ~= 25-30 minutes of ingestion wall-clock), which is acceptable
+// for one-time bulk seeding.
+export const PAGES_PER_CHUNK = 2;
+
+export interface PdfChunkInfo {
+  totalPages: number;
+  totalChunks: number;
+}
+
+async function getPdfChunkInfo(pdfBytes: Uint8Array): Promise<PdfChunkInfo> {
   const srcDoc = await PDFDocument.load(pdfBytes);
   const totalPages = srcDoc.getPageCount();
-  const chunkSize = 8;
+  return {
+    totalPages,
+    totalChunks: Math.max(1, Math.ceil(totalPages / PAGES_PER_CHUNK)),
+  };
+}
 
-  const parts: string[] = [];
-  for (let start = 0; start < totalPages; start += chunkSize) {
-    const end = Math.min(start + chunkSize - 1, totalPages - 1);
-    const newDoc = await PDFDocument.create();
-    const indices = Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    const copied = await newDoc.copyPages(srcDoc, indices);
-    for (const p of copied) newDoc.addPage(p);
-    const chunkBytes = new Uint8Array(await newDoc.save());
-
-    const base64 = toBase64(chunkBytes);
-    const promptSuffix = `\n\nNote: This is pages ${start + 1}–${end + 1} of a ${totalPages}-page document. Convert all content on these pages. Do not add any preamble about the page range.`;
-    const md = await callDocumentApiWithRetry(base64, PDF_CONVERT_PROMPT + promptSuffix);
-    parts.push(md.trim());
+// Convert ONE 8-page slice of a PDF to Markdown via a single Claude Document
+// API call. Bounded ~30s. The bulk-seed script orchestrates iteration by
+// chunk_index from 0 to totalChunks-1; the UI's no-chunk-index path uses
+// convertEntirePdfInBackground (below) inside EdgeRuntime.waitUntil.
+async function convertPdfSliceToMarkdown(
+  pdfBytes: Uint8Array,
+  chunkIndex: number,
+): Promise<{ markdown: string; startPage: number; endPage: number; totalPages: number }> {
+  const srcDoc = await PDFDocument.load(pdfBytes);
+  const totalPages = srcDoc.getPageCount();
+  const start = chunkIndex * PAGES_PER_CHUNK;
+  if (start >= totalPages) {
+    throw new Error(`chunk_index ${chunkIndex} exceeds page count ${totalPages}`);
   }
+  const end = Math.min(start + PAGES_PER_CHUNK - 1, totalPages - 1);
 
+  const newDoc = await PDFDocument.create();
+  const indices = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  const copied = await newDoc.copyPages(srcDoc, indices);
+  for (const p of copied) newDoc.addPage(p);
+  const sliceBytes = new Uint8Array(await newDoc.save());
+
+  const base64 = toBase64(sliceBytes);
+  const promptSuffix = `\n\nNote: This is pages ${start + 1}–${end + 1} of a ${totalPages}-page document. Convert all content on these pages. Do not add any preamble about the page range.`;
+  const markdown = await callDocumentApi(base64, PDF_CONVERT_PROMPT + promptSuffix);
+
+  return {
+    markdown: markdown.trim(),
+    startPage: start + 1,
+    endPage: end + 1,
+    totalPages,
+  };
+}
+
+// Legacy whole-PDF conversion — kept for the UI's no-chunk-index path which
+// runs inside EdgeRuntime.waitUntil. New callers should use the chunk_index
+// orchestration via convertPdfSliceToMarkdown.
+async function convertPdfToMarkdown(pdfBytes: Uint8Array): Promise<string> {
+  const { totalChunks } = await getPdfChunkInfo(pdfBytes);
+  const parts: string[] = [];
+  for (let i = 0; i < totalChunks; i++) {
+    const { markdown } = await convertPdfSliceToMarkdown(pdfBytes, i);
+    parts.push(markdown);
+  }
   return parts.join("\n\n");
 }
 

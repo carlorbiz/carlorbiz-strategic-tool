@@ -38,6 +38,25 @@ async function callEngineFunction(
 }
 
 // ── Start a new conversation ─────────────────────────────────────────────────
+// ie_conversations.user_id is a FK to user_profiles(id) — NOT auth.users(id).
+// We have to resolve the user_profile row before inserting, otherwise the FK
+// fails. The RLS policy (migration 0007) uses current_user_profile_id() to
+// gate access, so the value we insert must equal that helper's result.
+
+async function currentUserProfileId(): Promise<string> {
+  if (!supabase) throw new Error('Supabase not configured');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  const { data: profile, error } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+  if (error || !profile) {
+    throw new Error('Your user_profiles row is missing — contact the engagement admin');
+  }
+  return profile.id as string;
+}
 
 export async function startConversation(
   goal: string,
@@ -46,13 +65,12 @@ export async function startConversation(
 ): Promise<IeConversation> {
   if (!supabase) throw new Error('Supabase not configured');
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const profileId = await currentUserProfileId();
 
   const { data, error } = await supabase
     .from('ie_conversations')
     .insert({
-      user_id: user.id,
+      user_id: profileId,
       product_id: PRODUCT_ID,
       engagement_id: engagementId ?? null,
       goal,

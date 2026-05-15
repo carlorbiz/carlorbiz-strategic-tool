@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { EngagementProvider, useEngagement } from '@/contexts/EngagementContext';
 import { StrategicChatProvider } from '@/contexts/StrategicChatContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, LogOut } from 'lucide-react';
+import { ArrowLeft, LogOut, Sparkles } from 'lucide-react';
 import { EngagementNeraChatbot } from '@/components/chat/EngagementNeraChatbot';
+import { OnboardingWizard } from '@/components/engagement/OnboardingWizard';
 
 // Status-specific views
 import { EngagementDraftView } from '@/pages/engagement/DraftView';
@@ -14,9 +16,10 @@ import { EngagementDeliveredView } from '@/pages/engagement/DeliveredView';
 import { EngagementLivingView } from '@/pages/engagement/LivingView';
 import { EngagementArchivedView } from '@/pages/engagement/ArchivedView';
 
-function EngagementNav() {
-  const { engagement } = useEngagement();
+function EngagementNav({ onTakeTour }: { onTakeTour: () => void }) {
+  const { engagement, aiConfig } = useEngagement();
   const { signOut } = useAuth();
+  const isResearchProfile = aiConfig?.profile_key === 'research-intelligence';
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -34,10 +37,24 @@ function EngagementNav() {
             </span>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-1 text-muted-foreground">
-          <LogOut className="w-3 h-3" />
-          Sign out
-        </Button>
+        <div className="flex items-center gap-1">
+          {isResearchProfile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onTakeTour}
+              className="gap-1 text-muted-foreground"
+              title="Re-launch the demo tour"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span className="hidden sm:inline">Take the tour</span>
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-1 text-muted-foreground">
+            <LogOut className="w-3 h-3" />
+            Sign out
+          </Button>
+        </div>
       </div>
     </nav>
   );
@@ -123,10 +140,26 @@ export default function EngagementShell() {
   return (
     <EngagementProvider engagementId={engagementId}>
       <StrategicChatProvider>
-        <EngagementNav />
-        <EngagementContent />
-        <EngagementNeraChatbot />
+        <EngagementShellInner />
       </StrategicChatProvider>
     </EngagementProvider>
+  );
+}
+
+function EngagementShellInner() {
+  // Manual-relaunch counter so the "Take the tour" button re-fires the wizard
+  // (remounting OnboardingWizard with a fresh forceStart=true each click).
+  const [tourNonce, setTourNonce] = useState(0);
+
+  return (
+    <>
+      <EngagementNav onTakeTour={() => setTourNonce((n) => n + 1)} />
+      <EngagementContent />
+      <EngagementNeraChatbot />
+      <OnboardingWizard
+        key={tourNonce}
+        forceStart={tourNonce > 0}
+      />
+    </>
   );
 }

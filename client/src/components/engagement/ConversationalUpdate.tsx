@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { MessageSquare, Send, Loader2, CheckCircle2, X, AlertTriangle } from 'lucide-react';
+import { MessageCircle, Send, Loader2, CheckCircle2, X, AlertTriangle } from 'lucide-react';
 
 const RAG_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   on_track: { label: 'On Track', color: 'text-green-600' },
@@ -56,7 +56,7 @@ export function ConversationalUpdate() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
+            <MessageCircle className="w-5 h-5" />
             Tell Nera what's happening
           </CardTitle>
           <CardDescription>
@@ -64,14 +64,28 @@ export function ConversationalUpdate() {
             which {v.commitment_top_singular.toLowerCase()} it relates to and capture it as a structured update.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button onClick={startUpdate} disabled={isLoading}>
+        <CardContent className="space-y-3">
+          {/* Round icon-button styled to mirror the bottom-right Nera bubble:
+              same primary fill, same circular shape, same MessageCircle icon —
+              visually signalling "this is Nera, just in update-capture mode" */}
+          <Button
+            onClick={startUpdate}
+            disabled={isLoading}
+            size="lg"
+            className="rounded-full px-6 gap-2"
+          >
             {isLoading ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Starting...</>
+              <><Loader2 className="w-4 h-4 animate-spin" /> Starting...</>
             ) : (
-              <><MessageSquare className="w-4 h-4 mr-2" /> Start update</>
+              <><MessageCircle className="w-5 h-5" /> Start update</>
             )}
           </Button>
+          {error && (
+            <div className="flex items-start gap-2 text-sm text-destructive border border-destructive/30 bg-destructive/5 rounded p-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -100,8 +114,8 @@ export function ConversationalUpdate() {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <MessageSquare className="w-4 h-4" />
-          Update conversation
+          <MessageCircle className="w-4 h-4" />
+          Update conversation with Nera
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

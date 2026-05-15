@@ -19,7 +19,14 @@ interface StrategicChatContextType {
   isLoading: boolean;
   isStreaming: boolean;
   sessionId: string;
+  /** Is the bottom-right Nera sheet open? Controlled so sample-question chips
+   *  can pop it open programmatically. */
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
   sendMessage: (text: string) => Promise<void>;
+  /** Convenience: opens the sheet and sends the message in one go. Used by
+   *  the "Try asking Nera" sample-question chips on the dashboard. */
+  askNera: (text: string) => Promise<void>;
   submitFeedback: (messageId: string, score: -1 | 1) => Promise<void>;
   clearHistory: () => void;
 }
@@ -51,6 +58,7 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isOpen, setOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>(() =>
     engagementId ? getOrCreateSessionId(engagementId) : generateId(),
   );
@@ -169,6 +177,14 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
     }
   }, [engagementId]);
 
+  // Open the Nera sheet and dispatch a question in one go — used by the
+  // "Try asking Nera" sample chips on the dashboard.
+  const askNera = useCallback(async (text: string) => {
+    setOpen(true);
+    // Tiny delay so the sheet starts animating in before the streaming begins.
+    setTimeout(() => { void sendMessage(text); }, 100);
+  }, [sendMessage]);
+
   // Suppress unused-var warning for user; kept in deps so if auth changes the
   // provider can re-evaluate (the api layer reads the session token directly).
   void user;
@@ -180,7 +196,10 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
         isLoading,
         isStreaming,
         sessionId,
+        isOpen,
+        setOpen,
         sendMessage,
+        askNera,
         submitFeedback,
         clearHistory,
       }}

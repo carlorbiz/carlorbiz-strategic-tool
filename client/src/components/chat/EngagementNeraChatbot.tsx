@@ -23,8 +23,16 @@ import { useMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
 
 export function EngagementNeraChatbot() {
-  const { messages, isLoading, isStreaming, sendMessage, submitFeedback, clearHistory } =
-    useStrategicChat();
+  const {
+    messages,
+    isLoading,
+    isStreaming,
+    sendMessage,
+    submitFeedback,
+    clearHistory,
+    isOpen,
+    setOpen,
+  } = useStrategicChat();
   const { engagement } = useEngagement();
   const v = useVocabulary();
   const isMobile = useMobile();
@@ -40,10 +48,11 @@ export function EngagementNeraChatbot() {
   const placeholder = `Ask about ${engagement.name}'s ${v.evidence_plural.toLowerCase()} or ${v.commitment_top_plural.toLowerCase()}...`;
 
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           size="icon"
+          data-tour="nera-bubble"
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
         >
           <MessageCircle className="h-6 w-6" />

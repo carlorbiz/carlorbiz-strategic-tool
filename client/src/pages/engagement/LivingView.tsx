@@ -20,6 +20,7 @@ import { PriorityStatusGrid } from '@/components/engagement/dashboard/PrioritySt
 import { DriftSignals } from '@/components/engagement/dashboard/DriftSignals';
 import { RecentUpdates } from '@/components/engagement/dashboard/RecentUpdates';
 import { NeraQuestions } from '@/components/engagement/dashboard/NeraQuestions';
+import { SampleNeraQuestions } from '@/components/engagement/dashboard/SampleNeraQuestions';
 import { ReportGenerator } from '@/components/engagement/ReportGenerator';
 import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEditor';
 
@@ -68,7 +69,7 @@ export function EngagementLivingView() {
       )}
 
       <Tabs defaultValue="dashboard">
-        <TabsList>
+        <TabsList data-tour="tabs-list">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
@@ -121,17 +122,22 @@ export function EngagementLivingView() {
           </div>
           <DriftSignals key={driftRefresh} />
 
-          {/* Nera's open questions (only shows if there are any) */}
+          {/* Nera's open questions from drift watch (only shows if there are any) */}
           <NeraQuestions />
 
+          {/* Sample questions a prospect can click to demo Nera (research profile only) */}
+          <SampleNeraQuestions />
+
           {/* Conversational update */}
-          <ConversationalUpdate />
+          <div data-tour="conversational-update">
+            <ConversationalUpdate />
+          </div>
 
           {/* Recent updates */}
           <RecentUpdates />
 
           {/* Recent documents */}
-          <div>
+          <div data-tour="recent-documents">
             <h3 className="text-base font-semibold mb-2">Recent {v.evidence_plural}</h3>
             <DocumentList refreshTrigger={docRefreshTrigger} />
           </div>

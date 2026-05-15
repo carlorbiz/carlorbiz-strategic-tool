@@ -95,16 +95,29 @@ export function useConversationalUpdate() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Resolve user_profiles.id — the interview-engine tables FK to it, NOT
+      // to auth.users.id. Passing the wrong id was the root cause of the
+      // Start update button silently failing every previous click.
+      const { data: profile, error: profileErr } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      if (profileErr || !profile) {
+        throw new Error('Your user_profiles row is missing — contact the engagement admin');
+      }
+      const profileId = profile.id as string;
+
       // Start conversation
       const conversation = await startConversation('update', engagement.id, {
         engagement_name: engagement.name,
         client_name: engagement.client_name,
       });
 
-      // Get opening prompt
+      // Get opening prompt — pass user_profiles.id, not auth.users.id
       const prompt = await selectPrompt(
         conversation.id,
-        user.id,
+        profileId,
         engagement.id
       );
 
