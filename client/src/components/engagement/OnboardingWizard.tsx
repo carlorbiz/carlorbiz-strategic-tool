@@ -175,21 +175,40 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
       disableScrolling={false}
       styles={{
         options: {
-          primaryColor: 'hsl(var(--primary))',
-          backgroundColor: 'hsl(var(--background))',
-          textColor: 'hsl(var(--foreground))',
-          arrowColor: 'hsl(var(--background))',
-          overlayColor: 'rgba(0, 0, 0, 0.4)',
+          // Explicit hex / rgba — react-joyride passes these into inline styles,
+          // which cannot resolve hsl(var(--token)) CSS-variable references.
+          primaryColor: '#2D7E32',         // brand green (matches --color-brand-primary)
+          backgroundColor: '#ffffff',      // tooltip fill (was transparent → overlapping bug)
+          textColor: '#262626',
+          arrowColor: '#ffffff',
+          overlayColor: 'rgba(0, 0, 0, 0.55)',
           zIndex: 60,
         },
         tooltip: {
           borderRadius: 8,
+          padding: '20px 24px',
+          maxWidth: 460,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.18)',
+        },
+        tooltipTitle: {
+          fontSize: 16,
+          fontWeight: 600,
+          marginBottom: 8,
+        },
+        tooltipContent: {
+          padding: 0,
+          fontSize: 14,
+          lineHeight: 1.5,
         },
         buttonNext: {
           borderRadius: 6,
+          padding: '8px 16px',
         },
         buttonBack: {
           marginRight: 8,
+        },
+        buttonSkip: {
+          color: '#6b7280',
         },
       }}
       locale={{
