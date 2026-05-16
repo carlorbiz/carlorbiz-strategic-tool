@@ -68,28 +68,43 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
       content: (
         <div className="space-y-2 text-sm">
           <p>
-            This is a <strong>research intelligence hub</strong> — a working installation of
-            the Carlorbiz Strategic Tool, configured as a doorway for events teams and
-            programme committees.
+            This is a <strong>research intelligence hub</strong> — a working installation of the
+            Carlorbiz Strategic Tool. It sits between the research your organisation harvests
+            and the strategic decisions your organisation has to make next.
           </p>
           <p>
-            Each year's research {v.evidence_plural.toLowerCase()} accumulate here instead of getting
-            their five seconds at a podium and disappearing. The next two minutes will show you
-            what that looks like in practice.
+            Two ideas thread through it: <strong>themes</strong> are the intake taxonomy (how the
+            corpus is organised); <strong>pillars</strong> are the strategic intent the corpus is
+            harvested in service of. The next two minutes show you both — and the loop between
+            them, which is where the value lives.
           </p>
         </div>
       ),
       disableBeacon: true,
     },
     {
+      target: '[data-tour="pillars-panel"]',
+      title: 'Strategic pillars — the intent',
+      content: (
+        <p className="text-sm">
+          These are the organisational or departmental priorities the conference is harvesting
+          evidence for. The tool earns its keep by showing what the corpus is telling you about
+          each pillar — what's being advanced, what's being contradicted, what's silent. Pillars
+          either come from your existing strategic plan, or from a quick extraction workshop if
+          you're using this hub as a standalone add-on.
+        </p>
+      ),
+      placement: 'bottom',
+    },
+    {
       target: '[data-tour="themes-grid"]',
-      title: `The four ${v.commitment_top_plural}`,
+      title: `${v.commitment_top_plural} — the intake taxonomy`,
       content: (
         <p className="text-sm">
           Every {v.evidence_singular.toLowerCase()} in the corpus is tagged against one of these
-          {' '}{v.commitment_top_plural.toLowerCase()} (and one or more {v.cross_cut_plural.toLowerCase()},
-          which are cross-cutting tags like discipline or geography). The status pill on each card
-          rolls up from the underlying {v.commitment_sub_plural.toLowerCase()}.
+          {' '}{v.commitment_top_plural.toLowerCase()} (and one or more {v.cross_cut_plural.toLowerCase()}{' '}
+          for cross-cutting dimensions like discipline or geography). Themes are locked once
+          you've set them — they're how the corpus is organised, not what the corpus is for.
         </p>
       ),
       placement: 'bottom',
@@ -99,23 +114,23 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
       title: `Recent ${v.evidence_plural}`,
       content: (
         <p className="text-sm">
-          Each {v.evidence_singular.toLowerCase()} you upload is converted, semantically chunked, and
-          tagged here. The chunk count tells you how granularly Nera can recall it. Authors,
-          institution, venue, and any reference identifier travel with the {v.evidence_singular.toLowerCase()}{' '}
-          so you can always get back to the source.
+          Each {v.evidence_singular.toLowerCase()} you upload is converted, semantically chunked,
+          and tagged against a theme and any cross-cutting disciplines. Authors, institution,
+          venue, and reference identifier travel with the {v.evidence_singular.toLowerCase()} so
+          you can always get back to the source.
         </p>
       ),
       placement: 'top',
     },
     {
       target: '[data-tour="nera-bubble"]',
-      title: 'Talk to Nera about this corpus',
+      title: 'Talk to Nera about your pillars',
       content: (
         <p className="text-sm">
-          Click the round bubble to open Nera. She answers questions strictly from the {' '}
-          {v.evidence_plural.toLowerCase()} in <strong>this engagement</strong> — no cross-contamination
-          with other clients. Try things like <em>"Which papers contradict each other on telehealth?"</em>
-          {' '}or <em>"Who at Macquarie has presented on workforce planning?"</em>
+          Click the round bubble to open Nera. She answers strictly from <strong>this
+          engagement's</strong> corpus — no cross-contamination. The questions worth asking are
+          pillar-level: <em>"Which pillar is best served by what we've collected?"</em> or{' '}
+          <em>"Where is the corpus saying our assumptions about workforce uptake are wrong?"</em>
         </p>
       ),
       placement: 'left',
@@ -125,25 +140,14 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
       title: 'The work surfaces',
       content: (
         <p className="text-sm">
-          The dashboard is the front door. <strong>Documents</strong> is where you upload new
-          {' '}{v.evidence_plural.toLowerCase()} — drop in PDFs from the shared Google Drive to watch
-          one go through the pipeline live. <strong>Reports</strong> generates a Conference
-          Roundup or Speaker Follow-up Brief from the corpus on demand.
+          <strong>Documents</strong> is where you upload — drop in PDFs from the shared folder to
+          watch one go through the pipeline live. <strong>Reports</strong> generates a Conference
+          Roundup, a Speaker Follow-up Brief, or — the most consequential one — a{' '}
+          <strong>Pillar Briefing</strong> that synthesises what the corpus says about each
+          strategic pillar and recommends moves for the next planning cycle.
         </p>
       ),
       placement: 'bottom',
-    },
-    {
-      target: '[data-tour="conversational-update"]',
-      title: 'Capture a follow-up',
-      content: (
-        <p className="text-sm">
-          When something happens — a researcher's paper gets cited in policy, a programme decision
-          gets made, a theme matures — capture it conversationally here. Nera figures out which
-          Theme or Stream it belongs to and stores it as structured evidence.
-        </p>
-      ),
-      placement: 'top',
     },
     {
       target: 'body',
@@ -152,12 +156,17 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
       content: (
         <div className="space-y-2 text-sm">
           <p>
-            That's the tour. The {v.commitment_top_plural.toLowerCase()}, the {v.evidence_plural.toLowerCase()},
-            the chatbot, and the reports are all live and querying real ingested research.
+            That's the tour. The pillars, the themes, the {v.evidence_plural.toLowerCase()}, the
+            chatbot, and the reports are all live and querying real ingested research.
           </p>
           <p>
-            You can re-launch this tour anytime from the navigation. If you have any questions,
-            email <strong>carla@carlorbiz.com.au</strong>.
+            Think of the question this hub answers: <em>"Is what we're harvesting actually
+            advancing what our organisation is trying to do?"</em> If yes — sharpen. If no — that's
+            the most valuable signal the tool can give you.
+          </p>
+          <p>
+            Re-launch this tour anytime from the navigation. Questions:{' '}
+            <strong>carla@carlorbiz.com.au</strong>.
           </p>
         </div>
       ),

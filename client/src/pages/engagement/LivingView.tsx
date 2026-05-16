@@ -21,6 +21,7 @@ import { DriftSignals } from '@/components/engagement/dashboard/DriftSignals';
 import { RecentUpdates } from '@/components/engagement/dashboard/RecentUpdates';
 import { NeraQuestions } from '@/components/engagement/dashboard/NeraQuestions';
 import { SampleNeraQuestions } from '@/components/engagement/dashboard/SampleNeraQuestions';
+import { PillarsPanel } from '@/components/engagement/dashboard/PillarsPanel';
 import { ReportGenerator } from '@/components/engagement/ReportGenerator';
 import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEditor';
 
@@ -30,8 +31,12 @@ import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEdit
  * Shown when engagement.status === 'living'.
  */
 export function EngagementLivingView() {
-  const { engagement, commitments, isEngagementAdmin } = useEngagement();
+  const { engagement, commitments, isEngagementAdmin, aiConfig } = useEngagement();
   const v = useVocabulary();
+  // Research-vertical engagements suppress strategic-planning-shaped features
+  // whose semantics don't yet map (conversational update, drift signals UI).
+  // Pillars + sample Nera questions + reports do the heavy lifting instead.
+  const isResearchProfile = aiConfig?.profile_key === 'research-intelligence';
   const [docRefreshTrigger, setDocRefreshTrigger] = useState(0);
   const [surveyRefreshTrigger, setSurveyRefreshTrigger] = useState(0);
   const [driftRunning, setDriftRunning] = useState(false);
@@ -87,7 +92,10 @@ export function EngagementLivingView() {
 
         {/* ── Dashboard tab ─────────────────────────────────── */}
         <TabsContent value="dashboard" className="mt-4 space-y-6">
-          {/* Priority status grid with RAG roll-ups */}
+          {/* Strategic pillars — the intent the corpus is harvested in service of */}
+          <PillarsPanel />
+
+          {/* Themes (intake taxonomy) — what the corpus is organised by */}
           <PriorityStatusGrid />
 
           {/* Lenses */}
@@ -102,39 +110,49 @@ export function EngagementLivingView() {
             </div>
           )}
 
-          {/* Drift signals */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold">{v.drift_plural ?? 'Drift Signals'}</h3>
-            {isEngagementAdmin && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRunDriftWatch}
-                disabled={driftRunning}
-              >
-                {driftRunning ? (
-                  <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Running...</>
-                ) : (
-                  <><Radar className="w-3 h-3 mr-1" /> Run Drift Watch</>
+          {/* Drift signals — hidden on research-vertical engagements until the
+              drift-watch edge function is reframed to detect programme-integrity
+              signals (repeat presenters, theme silence, institution concentration)
+              rather than strategic-plan drift. */}
+          {!isResearchProfile && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold">{v.drift_plural ?? 'Drift Signals'}</h3>
+                {isEngagementAdmin && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRunDriftWatch}
+                    disabled={driftRunning}
+                  >
+                    {driftRunning ? (
+                      <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Running...</>
+                    ) : (
+                      <><Radar className="w-3 h-3 mr-1" /> Run Drift Watch</>
+                    )}
+                  </Button>
                 )}
-              </Button>
-            )}
-          </div>
-          <DriftSignals key={driftRefresh} />
-
-          {/* Nera's open questions from drift watch (only shows if there are any) */}
-          <NeraQuestions />
+              </div>
+              <DriftSignals key={driftRefresh} />
+              <NeraQuestions />
+            </>
+          )}
 
           {/* Sample questions a prospect can click to demo Nera (research profile only) */}
           <SampleNeraQuestions />
 
-          {/* Conversational update */}
-          <div data-tour="conversational-update">
-            <ConversationalUpdate />
-          </div>
+          {/* Conversational update — hidden on research-vertical engagements until
+              the semantic equivalent ("capture how the corpus shifted a pillar")
+              is designed. Shipping RAG-status framing for a non-plan engagement
+              is worse than silence. */}
+          {!isResearchProfile && (
+            <div data-tour="conversational-update">
+              <ConversationalUpdate />
+            </div>
+          )}
 
           {/* Recent updates */}
-          <RecentUpdates />
+          {!isResearchProfile && <RecentUpdates />}
 
           {/* Recent documents */}
           <div data-tour="recent-documents">

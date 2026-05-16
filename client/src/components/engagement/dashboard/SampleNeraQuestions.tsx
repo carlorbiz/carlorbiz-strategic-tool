@@ -1,12 +1,12 @@
-// Demonstrative "Try asking Nera" panel. Renders a short list of curated
-// sample questions tailored to the research-intelligence profile. Clicking a
-// chip opens the Nera sheet and dispatches the question via askNera().
+// Demonstrative "Try asking Nera" panel. Renders a curated list of pillar-aware
+// prompts that tie the corpus back to organisational purpose. Clicking a chip
+// opens the Nera sheet and dispatches the question via askNera().
 //
-// The questions below are written to land specifically against the Rural
-// Futures Australia corpus (rural health, multidisciplinary care, telehealth,
-// workforce, knowledge translation). For other research-vertical engagements
-// they're generic enough to still demonstrate the pattern; specific prompts
-// per engagement can be added as a separate config later.
+// These are deliberately written as questions a Programme Director or board
+// member would actually ask — not librarian queries ("find me a paper") but
+// strategic-intelligence queries ("which pillar is best served, which is silent,
+// what should our next strategic plan emphasise"). The corpus is the input;
+// pillar progress is the output.
 
 import { useStrategicChat } from '@/contexts/StrategicChatContext';
 import { useEngagement } from '@/contexts/EngagementContext';
@@ -14,12 +14,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 const RESEARCH_PROMPTS = [
-  'Which papers contradict each other on whether telehealth deskills rural clinicians?',
-  'Who has done research on co-designed integrated care models in Cape York or northern Australia?',
-  'What does the corpus say about the gaps in workforce retention strategies for allied health?',
-  'Compare what Krahe et al. argue across their 2024 and 2025 papers — has their position shifted?',
-  'Which authors have presented on Indigenous-led service models, and who would I invite for next year?',
-  'What are the unintended consequences of digital health adoption that the corpus has flagged?',
+  'Of our four strategic pillars, which one is best served by the current corpus, and which is the weakest?',
+  'Where is the corpus suggesting our assumptions about workforce uptake are wrong, and what should we change?',
+  'Which voices are dominating the corpus, and whose perspectives are missing relative to what our pillars need?',
+  'What evidence in the corpus is strong enough to put in a policy submission tomorrow, and against which pillar would it land hardest?',
+  "What does the corpus suggest we should programme into next year's symposium to close the gaps in our weakest pillar?",
+  'Has anything in the corpus actually been adopted into rural health practice or policy in the last 12 months — and which pillar did it advance?',
 ];
 
 export function SampleNeraQuestions() {
@@ -38,10 +38,11 @@ export function SampleNeraQuestions() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
-          Try asking Nera
+          Ask Nera about your strategic pillars
         </CardTitle>
         <CardDescription>
-          Click any of these to open Nera and have her answer from the corpus.
+          Strategic questions a Programme Director or board would ask. Click any to
+          open Nera and have her answer from the corpus, tied back to your pillars.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

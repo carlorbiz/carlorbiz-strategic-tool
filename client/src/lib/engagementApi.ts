@@ -118,6 +118,22 @@ export async function fetchAiConfig(engagementId: string): Promise<StAiConfig | 
   return global as StAiConfig | null;
 }
 
+// ── Organisational Pillars ──────────────────────────────────────────────────
+
+export async function fetchOrganisationalPillars(
+  engagementId: string,
+): Promise<import('@/types/engagement').StOrganisationalPillar[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('st_organisational_pillars')
+    .select('*')
+    .eq('engagement_id', engagementId)
+    .eq('status', 'active')
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as import('@/types/engagement').StOrganisationalPillar[];
+}
+
 // ── Documents ───────────────────────────────────────────────────────────────
 
 export async function fetchDocuments(

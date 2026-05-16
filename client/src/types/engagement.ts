@@ -178,6 +178,24 @@ export interface StDocument {
   external_link: string | null;
 }
 
+// ── Organisational Pillars (migration 0008) ─────────────────────────────────
+// Strategic intent the corpus is harvested in service of. Sits above themes.
+
+export type PillarLevel = 'organisational' | 'departmental' | 'programmatic';
+
+export interface StOrganisationalPillar {
+  id: string;
+  engagement_id: string;
+  title: string;
+  description: string | null;
+  success_signal: string | null;
+  pillar_level: PillarLevel;
+  order_index: number;
+  status: 'active' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
 // ── Surveys ─────────────────────────────────────────────────────────────────
 
 export interface StSurvey {

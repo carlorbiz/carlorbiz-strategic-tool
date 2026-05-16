@@ -6,6 +6,7 @@ import {
   fetchStages,
   fetchUserRoles,
   fetchAiConfig,
+  fetchOrganisationalPillars,
 } from '@/lib/engagementApi';
 import type {
   Engagement,
@@ -13,12 +14,14 @@ import type {
   Commitment,
   UserEngagementRole,
   StAiConfig,
+  StOrganisationalPillar,
 } from '@/types/engagement';
 
 interface EngagementContextType {
   engagement: Engagement | null;
   stages: EngagementStage[];
   commitments: Commitment[];
+  pillars: StOrganisationalPillar[];
   userRoles: UserEngagementRole[];
   aiConfig: StAiConfig | null;
   isLoading: boolean;
@@ -43,6 +46,7 @@ export function EngagementProvider({ engagementId, children }: EngagementProvide
   const [engagement, setEngagement] = useState<Engagement | null>(null);
   const [stages, setStages] = useState<EngagementStage[]>([]);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
+  const [pillars, setPillars] = useState<StOrganisationalPillar[]>([]);
   const [userRoles, setUserRoles] = useState<UserEngagementRole[]>([]);
   const [aiConfig, setAiConfig] = useState<StAiConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,15 +70,17 @@ export function EngagementProvider({ engagementId, children }: EngagementProvide
 
       // Use the engagement's UUID for all subsequent queries
       const uuid = eng.id;
-      const [stg, cmt, cfg] = await Promise.all([
+      const [stg, cmt, cfg, plr] = await Promise.all([
         fetchStages(uuid),
         fetchCommitments(uuid),
         fetchAiConfig(uuid),
+        fetchOrganisationalPillars(uuid),
       ]);
 
       setStages(stg);
       setCommitments(cmt);
       setAiConfig(cfg);
+      setPillars(plr);
 
       // Fetch user roles if authenticated
       if (user?.id) {
@@ -110,6 +116,7 @@ export function EngagementProvider({ engagementId, children }: EngagementProvide
         engagement,
         stages,
         commitments,
+        pillars,
         userRoles,
         aiConfig,
         isLoading,
