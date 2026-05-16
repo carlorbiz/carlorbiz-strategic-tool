@@ -101,8 +101,8 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
         <p className="text-sm">
           Each {v.evidence_singular.toLowerCase()} you upload is converted, semantically chunked, and
           tagged here. The chunk count tells you how granularly Nera can recall it. Authors,
-          journal, and DOI travel with the {v.evidence_singular.toLowerCase()} so you can always get
-          back to the source.
+          institution, venue, and any reference identifier travel with the {v.evidence_singular.toLowerCase()}{' '}
+          so you can always get back to the source.
         </p>
       ),
       placement: 'top',

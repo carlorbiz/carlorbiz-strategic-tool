@@ -351,12 +351,12 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="doi">DOI</Label>
+                <Label htmlFor="doi">Citation / reference ID</Label>
                 <Input
                   id="doi"
                   value={doi}
                   onChange={e => setDoi(e.target.value)}
-                  placeholder="10.1111/ajr.13144"
+                  placeholder="DOI, abstract number, or other ID"
                   disabled={isWorking}
                 />
               </div>
