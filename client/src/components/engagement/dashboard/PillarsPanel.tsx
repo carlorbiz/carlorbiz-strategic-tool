@@ -3,9 +3,9 @@
 // corpus is being harvested in service of, distinct from the themes/streams
 // that organise the corpus itself.
 //
-// Empty state is meaningful: an engagement without pillars is one that has not
-// yet been wired into organisational purpose. The panel says so plainly rather
-// than hiding silently.
+// Empty state is meaningful: an engagement without pillars is a library, not
+// a rhythm — a corpus with nothing to be challenged against. The panel says
+// so plainly rather than hiding silently.
 
 import { useEngagement } from '@/contexts/EngagementContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,8 +44,8 @@ export function PillarsPanel() {
             <p>
               No strategic pillars defined yet. Pillars are the organisational or
               departmental priorities the corpus is harvested in service of — without
-              them, this engagement is a library, not a strategic instrument. Add
-              pillars from the Settings tab.
+              them, this engagement is a library, not a rhythm. Add pillars from
+              the Settings tab.
             </p>
           </CardContent>
         </Card>

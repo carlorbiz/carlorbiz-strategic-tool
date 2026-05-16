@@ -75,8 +75,9 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
           <p>
             Two ideas thread through it: <strong>themes</strong> are the intake taxonomy (how the
             corpus is organised); <strong>pillars</strong> are the strategic intent the corpus is
-            harvested in service of. The next two minutes show you both — and the loop between
-            them, which is where the value lives.
+            harvested in service of. The loop between them is your organisation's{' '}
+            <strong>operating rhythm</strong> — the place where evidence either challenges intent
+            or quietly confirms it. The next two minutes show you both.
           </p>
         </div>
       ),
@@ -88,10 +89,11 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
       content: (
         <p className="text-sm">
           These are the organisational or departmental priorities the conference is harvesting
-          evidence for. The tool earns its keep by showing what the corpus is telling you about
-          each pillar — what's being advanced, what's being contradicted, what's silent. Pillars
-          either come from your existing strategic plan, or from a quick extraction workshop if
-          you're using this hub as a standalone add-on.
+          evidence for — the <strong>challenge cadence</strong> the corpus is meant to feed. The
+          tool earns its keep by showing what the corpus is telling you about each pillar:
+          what's being advanced, what's being contradicted, what's silent. Pillars either come
+          from your existing strategic plan, or from a quick extraction workshop if you're
+          using this hub as a standalone add-on.
         </p>
       ),
       placement: 'bottom',
@@ -161,8 +163,9 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
           </p>
           <p>
             Think of the question this hub answers: <em>"Is what we're harvesting actually
-            advancing what our organisation is trying to do?"</em> If yes — sharpen. If no — that's
-            the most valuable signal the tool can give you.
+            advancing what our organisation is trying to do?"</em> If yes — sharpen. If no — that
+            mismatch is the most valuable signal the tool can give you, and the seed of your
+            next planning cycle's rhythm.
           </p>
           <p>
             Re-launch this tour anytime from the navigation. Questions:{' '}
