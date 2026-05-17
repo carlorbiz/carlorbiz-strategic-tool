@@ -63,6 +63,16 @@ export function PillarsPanel() {
                         {p.description}
                       </p>
                     )}
+                    {p.distinctiveness_claim ? (
+                      <p className="text-xs mt-2 line-clamp-3 border-l-2 border-primary/40 pl-2">
+                        <span className="font-medium">Point of difference: </span>
+                        <span className="text-muted-foreground">{p.distinctiveness_claim}</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs mt-2 text-amber-700/80 dark:text-amber-400/80 italic">
+                        No point-of-difference articulated yet — a pillar a peer could equally claim is not yet distinct.
+                      </p>
+                    )}
                     {p.success_signal && (
                       <p className="text-xs text-muted-foreground mt-2 italic line-clamp-2">
                         <span className="font-medium not-italic">Success signal: </span>

@@ -189,6 +189,11 @@ export interface StOrganisationalPillar {
   title: string;
   description: string | null;
   success_signal: string | null;
+  // The point-of-difference statement (migration 0009). If a peer organisation
+  // could substitute the same language, the pillar has not yet earned this
+  // field. Drives the Pillar Briefing distinctiveness signal and the Generic
+  // Drift Detection verbal-actual lag check.
+  distinctiveness_claim: string | null;
   pillar_level: PillarLevel;
   order_index: number;
   status: 'active' | 'archived';
