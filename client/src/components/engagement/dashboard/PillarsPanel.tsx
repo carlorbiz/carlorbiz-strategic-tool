@@ -19,8 +19,13 @@ const LEVEL_LABEL: Record<string, string> = {
 };
 
 export function PillarsPanel() {
-  const { pillars, engagement } = useEngagement();
+  const { pillars, engagement, aiConfig } = useEngagement();
   if (!engagement) return null;
+
+  // Sovereignty commitment display + empty-state nudge only show on the
+  // sovereignty-watch consulting profile to avoid noise on research /
+  // strategic-plan engagements where sovereignty isn't the active lens.
+  const isSovereigntyProfile = aiConfig?.profile_key === 'sovereignty-watch';
 
   // Group by level — most engagements will use a single level, but the panel
   // surfaces the distinction when both are present (an org running both Path A
@@ -73,6 +78,16 @@ export function PillarsPanel() {
                         No point-of-difference articulated yet — a pillar a peer could equally claim is not yet distinct.
                       </p>
                     )}
+                    {p.sovereignty_claim ? (
+                      <p className="text-xs mt-2 line-clamp-3 border-l-2 border-amber-500/50 pl-2">
+                        <span className="font-medium">Sovereignty commitment: </span>
+                        <span className="text-muted-foreground">{p.sovereignty_claim}</span>
+                      </p>
+                    ) : isSovereigntyProfile ? (
+                      <p className="text-xs mt-2 text-amber-700/80 dark:text-amber-400/80 italic">
+                        No sovereignty commitment articulated yet — a pillar without a stated control posture is not yet defensible.
+                      </p>
+                    ) : null}
                     {p.success_signal && (
                       <p className="text-xs text-muted-foreground mt-2 italic line-clamp-2">
                         <span className="font-medium not-italic">Success signal: </span>

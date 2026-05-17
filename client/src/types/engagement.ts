@@ -194,6 +194,12 @@ export interface StOrganisationalPillar {
   // field. Drives the Pillar Briefing distinctiveness signal and the Generic
   // Drift Detection verbal-actual lag check.
   distinctiveness_claim: string | null;
+  // The sovereignty commitment that anchors this pillar (migration 0010): what
+  // IP, what controls, what behaviours the organisation has committed to
+  // holding. Drives the Sovereignty Drift lens — SovereigntyDriftSampleNera
+  // Questions widget, sovereignty signal column on Pillar Briefing report, and
+  // the Sovereignty Drift Detection report template (all queued under CC-11).
+  sovereignty_claim: string | null;
   pillar_level: PillarLevel;
   order_index: number;
   status: 'active' | 'archived';
