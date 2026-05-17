@@ -2,7 +2,9 @@
 
 *A companion exercise to* **Generic Drift** *(Volume 2 of the Carlorbiz Drift Trilogy).*
 
-*Designed to be worked through by a board, on its own organisation, in roughly two hours.*
+*Designed to be worked through by a board, on its own organisation, in roughly two and a half hours.*
+
+*Version 2.0 — adds Part 2 (Score and Act) drawn from Chapter 10's diagnostic dimensions, alongside the original Part 1 (Detect) drawn from Chapter 6's eight warning signs.*
 
 ---
 
@@ -14,11 +16,15 @@ You will need three things at the meeting:
 
 - A printed copy of this workbook for each director
 - A small set of recent primary documents from your organisation: the last five years of strategic plans, annual reports, CEO letters or chair statements, and one or two recent board papers. Have them physically in the room, or accessible on a single shared screen
-- Two hours of board time. The workbook takes about ninety minutes to work through; the conversation it produces takes another thirty
+- Two and a half hours of board time. The workbook takes about two and a quarter hours to work through; the conversation it produces takes another fifteen to thirty
 
-The workbook does eight things. It walks you through the eight signals of generic drift named in Chapter 6 of the book. For each signal, you score your organisation on a five-point scale. At the end, you read the pattern across the eight scores and decide what your board's next moves should be.
+The workbook has two parts. Each does a different kind of work, and a board genuinely benefits from doing both.
 
-The exercise is paper-and-pencil by design. It is meant to slow the conversation down. Boards under pressure tend to default to the language they already use about their organisation, and that is precisely what generic drift hides inside. The workbook asks you to put that language to one side for ninety minutes and look at the evidence honestly.
+**Part 1 — Detect.** Eight signal worksheets, one per warning sign named in Chapter 6 of the book. The question is: *is drift happening, and where can we see it?* This part is evidence-based. You will be asked to find and cite specific passages in your own primary documents.
+
+**Part 2 — Score and Act.** Eight diagnostic dimensions drawn from Chapter 10. The question is: *given what we have just seen, where should we act first?* This part is operational and prioritisation-shaped. Some dimensions ask you to re-score what you have already detected, this time on action urgency rather than evidence. Three dimensions ask something new that Part 1 does not.
+
+The exercise is paper-and-pencil by design. It is meant to slow the conversation down. Boards under pressure tend to default to the language they already use about their organisation, and that is precisely what generic drift hides inside. The workbook asks you to put that language to one side for two and a half hours and look at the evidence honestly.
 
 A note on scope. This workbook is a board-level diagnostic, not a management one. It is designed for directors, the Chair, and the CEO sitting together. Some of the questions will be uncomfortable. That is the work. If a question is uncomfortable to answer honestly, the honest answer is usually the one that matters.
 
@@ -26,21 +32,25 @@ A note on scope. This workbook is a board-level diagnostic, not a management one
 
 ## How to use this workbook
 
-**Solo first, group second.** Each director should work through the eight signal worksheets on their own before the meeting. Bring your filled-in workbook to the board table. Compare and discuss your scores at the meeting. Differences in scores between directors are themselves diagnostic.
+**Solo first, group second.** Each director should work through both parts on their own before the meeting. Bring your filled-in workbook to the board table. Compare and discuss your scores at the meeting. Differences in scores between directors are themselves diagnostic.
 
-**Use the primary documents.** Each signal includes a short list of things to check. Most of those things live inside your organisation's own primary documents, not in your memory of them. Read the documents. The point of the exercise is to look at the evidence rather than to recall an impression.
+**Use the primary documents in Part 1.** Each signal in Part 1 includes a short list of things to check. Most of those things live inside your organisation's own primary documents, not in your memory of them. Read the documents. The point of the exercise is to look at the evidence rather than to recall an impression.
+
+**Use the Part 1 evidence in Part 2.** Part 2 runs faster than Part 1 because the evidence work is already done. When a Part 2 dimension overlaps with a Part 1 signal, the cross-reference is named in the worksheet. Re-score for action, not for evidence.
 
 **Be specific.** When the workbook asks "what evidence did you rely on," write a sentence or a citation, not a vibe. "The 2022 strategic plan, executive summary, paragraph 3" is a useful answer. "It feels like things have changed" is not.
 
-**Rate honestly.** The five-point scale has anchors at 1 (no concern) and 5 (urgent). Most boards score between 2 and 4 on most signals. A board that scores 1 everywhere has either not done the exercise carefully or is in a sector with such favourable conditions that the next downturn will surprise them.
+**Rate honestly.** The five-point scale has anchors at 1 (no concern) and 5 (urgent). Most boards score between 2 and 4 on most signals and dimensions. A board that scores 1 everywhere has either not done the exercise carefully or is in a sector with such favourable conditions that the next downturn will surprise them.
 
-**Two-or-more is the threshold.** Any single signal scoring at 4 or 5 deserves a board conversation. Any two signals scoring at 4 or 5 simultaneously deserves a board decision. The workbook is calibrated to surface that threshold honestly.
+**Two-or-more is the threshold.** Any single signal or dimension scoring at 4 or 5 deserves a board conversation. Any two scoring at 4 or 5 simultaneously deserves a board decision. The workbook is calibrated to surface that threshold honestly.
 
-**Use the lined space.** Every signal worksheet has space for your evidence and for your reading. Use it. The act of writing the sentence is the diagnostic.
+**Use the lined space.** Every worksheet has space for your evidence and for your reading. Use it. The act of writing the sentence is the diagnostic.
 
 ---
 
-## The eight signals
+## PART 1 — DETECT
+
+*Eight signal worksheets drawn from Chapter 6 of* Generic Drift. *About ninety minutes solo, then group comparison.*
 
 The eight signals come from Chapter 6 of *Generic Drift*. They appear here in the same order, with the same language, as in the book. The workbook is the place to apply them.
 
@@ -384,9 +394,268 @@ A short refresher for each is included at the top of the worksheet. If you need 
 
 ---
 
-## Scoring summary
+## End of Part 1
+
+You have now rated your organisation on the eight warning signs of generic drift. Before moving into Part 2, take five minutes to look back at your eight ratings. Which two or three are scoring highest? Mark them. Those are the signs the board will return to after Part 2 has scored where to act first.
+
+---
+
+## PART 2 — SCORE AND ACT
+
+*Eight diagnostic dimensions drawn from Chapter 10 of* Generic Drift. *About forty-five minutes solo, then group comparison.*
+
+If Part 1 was about finding evidence, Part 2 is about deciding where to act. The eight dimensions below ask a different question of your board. Where do you score, on each, on a one-to-five scale? Where is the unevenness most concerning? Where is the leverage if you choose to invest first?
+
+Some dimensions echo what you have just rated in Part 1. Score them again, but this time on the action question: not "is drift happening here," but "how urgent is the response here?" The shift in question can produce a different score, and the difference is itself diagnostic.
+
+Three dimensions are new in Part 2. They ask something Part 1 did not: whether the organisation is under-claiming the real strengths it has, whether customers can articulate what makes the organisation different, and whether the evidence of commoditisation has begun to show up in price and comparison patterns.
+
+Part 2 runs faster than Part 1 because the evidence work is already done. Most boards will work through the eight dimensions in forty-five minutes.
+
+---
+
+## Dimension 1 — Language sameness
+
+**Refresher.** The verbal-actual lag is the most reliable early signal of drift. This dimension scores how much of your organisation's primary documents describe a position the organisation no longer inhabits, and how urgently the response is needed.
+
+**Cross-reference:** this is the same lens as Part 1 Signal 1. The Part 1 worksheet asked you to find the evidence. The Part 2 score asks how much action it warrants. Look back at your evidence before scoring.
+
+**Rate this dimension.**
+
+- [ ] **1.** Current and honest throughout. No action needed.
+- [ ] **2.** Light cleanup needed. A communications refresh inside the next planning cycle.
+- [ ] **3.** Visible gap. One year of communications work to align language with operating reality.
+- [ ] **4.** Material gap. Two to three years of sustained reframing alongside the operational reality.
+- [ ] **5.** Severe gap. Two to four years of sustained reframing, with structural change to the operating model running in parallel.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 2 — Benchmark dependence
+
+**Refresher.** When peer behaviour informs judgement, benchmarking is a discipline. When peer behaviour substitutes for judgement, benchmarking is a shelter. This dimension scores how much your strategic conversations default to "what our peers are doing" as the primary reason for a recommendation, and how urgently the dependence needs interrupting.
+
+**Cross-reference:** this is the same lens as Part 1 Signal 3. Look back at your evidence before scoring.
+
+**Rate this dimension.**
+
+- [ ] **1.** Peers inform; the board still decides on its own basis. No action.
+- [ ] **2.** Peer-checking is more common than necessary but does not drive decisions. A meeting rule would help.
+- [ ] **3.** Peer alignment is a frequent reason for a recommendation. A meeting rule and a board education session.
+- [ ] **4.** Peer alignment is the dominant reason. A standing rule about distinct rationale is needed, plus a deliberate set of peer-divergent decisions to break the pattern.
+- [ ] **5.** The board cannot remember when it last approved a strategic move that materially differed from sector norm. The pattern is structural; a board-process redesign is the response.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 3 — Risk aversion in strategic choice
+
+**Refresher.** Strategic choice requires trade-off. A leadership team that can name what it would do but not what it would refuse is making positional statements rather than strategic ones. This dimension scores whether your team can articulate the exclusions as clearly as the inclusions, and how urgently the inclusion-bias needs correcting.
+
+**Cross-reference:** this is the same lens as Part 1 Signal 4, with the action question added. Dimension 7 below is the sharper sixty-second-test version.
+
+**Rate this dimension.**
+
+- [ ] **1.** Exclusions are clear, specific, and named in the strategy document. No action.
+- [ ] **2.** Exclusions are mostly clear but stated as virtues rather than as concrete trade-offs. Sharpen at next strategy session.
+- [ ] **3.** Exclusions are claimed but not consistently observed in practice. Audit recent decisions for slippage.
+- [ ] **4.** Exclusions are difficult to articulate; the strategy reads as "all of the above." The next strategy refresh must start with what the organisation will deliberately stop doing.
+- [ ] **5.** The leadership team cannot name a single concrete exclusion the organisation made in the last two years. The strategy is decorative. Repair the exclusion discipline before any other strategic move.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 4 — Hidden strengths ignored *(new in Part 2)*
+
+**Refresher.** Generic drift is not only about hollowing out distinctiveness. It is also about systematically under-claiming the real distinctiveness an organisation has. The work might be exceptional in a specific way that the strategic narrative never names, because no one has stopped to ask. This dimension scores whether your organisation knows what it is actually good at, and is willing to claim it.
+
+**Detection (paper-and-pencil):**
+
+1. Name three things this organisation does materially better than its peers. Be specific. "We are deeply experienced" is not enough; "we run a same-day specialist response in regional sites that no peer matches" is.
+2. Now look at the most recent strategic plan, annual report, or organisational positioning statement. Where are those three things named? Where are they claimed as a competitive advantage?
+3. If a customer or stakeholder were asked, "what is this organisation known for," would the three things be the answer? Or would they not feature?
+4. Ask: when did the leadership team last deliberately stop, audit the organisation's real operational distinctiveness, and decide how much of it to amplify in the strategic story?
+
+**Rate this dimension.**
+
+- [ ] **1.** Strengths are surfaced, named, and claimed. The strategy is built on them.
+- [ ] **2.** Most strengths are claimed; one or two are quietly under-promoted.
+- [ ] **3.** Some real strengths sit outside the strategic narrative entirely.
+- [ ] **4.** The strategic narrative is largely category-standard; the operational distinctiveness has not been promoted to the story.
+- [ ] **5.** The leadership team cannot quickly name what makes the organisation operationally distinctive, even though it likely is in specific ways.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 5 — Customer relevance of claimed difference *(new in Part 2)*
+
+**Refresher.** A point of difference is only valuable if the audience the organisation needs to reach actually cares. A claim that is true, hard to copy, and unique to this organisation is still useless if no customer notices or values it. This dimension scores whether your organisation's claimed distinctiveness is felt by the buyers, stakeholders, and partners who make the consequential decisions.
+
+**Detection (paper-and-pencil):**
+
+1. In the last six months, have you asked customers what they value about this organisation? What did they say?
+2. If you compared their answers with your strategy's positioning statements, would the two sets of language align?
+3. Are customers using your distinctiveness as the reason they chose you, or are they using price, convenience, history, or category fit?
+4. If a competitor announced tomorrow that they could match your most-claimed differentiator, what proportion of your customers would care?
+
+**Rate this dimension.**
+
+- [ ] **1.** Customers articulate the distinctiveness in their own words, unprompted, and use it as the reason they chose.
+- [ ] **2.** Most customers can articulate it when prompted; some use it as the reason; others cite different reasons.
+- [ ] **3.** Customers know the distinctiveness exists but make decisions on other criteria.
+- [ ] **4.** Customers are warm but vague; they do not naturally reach for the distinctiveness as the reason.
+- [ ] **5.** Customers can articulate no specific reason for choosing this organisation over others.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 6 — Evidence of commoditisation *(new in Part 2)*
+
+**Refresher.** When generic drift advances, the commercial signals catch up eventually. Pricing pressure intensifies. Procurement cycles lengthen. Premium tiers thin. The discount frequency at the edge of negotiations creeps up. This dimension scores whether the commercial evidence already shows that the market is treating the organisation as comparable rather than distinct.
+
+**Detection (paper-and-pencil):**
+
+1. Has pricing pressure intensified in the last two years? Where?
+2. Has the discount frequency in proposals, renewals, or sales conversations increased?
+3. Has the premium tier (or the equivalent for non-commercial organisations: the high-engagement contract, the named partnership, the cited reference) thinned or remained healthy?
+4. Are new customers naming a competitor in the consideration set more often than they were two years ago?
+
+**Rate this dimension.**
+
+- [ ] **1.** No commercial evidence of commoditisation. Premium positioning holds.
+- [ ] **2.** Minor pressure on one or two tiers; not yet structural.
+- [ ] **3.** Visible pressure across multiple tiers; pricing conversations harder than they were.
+- [ ] **4.** Material pressure. Premium tiers are thinning. Discounting frequency has stepped up.
+- [ ] **5.** The organisation is now reliably compared on price, convenience, or category fit rather than on what it was once known for.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 7 — Willingness to exclude (the sixty-second test)
+
+**Refresher.** The sixty-second test is the operational version of strategic exclusion. Ask any director or executive in the room: in sixty seconds, what is this organisation deliberately not doing? Three exclusions. Specific. Resourced. Reviewable. A leadership team that struggles to answer in sixty seconds has a strategy that is more inclusive than it should be.
+
+**Cross-reference:** Dimension 3 scored exclusions in the abstract; this dimension scores whether the leadership team can produce them on the spot. The two often score differently. The gap between them is itself informative.
+
+**Run the test now.** Each director writes down three concrete exclusions, in sixty seconds, without consulting the room. Then read aloud.
+
+**Rate this dimension.**
+
+- [ ] **1.** Every director named three exclusions in sixty seconds, and the room agreed on the three.
+- [ ] **2.** Most directors named two or three in sixty seconds; some answers diverged but were broadly consistent.
+- [ ] **3.** Directors produced answers, but the answers were vague or general rather than specific.
+- [ ] **4.** Directors struggled. Several needed more than sixty seconds; some could not answer.
+- [ ] **5.** The room was silent.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Dimension 8 — Execution rhythm
+
+**Refresher.** The strongest strategic insight is undermined when the organisation's standard cadence softens it on its way through committees. This dimension scores whether your organisation has the operational rhythm to translate sharper choices into sustained execution, or whether the cadence dilutes the choice before it arrives at delivery.
+
+**Cross-reference:** Part 1 Signal 8 (language-before-operations repair) is the failure mode of this dimension. *Cadence Drift* (the trilogy's first volume) is the deeper treatment, and a high score here is also an invitation to read that book next.
+
+**Detection (paper-and-pencil):**
+
+1. Take the last three strategic decisions the board approved. Where are they now in execution? Have they been implemented as intended, modified materially, or quietly stalled?
+2. Look at the cadence of strategic reviews, performance check-ins, and decision-rights routines. Are they running on the rhythm the organisation actually needs, or on a calendar that has not been revisited in years?
+3. Does strategic insight typically survive its first contact with execution, or does it consistently arrive in delivery a softer version of what was originally agreed?
+
+**Rate this dimension.**
+
+- [ ] **1.** Strategic decisions survive the journey to execution intact. The cadence holds.
+- [ ] **2.** Most decisions hold; occasional softening.
+- [ ] **3.** Decisions usually arrive in execution noticeably softer than intended.
+- [ ] **4.** The cadence is the problem. Strategic insight reliably loses its edge by the time it reaches operations.
+- [ ] **5.** There is no functional cadence to speak of. Strategic decisions disappear into committee.
+
+**Where we score / Why:**
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+---
+
+## Combined scoring summary
 
 Transfer your ratings here. Each director fills in their own column. The Chair or facilitator copies the consolidated row into the centre column once the discussion settles.
+
+### Part 1 — Detect (the Ch 6 signs)
 
 | Signal | Your rating (1-5) | Board's rating (1-5) | One-sentence summary |
 |---|---|---|---|
@@ -399,19 +668,36 @@ Transfer your ratings here. Each director fills in their own column. The Chair o
 | 7 — Scale vs distinctiveness | | | |
 | 8 — Language before operations | | | |
 
+### Part 2 — Score and Act (the Ch 10 dimensions)
+
+| Dimension | Your rating (1-5) | Board's rating (1-5) | One-sentence summary |
+|---|---|---|---|
+| 1 — Language sameness | | | |
+| 2 — Benchmark dependence | | | |
+| 3 — Risk aversion in choice | | | |
+| 4 — Hidden strengths ignored | | | |
+| 5 — Customer relevance | | | |
+| 6 — Evidence of commoditisation | | | |
+| 7 — Willingness to exclude (60s) | | | |
+| 8 — Execution rhythm | | | |
+
 ---
 
 ## Reading the pattern
 
-The total score is less interesting than the shape. A board that is healthy on six signals and concerning on two is in a more defined position than a board that is mildly concerning on eight. Use the questions below as the discussion frame.
+The total score is less interesting than the shape. A board that is healthy on six signals or dimensions and concerning on two is in a more defined position than a board that is mildly concerning on all sixteen. Use the questions below as the discussion frame.
 
-**Which one or two signals scored highest?** Those are the ones doing the most damage. They are also the ones with the clearest remediation path. Name them out loud. Write them down.
+**Which one or two items scored highest?** Those are the ones doing the most damage. They are also the ones with the clearest remediation path. Name them out loud. Write them down.
 
-**Which signals scored differently between directors?** Where directors gave the same signal a 2 and a 5, the disagreement itself is the diagnostic. Spend ten minutes on the gap. The director who scored higher is usually responding to something the director who scored lower has not yet absorbed.
+**Read Part 1 and Part 2 together where they overlap.** Where a Ch 6 sign and its matching Ch 10 dimension scored similarly, the evidence and the action question agree. Where they scored differently, the gap is informative. A sign scoring 4 (clear evidence of drift) but the matching dimension scoring 2 (low action urgency) tells you the board is seeing the drift but not yet treating it as urgent. The reverse tells you the board is anxious without yet having found the evidence.
 
-**Are any two high-scoring signals connected?** A high score on Signal 1 (verbal-actual lag) often comes with a high score on Signal 2 (outsiders see first); together they signal that the organisation has stopped looking at itself honestly. A high score on Signal 5 (governance change) often comes with a high score on Signal 7 (scale); together they signal that structural decisions have changed what the organisation actually is without anyone updating what it says. Look for the pairing. The pairing is the real story.
+**Pay particular attention to Dimensions 4, 5, and 6.** Those are the three lenses Part 2 adds that Part 1 does not provide. A high score on any of them is unusually significant because Part 1 will not have surfaced it. Hidden strengths ignored, customer relevance of claimed difference, and evidence of commoditisation each open a different conversation the rest of the workbook does not open.
 
-**What does the lowest score tell you?** A signal scoring at 1 or 2 is not just an absence of concern. It is also a strength. Name it. Boards often spend all their time on what is failing and forget to identify what they are doing well enough to protect.
+**Which scores diverged between directors?** Where directors gave the same item a 2 and a 5, the disagreement itself is the diagnostic. Spend ten minutes on the gap. The director who scored higher is usually responding to something the director who scored lower has not yet absorbed.
+
+**Are any two high-scoring items connected?** A high score on Signal 1 (verbal-actual lag) often comes with a high score on Signal 2 (outsiders see first); together they signal that the organisation has stopped looking at itself honestly. A high score on Dimension 5 (customer relevance) paired with a high score on Dimension 6 (commoditisation evidence) signals that the market is no longer crediting the organisation's positioning, which usually precedes pricing collapse. Look for the pairing. The pairing is the real story.
+
+**What do the lowest scores tell you?** An item scoring at 1 or 2 is not just an absence of concern. It is also a strength. Name it. Boards often spend all their time on what is failing and forget to identify what they are doing well enough to protect.
 
 ---
 
@@ -419,13 +705,13 @@ The total score is less interesting than the shape. A board that is healthy on s
 
 These are decisions a board can make in the meeting, not projects it commissions for next year. Pick the ones that match your scoring pattern.
 
-**If Signal 1 (verbal-actual lag) scored 4 or 5**, the board can today commission a writing refresh. Not a brand campaign. A discipline: every annual report, every chair statement, every CEO letter from this year forward will name the one most important way the organisation's position has changed since the last one. The discipline takes ten minutes a year and saves the organisation from a decade of inertia.
+**If Signal 1 (verbal-actual lag) or Dimension 1 (language sameness) scored 4 or 5**, the board can today commission a writing refresh. Not a brand campaign. A discipline: every annual report, every chair statement, every CEO letter from this year forward will name the one most important way the organisation's position has changed since the last one. The discipline takes ten minutes a year and saves the organisation from a decade of inertia.
 
 **If Signal 2 (outsiders see first) scored 4 or 5**, the board can today commission a standing item on the board agenda titled "What outsiders are saying about us." Twenty minutes per meeting. The CEO presents two pieces of external commentary the organisation has not yet absorbed. The board decides which one is worth taking seriously.
 
-**If Signal 3 (defensive benchmarking) scored 4 or 5**, the board can today install a meeting rule: no recommendation passes without the room being able to answer the question, "what would we still do here if no peer were doing it?" The rule takes thirty seconds per agenda item and meaningfully changes what the executive team prepares.
+**If Signal 3 (defensive benchmarking) or Dimension 2 (benchmark dependence) scored 4 or 5**, the board can today install a meeting rule: no recommendation passes without the room being able to answer the question, "what would we still do here if no peer were doing it?" The rule takes thirty seconds per agenda item and meaningfully changes what the executive team prepares.
 
-**If Signal 4 (exclusion choices) scored 4 or 5**, the board can today ask the CEO to bring a one-page "what we will deliberately not do" paper to the next strategy session. Three categorical exclusions. Specific. Resourced. Reviewable.
+**If Signal 4 (exclusion choices), Dimension 3 (risk aversion in choice), or Dimension 7 (sixty-second test) scored 4 or 5**, the board can today ask the CEO to bring a one-page "what we will deliberately not do" paper to the next strategy session. Three categorical exclusions. Specific. Resourced. Reviewable.
 
 **If Signal 5 (governance change) scored 4 or 5**, the board can today resolve that any future governance change of any kind will be accompanied by a positioning-impact paper. The paper names which claims will need to be re-grounded if the change goes through. Most boards consider governance changes structurally; this resolution makes them consider them positionally as well.
 
@@ -435,15 +721,23 @@ These are decisions a board can make in the meeting, not projects it commissions
 
 **If Signal 8 (language before operations) scored 4 or 5**, the board can today pause any communications, brand, or messaging refresh project that is not paired with a named operational change. Hold the language until the practice is in place. The discipline is uncomfortable. It is also the only one of these recommendations that has saved any of the named cases in the book.
 
+**If Dimension 4 (hidden strengths ignored) scored 4 or 5**, the board can today commission a one-page "operational distinctiveness audit." Not a marketing exercise. A list of things the organisation does materially better than its peers, with the evidence, brought back to the next meeting. The audit alone often surfaces three claims the strategy has been missing.
+
+**If Dimension 5 (customer relevance of claimed difference) scored 4 or 5**, the board can today commission a six-customer conversation programme. Six unprompted phone calls or coffees with current customers in the next ninety days. The single question: "In your own words, why do you choose to work with us?" The answers are the test of whether the strategy's claimed differentiator is felt by the people it is meant to influence.
+
+**If Dimension 6 (evidence of commoditisation) scored 4 or 5**, the board can today add a standing line to every board pack: pricing pressure metrics, discount frequency, premium-tier health. Three numbers. Tracked quarter on quarter. The numbers are the leading commercial indicators of generic drift; once they are on the agenda, the conversation about them follows.
+
+**If Dimension 8 (execution rhythm) scored 4 or 5**, the board can today commission a cadence review: three months from now, the Chair brings back a one-page review of the operational rhythm the organisation actually runs on, the rhythm it should be running on, and the gap between them. The review is the natural bridge into the first volume of the trilogy, *Cadence Drift and The Rhythm Advantage*.
+
 ---
 
 ## What this workbook does not tell you
 
 Three things this workbook is not, so the board does not over-trust it.
 
-It is not a diagnostic by itself. Eight directors filling in this workbook is the start of a board conversation, not its conclusion. The signals are calibrated to surface real conditions. The interpretation, the decisions, and the changes are the board's work.
+It is not a diagnostic by itself. Eight directors filling in this workbook is the start of a board conversation, not its conclusion. The signals in Part 1 and the dimensions in Part 2 are calibrated to surface real conditions. The interpretation, the decisions, and the changes are the board's work.
 
-It is not a substitute for the book. The book carries the case research, the academic evidence, the named-case histories that show how generic drift unfolds over years and decades. The workbook applies the lens. The lens is sharper if you have read the book first.
+It is not a substitute for the book. The book carries the case research, the academic evidence, the named-case histories that show how generic drift unfolds over years and decades. Chapter 6 carries the eight warning signs in their full argument. Chapter 10 carries the eight dimensions as the diagnostic in its full form. The workbook applies both lenses. The lenses are sharper if you have read the chapters first.
 
 It is not the only way to look at your organisation. Generic drift is one form of strategic drift. Rhythm drift (the loss of cadence at which strategy is tested against evidence) is another. Sovereignty drift (the loss of control over IP, AI use, and distributed work) is a third. The three together form the Carlorbiz Drift Trilogy, and the same board can productively run all three diagnostics across a year. This one is the one for this book.
 
@@ -453,7 +747,7 @@ It is not the only way to look at your organisation. Generic drift is one form o
 
 Most board exercises end the way most strategy days end: with a document that no one returns to. The instrument was never the problem. The problem is that audits, like plans, decay without a place to live.
 
-The eight signals you have just rated do not need software to be useful. They need an honest hour, the right people in the room, and the willingness to write down what you actually saw. You have just done that.
+The sixteen ratings you have just produced do not need software to be useful. They need an honest hour, the right people in the room, and the willingness to write down what you actually saw. You have just done that.
 
 If, after that hour, your organisation decides the diagnostic is worth running as an operating discipline rather than as a one-off board exercise, a working installation is available at **carlorbiz.com.au/rhythm**. It will not replace what you have just done together. It will give the exercise somewhere to live afterwards, and a way to ask next quarter's evidence whether your point of difference is still recognisably your own.
 
@@ -461,4 +755,4 @@ That is the only mention of the tool in this workbook. Everything else the workb
 
 ---
 
-*Generic Drift — A Board Workbook. Companion to* **Generic Drift** *(Volume 2, Carlorbiz Drift Trilogy). For board use under licence. Carlorbiz Pty Ltd, 2026.*
+*Generic Drift — A Board Workbook, Version 2.0. Companion to* **Generic Drift** *(Volume 2, Carlorbiz Drift Trilogy). Part 1 draws on Chapter 6 (Early Warning Signs of Generic Drift); Part 2 draws on Chapter 10 (The Generic Drift Diagnostic). For board use under licence. Carlorbiz Pty Ltd, 2026.*
