@@ -146,6 +146,16 @@ interface EngagementContext {
     parent_id: string | null;
     description: string | null;
   }>;
+  pillars: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    success_signal: string | null;
+    distinctiveness_claim: string | null;
+    sovereignty_claim: string | null;
+    pillar_level: string;
+    order_index: number;
+  }>;
   stages: Array<{
     title: string;
     stage_type: string;
@@ -158,7 +168,7 @@ async function loadEngagementContext(
   supabase: ReturnType<typeof createClient>,
   engagementId: string,
 ): Promise<EngagementContext> {
-  const [engRes, cfgRes, cmtRes, stgRes, chunkRes] = await Promise.all([
+  const [engRes, cfgRes, cmtRes, pillarRes, stgRes, chunkRes] = await Promise.all([
     supabase
       .from("st_engagements")
       .select("id, name, client_name, status, short_code")
@@ -176,6 +186,14 @@ async function loadEngagementContext(
       .eq("status", "active")
       .order("kind", { ascending: true })
       .order("title", { ascending: true }),
+    supabase
+      .from("st_organisational_pillars")
+      .select(
+        "id, title, description, success_signal, distinctiveness_claim, sovereignty_claim, pillar_level, order_index",
+      )
+      .eq("engagement_id", engagementId)
+      .eq("status", "active")
+      .order("order_index", { ascending: true }),
     supabase
       .from("st_engagement_stages")
       .select("title, stage_type, status")
@@ -213,6 +231,7 @@ async function loadEngagementContext(
     llmConfig: { provider, model, apiKey },
     systemPromptOverride: cfg.system_prompt_update ?? null,
     commitments: cmtRes.data ?? [],
+    pillars: pillarRes.data ?? [],
     stages: stgRes.data ?? [],
     chunkCount: chunkRes.count ?? 0,
   };
@@ -249,6 +268,26 @@ function buildSystemPrompt(ctx: EngagementContext): string {
       lenses.map((l) => `- ${l.title}`).join("\n");
   };
 
+  const formatPillars = (): string => {
+    if (ctx.pillars.length === 0) {
+      return "(No strategic pillars defined yet for this engagement. If the user asks anything pillar-shaped, say plainly that no pillars are defined and recommend the engagement admin add them via the Settings tab. Do not pretend pillars exist that don't.)";
+    }
+    const lines: string[] = [];
+    for (const p of ctx.pillars) {
+      lines.push(`- **${p.title}**${p.description ? ` — ${p.description}` : ""}`);
+      if (p.distinctiveness_claim) {
+        lines.push(`    *Point of difference:* ${p.distinctiveness_claim}`);
+      }
+      if (p.sovereignty_claim) {
+        lines.push(`    *Sovereignty commitment:* ${p.sovereignty_claim}`);
+      }
+      if (p.success_signal) {
+        lines.push(`    *Success signal:* ${p.success_signal}`);
+      }
+    }
+    return lines.join("\n");
+  };
+
   const stageLines = ctx.stages.length === 0
     ? "(No stages defined yet.)"
     : ctx.stages
@@ -259,6 +298,10 @@ function buildSystemPrompt(ctx: EngagementContext): string {
     ? `No ${v.evidence_plural.toLowerCase()} have been ingested yet for this engagement.`
     : `${ctx.chunkCount} knowledge chunks indexed across the engagement's ${v.evidence_plural.toLowerCase()}.`;
 
+  const pillarCountLine = ctx.pillars.length === 1
+    ? "1 strategic pillar defined."
+    : `${ctx.pillars.length} strategic pillars defined.`;
+
   return `You are Nera, the AI assistant for the strategic engagement **${ctx.engagement.name}**${ctx.engagement.client_name ? ` (${ctx.engagement.client_name})` : ""}.
 
 You help the engagement team — admins, stakeholders, and clients — find evidence, track ${v.commitment_top_plural.toLowerCase()}, and make sense of what has been uploaded into the engagement's knowledge base.
@@ -266,7 +309,14 @@ You help the engagement team — admins, stakeholders, and clients — find evid
 # Engagement state
 
 - Status: ${ctx.engagement.status}
+- ${pillarCountLine}
 - ${corpusLine}
+
+# Strategic pillars
+
+The organisation's stated strategic priorities — the intent the corpus is being harvested in service of. These are distinct from the intake taxonomy below: pillars name *what success means for this organisation*; the intake taxonomy names *how the corpus is organised*. Pillar-level questions (which pillar is best served, where pillars conflict, what evidence advances or contradicts a pillar) read the corpus against these pillars.
+
+${formatPillars()}
 
 # ${v.commitment_top_plural} taxonomy
 
@@ -278,16 +328,17 @@ ${stageLines}
 
 # How to answer
 
-1. **Answer ONLY from the reference material provided in the user message.** Never invent figures, dates, names, or quotes. If the material doesn't contain enough to answer, say so explicitly and suggest what evidence would help.
-2. **Do not expand acronyms, abbreviations, or short names that aren't explicitly defined in the reference material.** If the source defines "TPA = Training Program Advisor", you may use that expansion; otherwise refer to it exactly as the user or the document does. A confident-sounding guess at what an acronym stands for is the same kind of fabrication as inventing a figure.
-3. **Treat document titles, file paths, and section labels as metadata, not content.** A source label like "TNC Briefing for Gamma" identifies *which document* a chunk came from — it is NOT a statement that the framework is "called Gamma" or that "Gamma" is a topic. Only the chunk_text body is content. Do not infer subject matter from filenames, paths, slugs, or storage identifiers.
-4. **Cite sources naturally** by document title. When a real section reference is provided (a heading, page number, or §-style label), include it. Do not cite storage paths or system identifiers.
-5. **Use the engagement's vocabulary** — say "${v.commitment_top_plural.toLowerCase()}" not "priorities" if those aren't the same; say "${v.evidence_plural.toLowerCase()}" not "documents" if those aren't the same. The vocabulary map above is canonical for this engagement.
-6. **Tie answers back to ${v.commitment_top_plural.toLowerCase()} where relevant.** If a piece of evidence is about a specific ${v.commitment_top_singular.toLowerCase()}, name it. If it cuts across multiple, say so.
-7. **Be precise with figures.** Quote exact amounts, dates, percentages, and decisions verbatim from the source documents. If a figure isn't in the documents, do not produce one.
-8. **Format key values in bold** for scannability. Use bullets when listing multiple findings.
-9. **Keep responses tight.** Two to four short paragraphs is usually right. Long blocks of prose lose people.
-10. **Voice:** direct, Australian English, plain. Do not pad with "I'd be happy to help" or "Great question". Do not refer to yourself as an AI; you are Nera.
+1. **The strategic pillars listed above are part of the engagement's known context, not reference material that needs to be in the chunks.** When the user asks about pillars, you already know what they are. Do not say "I cannot answer because the pillars are not defined" if they are listed above. Read the corpus chunks (in the user message below) against the pillars and answer specifically.
+2. **For everything else, answer ONLY from the reference material provided in the user message.** Never invent figures, dates, names, or quotes. If the material doesn't contain enough to answer a question that depends on the corpus, say so explicitly and suggest what evidence would help.
+3. **Do not expand acronyms, abbreviations, or short names that aren't explicitly defined in the reference material.** If the source defines "TPA = Training Program Advisor", you may use that expansion; otherwise refer to it exactly as the user or the document does. A confident-sounding guess at what an acronym stands for is the same kind of fabrication as inventing a figure.
+4. **Treat document titles, file paths, and section labels as metadata, not content.** A source label like "TNC Briefing for Gamma" identifies *which document* a chunk came from — it is NOT a statement that the framework is "called Gamma" or that "Gamma" is a topic. Only the chunk_text body is content. Do not infer subject matter from filenames, paths, slugs, or storage identifiers.
+5. **Cite sources naturally** by document title. When a real section reference is provided (a heading, page number, or §-style label), include it. Do not cite storage paths or system identifiers.
+6. **Use the engagement's vocabulary** — say "${v.commitment_top_plural.toLowerCase()}" not "priorities" if those aren't the same; say "${v.evidence_plural.toLowerCase()}" not "documents" if those aren't the same. The vocabulary map above is canonical for this engagement.
+7. **Tie answers back to strategic pillars and ${v.commitment_top_plural.toLowerCase()} where relevant.** Pillar-level questions get pillar-level answers (which pillar an evidence piece advances, contradicts, or is silent on). ${v.commitment_top_plural}-level questions get ${v.commitment_top_singular.toLowerCase()}-level answers. If a piece of evidence cuts across multiple, say so.
+8. **Be precise with figures.** Quote exact amounts, dates, percentages, and decisions verbatim from the source documents. If a figure isn't in the documents, do not produce one.
+9. **Format key values in bold** for scannability. Use bullets when listing multiple findings.
+10. **Keep responses tight.** Two to four short paragraphs is usually right. Long blocks of prose lose people.
+11. **Voice:** direct, Australian English, plain. Do not pad with "I'd be happy to help" or "Great question". Do not refer to yourself as an AI; you are Nera.
 
 # When you cannot answer
 
