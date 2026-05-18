@@ -372,30 +372,78 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
     );
 
     // ── Extract citations from the generated content ────────────
+    //
+    // The LLM is asked to cite using [chunk_uuid] inline. That is correct
+    // for evidence-grounding but ugly to read. We post-process:
+    //   1. Walk the report in document order, assigning each unique chunk_id
+    //      a sequential number (1, 2, 3, ...).
+    //   2. Replace every [chunk_uuid] in the report body with [N].
+    //   3. Append a "## References" section at the bottom listing each
+    //      numbered reference with its source document and section reference.
+    //   4. The citations JSON keeps the full audit trail (chunk_id + claim
+    //      sentence + source document) so the review dialog can still link
+    //      a numbered marker back to its specific chunk for verification.
 
     const citationMatches = [...reportContent.matchAll(/\[([0-9a-f-]{36})\]/g)];
-    const chunkIds = new Set(citationMatches.map((m) => m[1]));
     const chunkMap = new Map(
       (chunks ?? []).map((c) => [c.id, c])
     );
 
-    for (const chunkId of chunkIds) {
-      const chunk = chunkMap.get(chunkId);
-      if (chunk) {
-        // Find the sentence containing this citation
-        const citationRegex = new RegExp(
-          `[^.]*\\[${chunkId}\\][^.]*\\.?`,
-          "g"
-        );
-        const claimMatch = reportContent.match(citationRegex);
-        allCitations.push({
-          claim: claimMatch?.[0]?.trim() ?? "(citation context not extracted)",
-          source_chunk_id: chunkId,
-          source_document: chunk.document_source,
-          source_type: chunk.source_type,
-        });
+    // Assign numbers in document order (first appearance wins)
+    const chunkIdToNumber = new Map<string, number>();
+    let nextRef = 1;
+    for (const m of citationMatches) {
+      const chunkId = m[1];
+      if (!chunkIdToNumber.has(chunkId) && chunkMap.has(chunkId)) {
+        chunkIdToNumber.set(chunkId, nextRef++);
       }
     }
+
+    // Build the audit-trail citations array (one per unique chunk)
+    for (const [chunkId, refNumber] of chunkIdToNumber) {
+      const chunk = chunkMap.get(chunkId);
+      if (!chunk) continue;
+      const citationRegex = new RegExp(
+        `[^.]*\\[${chunkId}\\][^.]*\\.?`,
+        "g",
+      );
+      const claimMatch = reportContent.match(citationRegex);
+      allCitations.push({
+        claim: claimMatch?.[0]?.trim() ?? "(citation context not extracted)",
+        source_chunk_id: chunkId,
+        source_document: chunk.document_source,
+        source_type: chunk.source_type,
+        // deno-lint-ignore no-explicit-any
+        ...({ ref_number: refNumber } as any),
+      });
+    }
+
+    // Replace [chunk_uuid] with [N] throughout the body
+    let cleanedReport = reportContent;
+    for (const [chunkId, refNumber] of chunkIdToNumber) {
+      const inlineRegex = new RegExp(`\\[${chunkId}\\]`, "g");
+      cleanedReport = cleanedReport.replace(inlineRegex, `[${refNumber}]`);
+    }
+    // Strip any unreferenced [uuid] markers that didn't map to a chunk
+    cleanedReport = cleanedReport.replace(/\[[0-9a-f-]{36}\]/g, "");
+
+    // Append a clean References section
+    if (chunkIdToNumber.size > 0) {
+      const refLines: string[] = ["", "---", "", "## References", ""];
+      const ordered = [...chunkIdToNumber.entries()].sort(
+        (a, b) => a[1] - b[1],
+      );
+      for (const [chunkId, refNumber] of ordered) {
+        const chunk = chunkMap.get(chunkId);
+        if (!chunk) continue;
+        const docTitle = chunk.document_source ?? "Source document";
+        refLines.push(`${refNumber}. ${docTitle}`);
+      }
+      cleanedReport = cleanedReport + refLines.join("\n");
+    }
+
+    // Hand the cleaned version forward to the DB insert
+    const finalReportContent = cleanedReport;
 
     // ── Write to st_compliance_reports ───────────────────────────
 
@@ -417,7 +465,7 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
         title: reportTitle,
         period_start: period_start ?? null,
         period_end: period_end ?? null,
-        content_markdown: reportContent,
+        content_markdown: finalReportContent,
         citations: allCitations,
         status: "draft",
         created_by: createdByProfileId,
