@@ -135,7 +135,11 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
           <em>"Where is the corpus saying our assumptions about workforce uptake are wrong?"</em>
         </p>
       ),
-      placement: 'left',
+      // Anchor above the Nera bubble (which sits at the bottom-right of the
+      // viewport) so the tooltip + Next button always fit on screen. The
+      // previous 'left' placement pushed the tooltip off the bottom edge on
+      // narrower widths, hiding the Next button.
+      placement: 'top',
     },
     {
       target: '[data-tour="tabs-list"]',
