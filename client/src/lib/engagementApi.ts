@@ -22,23 +22,44 @@ export async function fetchEngagements(): Promise<Engagement[]> {
   return (data ?? []) as Engagement[];
 }
 
-export async function fetchEngagement(idOrCode: string): Promise<Engagement | null> {
+// Strict UUIDv4-shape check. Anything that doesn't match is treated as a
+// slug or short_code candidate.
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function fetchEngagement(
+  idOrCodeOrSlug: string,
+): Promise<Engagement | null> {
   if (!supabase) return null;
 
-  // If it looks like a UUID, query by id; otherwise query by short_code
-  const isUuid = idOrCode.length > 8 && idOrCode.includes('-');
-  const column = isUuid ? 'id' : 'short_code';
+  // 1. UUID: fastest, direct primary-key lookup.
+  if (UUID_REGEX.test(idOrCodeOrSlug)) {
+    const { data, error } = await supabase
+      .from('st_engagements')
+      .select('*')
+      .eq('id', idOrCodeOrSlug)
+      .maybeSingle();
+    if (error && error.code !== 'PGRST116') throw error;
+    return (data as Engagement | null) ?? null;
+  }
 
-  const { data, error } = await supabase
+  // 2. Slug: preferred human-readable URL (migration 0011).
+  const { data: bySlug, error: slugErr } = await supabase
     .from('st_engagements')
     .select('*')
-    .eq(column, idOrCode)
-    .single();
-  if (error) {
-    if (error.code === 'PGRST116') return null; // not found
-    throw error;
-  }
-  return data as Engagement;
+    .eq('slug', idOrCodeOrSlug)
+    .maybeSingle();
+  if (slugErr && slugErr.code !== 'PGRST116') throw slugErr;
+  if (bySlug) return bySlug as Engagement;
+
+  // 3. Short code: legacy 6-char path, kept working for backward compat.
+  const { data: byCode, error: codeErr } = await supabase
+    .from('st_engagements')
+    .select('*')
+    .eq('short_code', idOrCodeOrSlug)
+    .maybeSingle();
+  if (codeErr && codeErr.code !== 'PGRST116') throw codeErr;
+  return (byCode as Engagement | null) ?? null;
 }
 
 // ── Engagement stages ───────────────────────────────────────────────────────

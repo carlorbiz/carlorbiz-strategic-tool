@@ -28,6 +28,10 @@ export type UpdateRagStatus = 'on_track' | 'at_risk' | 'blocked' | 'done';
 export interface Engagement {
   id: string;
   short_code: string;
+  // Human-readable URL slug (migration 0011). Lowercase, hyphenated, ASCII.
+  // Used in /e/:slug routes alongside the legacy short_code path. NULL for
+  // engagements created before this column was added.
+  slug: string | null;
   name: string;
   client_name: string | null;
   description: string | null;
