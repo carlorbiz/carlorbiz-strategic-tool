@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, Link } from 'wouter';
+import { useEffect, useState } from 'react';
+import { useParams, useLocation, Link } from 'wouter';
 import { EngagementProvider, useEngagement } from '@/contexts/EngagementContext';
 import { StrategicChatProvider } from '@/contexts/StrategicChatContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
@@ -146,6 +146,27 @@ export default function EngagementShell() {
   );
 }
 
+// If the engagement was loaded via UUID or short_code but it has a slug,
+// quietly swap the URL to the canonical slug form. Random-looking short
+// codes (e.g. /e/b93cb5) read as phishing tokens to most prospects;
+// /e/rural-futures-australia reads as a recognisable place.
+//
+// Uses replace:true so the change doesn't create a back-button entry. The
+// engagement object stays the same; components don't unmount.
+function CanonicalUrlRedirect() {
+  const params = useParams<{ engagementId: string }>();
+  const [, setLocation] = useLocation();
+  const { engagement } = useEngagement();
+
+  useEffect(() => {
+    if (!engagement?.slug) return;
+    if (params.engagementId === engagement.slug) return;
+    setLocation(`/e/${engagement.slug}`, { replace: true });
+  }, [engagement, params.engagementId, setLocation]);
+
+  return null;
+}
+
 function EngagementShellInner() {
   // Manual-relaunch counter so the "Take the tour" button re-fires the wizard
   // (remounting OnboardingWizard with a fresh forceStart=true each click).
@@ -153,6 +174,7 @@ function EngagementShellInner() {
 
   return (
     <>
+      <CanonicalUrlRedirect />
       <EngagementNav onTakeTour={() => setTourNonce((n) => n + 1)} />
       <EngagementContent />
       <EngagementNeraChatbot />
