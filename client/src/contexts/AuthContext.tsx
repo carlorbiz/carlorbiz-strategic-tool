@@ -164,6 +164,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     setUser(null);
     setProfile(null);
+    // Force a clean reload to /login. ProtectedRoute intentionally does NOT
+    // redirect when previously-authenticated users become unauthenticated
+    // (it assumes token-refresh flicker and shows an inline 'Session expired'
+    // prompt instead). That logic is correct for transient flickers but wrong
+    // for explicit sign-out — the user gets stuck on the same view or sees a
+    // confusing 'Session expired' screen they didn't ask for. A full reload
+    // sidesteps the whole React-state-vs-route timing problem cleanly.
+    window.location.replace('/login');
   };
 
   const hasRole = (role: UserRole): boolean => {
