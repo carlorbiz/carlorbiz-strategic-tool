@@ -81,6 +81,25 @@ function parseTemplateSections(templateMarkdown: string): TemplateSection[] {
   return sections;
 }
 
+// ─── user_profiles indirection ───────────────────────────────
+// st_compliance_reports.created_by FKs to user_profiles(id), NOT auth.users(id).
+// requireAuth() returns the JWT sub (auth.users.id), so we have to resolve it
+// to the matching user_profiles.id before any st_* insert that touches
+// created_by. Same bug pattern as migration 0007 (ie_* tables).
+async function resolveUserProfileId(
+  supabase: ReturnType<typeof createClient>,
+  authUserId: string,
+): Promise<string | null> {
+  if (authUserId === "service-role") return null;
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("id")
+    .eq("user_id", authUserId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return (data as { id: string }).id;
+}
+
 // ─── Citation types ───────────────────────────────────────────
 
 interface Citation {
@@ -384,6 +403,12 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
       title ??
       `${template.name} — ${period_start ?? "inception"} to ${period_end ?? new Date().toISOString().slice(0, 10)}`;
 
+    // Resolve auth.users.id → user_profiles.id for the FK constraint.
+    // st_compliance_reports.created_by points at user_profiles(id), not
+    // auth.users(id). Falls back to null if the user has no profile row
+    // (service-role calls, or a user that hasn't completed onboarding).
+    const createdByProfileId = await resolveUserProfileId(supabase, userId);
+
     const { data: report, error: reportErr } = await supabase
       .from("st_compliance_reports")
       .insert({
@@ -395,7 +420,7 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
         content_markdown: reportContent,
         citations: allCitations,
         status: "draft",
-        created_by: userId === "service-role" ? null : userId,
+        created_by: createdByProfileId,
       })
       .select("id, title, status")
       .single();
