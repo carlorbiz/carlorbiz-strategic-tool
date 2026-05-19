@@ -1,3 +1,27 @@
+// =============================================================================
+// Carlorbiz Strategic Tool — Survey ingestion (background + multi-LLM)
+// supabase/functions/st-ingest-survey/index.ts
+//
+// CHANGE (2026-05-19, v3):
+//   - Synchronous part returns 202 Accepted after parsing the file and
+//     batch-inserting response cells. No more 150-second gateway timeouts
+//     hanging the browser.
+//   - LLM analysis (per-question themes + overall summary + chunk extraction)
+//     runs in EdgeRuntime.waitUntil() after the response goes out.
+//   - Frontend polls st_surveys.status until it flips from 'ingesting' to
+//     'ingested' or 'failed'.
+//   - Model split: Gemini 2.5 Flash for per-question analysis (~20 calls)
+//     and chunk extraction (~20 calls). Claude Sonnet 4 for the single
+//     overall-survey summary (prose quality matters; cost is rounding error).
+//     Aligns with the standing multi-LLM policy: never Anthropic-only;
+//     Gemini required for cost rotation.
+//   - Per-question and chunk calls run with concurrency=5 (Promise.all
+//     semaphore). 20 questions x ~3 sec per Flash call serially = 60s;
+//     with concurrency 5, ~15s. Same speedup applied to chunk extraction.
+//   - Response inserts now batched (500 rows per insert) rather than one
+//     INSERT per cell. 1481 rows used to take ~150s; now ~2s.
+// =============================================================================
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
 import type { LLMConfig } from "../_shared/llm.ts";
@@ -6,6 +30,7 @@ import type { LLMConfig } from "../_shared/llm.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY") || "";
 
 // ─── CORS ─────────────────────────────────────────────────────
 const corsHeaders = {
@@ -45,6 +70,25 @@ async function requireAuth(req: Request): Promise<string> {
   }
 }
 
+// ─── Model configs ────────────────────────────────────────────
+// Per-question analysis + chunk extraction: Gemini 2.5 Flash. Cheap, fast,
+// reliable JSON output for structured extraction. ~40 calls per survey, so
+// latency dominates total time.
+// Overall summary: Claude Sonnet 4. Single call, prose quality matters for
+// the board-readable summary.
+
+const FLASH_CONFIG: LLMConfig = {
+  provider: "google",
+  model: "gemini-2.5-flash",
+  apiKey: GOOGLE_API_KEY,
+};
+
+const SONNET_CONFIG: LLMConfig = {
+  provider: "anthropic",
+  model: "claude-sonnet-4-20250514",
+  apiKey: ANTHROPIC_API_KEY,
+};
+
 // ─── LLM prompts ──────────────────────────────────────────────
 
 const QUESTION_ANALYSIS_PROMPT = `You are a survey analyst for a strategic planning evidence platform. Analyse the responses to a single survey question.
@@ -55,9 +99,9 @@ Given a question header and a list of responses, produce:
 3. "notable_quotes": array of 1-5 standout verbatim responses that capture key sentiments or insights
 4. "summary": a 1-2 sentence plain-English summary of what respondents said
 
-Return ONLY a JSON object with these four keys. No other text.`;
+Australian English throughout. No em-dashes. Return ONLY a JSON object with these four keys. No other text.`;
 
-const SURVEY_SUMMARY_PROMPT = `You are a survey analyst for a strategic planning evidence platform. Given per-question summaries from a survey, write a 2-3 sentence overall summary capturing the key findings, dominant themes, and any notable tensions or surprises. Be specific — cite question topics and quantify where possible. Return ONLY the summary text, no quotes, no prefix.`;
+const SURVEY_SUMMARY_PROMPT = `You are a survey analyst for a strategic planning evidence platform. Given per-question summaries from a survey, write a 2-3 sentence overall summary capturing the key findings, dominant themes, and any notable tensions or surprises. Be specific. Cite question topics and quantify where possible. Australian English. No em-dashes. Return ONLY the summary text, no quotes, no prefix.`;
 
 const SURVEY_CHUNK_PROMPT = `You are a knowledge extraction specialist. Given a survey question summary (themes, sentiment, notable quotes), produce 1-3 knowledge chunks that capture the key findings as standalone facts.
 
@@ -71,7 +115,7 @@ Output a JSON array of objects, each with:
 - "chunk_summary": a one-sentence summary
 - "topic_tags": relevant tags as lowercase strings
 
-Return ONLY the JSON array.`;
+Australian English. No em-dashes. Return ONLY the JSON array.`;
 
 // ─── CSV parser ───────────────────────────────────────────────
 
@@ -85,7 +129,6 @@ function parseCSV(text: string, sheetName = "Sheet1"): ParsedSheet {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return { sheet_name: sheetName, headers: [], rows: [] };
 
-  // Simple CSV parse: handle quoted fields
   const parseLine = (line: string): string[] => {
     const result: string[] = [];
     let current = "";
@@ -123,8 +166,6 @@ function parseCSV(text: string, sheetName = "Sheet1"): ParsedSheet {
   return { sheet_name: sheetName, headers, rows };
 }
 
-// ─── JSON survey parser ───────────────────────────────────────
-
 function parseJSONSurvey(text: string): ParsedSheet {
   const data = JSON.parse(text);
   if (!Array.isArray(data) || data.length === 0) {
@@ -139,6 +180,34 @@ function parseJSONSurvey(text: string): ParsedSheet {
     return row;
   });
   return { sheet_name: "Sheet1", headers, rows };
+}
+
+// ─── Parallel runner with concurrency limit ───────────────────
+// Simple worker-pool pattern. Returns results in the same order as the
+// input items array. Errors from fn() are not caught here — fn should
+// handle its own errors and return a safe value (e.g. null).
+async function runParallel<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIdx = 0;
+
+  async function worker() {
+    while (true) {
+      const i = nextIdx++;
+      if (i >= items.length) return;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  const workers: Promise<void>[] = [];
+  for (let i = 0; i < Math.min(concurrency, items.length); i++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+  return results;
 }
 
 // ─── Main handler ─────────────────────────────────────────────
@@ -199,9 +268,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Survey file contains no data" }, 400);
     }
 
-    // 5. Write normalised responses to st_survey_responses
-    let totalResponses = 0;
-    const allQuestionHeaders: Map<string, string[]> = new Map(); // header → response values
+    // 5. Build response rows + accumulate per-question buckets
+    const allQuestionHeaders = new Map<string, string[]>();
+    const rowsToInsert: Array<Record<string, unknown>> = [];
 
     for (const sheet of sheets) {
       for (let ri = 0; ri < sheet.rows.length; ri++) {
@@ -209,17 +278,13 @@ Deno.serve(async (req) => {
         for (const header of sheet.headers) {
           const value = row[header];
           if (!value || value.trim().length === 0) continue;
-
-          await supabase.from("st_survey_responses").insert({
+          rowsToInsert.push({
             survey_id,
             sheet_name: sheet.sheet_name,
             question_header: header,
             response_value: value,
             respondent_index: ri,
           });
-          totalResponses++;
-
-          // Accumulate for per-question analysis
           if (!allQuestionHeaders.has(header)) {
             allQuestionHeaders.set(header, []);
           }
@@ -228,128 +293,258 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 6. LLM config
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
-      apiKey: ANTHROPIC_API_KEY,
-    };
-
-    // 7. Per-question LLM analysis
-    const questionSummaries: Array<{
-      question_header: string;
-      response_count: number;
-      themes: unknown[];
-      sentiment: Record<string, number>;
-      notable_quotes: string[];
-      summary: string;
-    }> = [];
-
-    for (const [header, responses] of allQuestionHeaders) {
-      // Skip questions with fewer than 3 responses — not enough for analysis
-      if (responses.length < 3) continue;
-
-      try {
-        const input = `Question: "${header}"\n\nResponses (${responses.length} total):\n${responses
-          .slice(0, 200) // Cap at 200 responses to stay within context
-          .map((r, i) => `${i + 1}. ${r}`)
-          .join("\n")}`;
-
-        const result = await callLLM(
-          llmConfig,
-          QUESTION_ANALYSIS_PROMPT,
-          [{ role: "user", content: input }],
-          4000
+    // 6. Batch insert responses (500 rows per call). Previously one insert
+    //    per cell which killed the 150s timeout on any survey above ~1000
+    //    response cells.
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+      const batch = rowsToInsert.slice(i, i + BATCH_SIZE);
+      const { error } = await supabase
+        .from("st_survey_responses")
+        .insert(batch);
+      if (error) {
+        await markFailed(
+          supabase,
+          survey_id,
+          `Response insert failed: ${error.message}`,
         );
+        return jsonResponse(
+          { error: `Response insert failed: ${error.message}` },
+          500,
+        );
+      }
+    }
 
-        const parsed = parseJSONFromLLM(result);
-        if (parsed) {
-          const qSummary = {
-            question_header: header,
-            response_count: responses.length,
+    const totalResponses = rowsToInsert.length;
+    const questionList = [...allQuestionHeaders.entries()].map((
+      [header, responses],
+    ) => ({
+      header,
+      responses,
+    }));
+
+    // 7. Hand off to background. EdgeRuntime.waitUntil keeps the function
+    //    alive past the response, so the browser gets its 202 immediately
+    //    and the LLM analysis continues server-side.
+    const bgPromise = runBackgroundAnalysis(
+      supabase,
+      survey,
+      questionList,
+      totalResponses,
+    );
+    // deno-lint-ignore no-explicit-any
+    const er = (globalThis as any).EdgeRuntime;
+    if (er && typeof er.waitUntil === "function") {
+      er.waitUntil(bgPromise);
+    } else {
+      // Local-dev fallback: at least don't drop the promise on the floor.
+      bgPromise.catch((e) => console.error("Background analysis failed:", e));
+    }
+
+    return jsonResponse(
+      {
+        success: true,
+        survey_id,
+        response_count: totalResponses,
+        questions_total: questionList.filter((q) => q.responses.length >= 3)
+          .length,
+        status: "analysing",
+        message:
+          "File parsed and responses saved. LLM analysis running in background. Poll the survey row until status changes from 'ingesting' to 'ingested' or 'failed'.",
+      },
+      202,
+    );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Internal error";
+    console.error("st-ingest-survey error:", e);
+    return jsonResponse({ error: msg }, 500);
+  }
+});
+
+// ─── Background analysis ──────────────────────────────────────
+// Runs after the synchronous 202 response. Uses Gemini 2.5 Flash for the
+// per-question analysis loop and chunk extraction (40+ structured-output
+// calls, latency dominates). Uses Claude Sonnet 4 for the single overall
+// summary call (prose quality matters there; cost is rounding error).
+
+interface QuestionSummary {
+  header: string;
+  response_count: number;
+  themes: unknown[];
+  sentiment: Record<string, number>;
+  notable_quotes: string[];
+  summary: string;
+}
+
+async function runBackgroundAnalysis(
+  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  survey: any,
+  questionList: Array<{ header: string; responses: string[] }>,
+  totalResponses: number,
+): Promise<void> {
+  try {
+    const eligible = questionList.filter((q) => q.responses.length >= 3);
+    console.log(
+      `[bg] Survey ${survey.id}: analysing ${eligible.length} questions of ${questionList.length} total (skipped questions with <3 responses)`,
+    );
+
+    if (!GOOGLE_API_KEY) {
+      throw new Error(
+        "GOOGLE_API_KEY not configured — per-question analysis requires Gemini Flash",
+      );
+    }
+
+    // 7. Per-question Gemini Flash analysis, concurrency 5
+    const analysisResults = await runParallel(
+      eligible,
+      5,
+      async (q): Promise<QuestionSummary | null> => {
+        try {
+          const input = `Question: "${q.header}"\n\nResponses (${q.responses.length} total):\n${
+            q.responses
+              .slice(0, 200) // Cap at 200 responses to stay within context
+              .map((r, i) => `${i + 1}. ${r}`)
+              .join("\n")
+          }`;
+          const result = await callLLM(
+            FLASH_CONFIG,
+            QUESTION_ANALYSIS_PROMPT,
+            [{ role: "user", content: input }],
+            4000,
+          );
+          const parsed = parseJSONFromLLM(result);
+          if (!parsed) return null;
+          return {
+            header: q.header,
+            response_count: q.responses.length,
             themes: parsed.themes ?? [],
             sentiment: parsed.sentiment ?? {},
             notable_quotes: parsed.notable_quotes ?? [],
             summary: parsed.summary ?? "",
           };
-
-          await supabase.from("st_survey_question_summaries").insert({
-            survey_id,
-            question_header: header,
-            response_count: responses.length,
-            themes: qSummary.themes,
-            sentiment: qSummary.sentiment,
-            notable_quotes: qSummary.notable_quotes,
-            summary: qSummary.summary,
-          });
-
-          questionSummaries.push(qSummary);
+        } catch (e) {
+          console.error(
+            `[bg] Question analysis failed for "${q.header}":`,
+            e instanceof Error ? e.message : e,
+          );
+          return null;
         }
-      } catch (e) {
-        console.error(`Failed to analyse question "${header}":`, e);
-        // Non-fatal: continue with other questions
-      }
-    }
+      },
+    );
 
-    // 8. Overall survey summary
+    const questionSummaries: QuestionSummary[] = [];
+    for (const r of analysisResults) {
+      if (!r) continue;
+      questionSummaries.push(r);
+      await supabase.from("st_survey_question_summaries").insert({
+        survey_id: survey.id,
+        question_header: r.header,
+        response_count: r.response_count,
+        themes: r.themes,
+        sentiment: r.sentiment,
+        notable_quotes: r.notable_quotes,
+        summary: r.summary,
+      });
+    }
+    console.log(
+      `[bg] Survey ${survey.id}: ${questionSummaries.length} question summaries persisted`,
+    );
+
+    // 8. Overall survey summary — Sonnet (single call)
     let overallSummary = "";
     if (questionSummaries.length > 0) {
       try {
         const summaryInput = questionSummaries
-          .map((qs) => `Q: "${qs.question_header}" (${qs.response_count} responses)\nSummary: ${qs.summary}`)
+          .map((qs) =>
+            `Q: "${qs.header}" (${qs.response_count} responses)\nSummary: ${qs.summary}`
+          )
           .join("\n\n");
-
         overallSummary = await callLLM(
-          llmConfig,
+          SONNET_CONFIG,
           SURVEY_SUMMARY_PROMPT,
           [{ role: "user", content: summaryInput }],
-          500
+          500,
         );
         overallSummary = overallSummary.trim().replace(/^["']|["']$/g, "");
-      } catch {
-        overallSummary = `Survey with ${totalResponses} responses across ${questionSummaries.length} questions.`;
-      }
-    }
-
-    // 9. Chunk into knowledge_chunks
-    let chunksCreated = 0;
-    for (const qs of questionSummaries) {
-      try {
-        const chunkInput = `Survey: "${survey.name}" (${survey.period ?? "no period"})\nQuestion: "${qs.question_header}"\nResponse count: ${qs.response_count}\nSummary: ${qs.summary}\nThemes: ${JSON.stringify(qs.themes)}\nNotable quotes: ${JSON.stringify(qs.notable_quotes)}`;
-
-        const result = await callLLM(
-          llmConfig,
-          SURVEY_CHUNK_PROMPT,
-          [{ role: "user", content: chunkInput }],
-          3000
-        );
-
-        const chunks = parseChunksFromLLM(result);
-        for (const chunk of chunks) {
-          const { error: chunkErr } = await supabase
-            .from("knowledge_chunks")
-            .insert({
-              source_app: "strategic-tool",
-              engagement_id: survey.engagement_id,
-              source_type: "survey",
-              source_id: survey_id,
-              document_source: survey.name,
-              section_reference: qs.question_header,
-              chunk_text: chunk.chunk_text,
-              chunk_summary: chunk.chunk_summary,
-              topic_tags: chunk.topic_tags,
-              content_type: "survey",
-              is_active: true,
-              extraction_version: "st-survey-1.0",
-            });
-          if (!chunkErr) chunksCreated++;
-        }
       } catch (e) {
-        console.error(`Failed to chunk question "${qs.question_header}":`, e);
+        console.error(
+          `[bg] Overall summary failed:`,
+          e instanceof Error ? e.message : e,
+        );
+        overallSummary =
+          `Survey with ${totalResponses} responses across ${questionSummaries.length} questions.`;
       }
+    } else {
+      overallSummary =
+        `Survey with ${totalResponses} responses. No questions met the minimum response threshold (3) for individual analysis.`;
     }
 
-    // 10. Update survey record
+    // 9. Chunk extraction (Gemini Flash, concurrency 5)
+    const chunkResults = await runParallel(
+      questionSummaries,
+      5,
+      async (qs) => {
+        try {
+          const chunkInput =
+            `Survey: "${survey.name}" (${survey.period ?? "no period"})\nQuestion: "${qs.header}"\nResponse count: ${qs.response_count}\nSummary: ${qs.summary}\nThemes: ${
+              JSON.stringify(qs.themes)
+            }\nNotable quotes: ${JSON.stringify(qs.notable_quotes)}`;
+          const result = await callLLM(
+            FLASH_CONFIG,
+            SURVEY_CHUNK_PROMPT,
+            [{ role: "user", content: chunkInput }],
+            3000,
+          );
+          return { qs, chunks: parseChunksFromLLM(result) };
+        } catch (e) {
+          console.error(
+            `[bg] Chunk extraction failed for "${qs.header}":`,
+            e instanceof Error ? e.message : e,
+          );
+          return {
+            qs,
+            chunks: [] as Array<
+              { chunk_text: string; chunk_summary: string; topic_tags: string[] }
+            >,
+          };
+        }
+      },
+    );
+
+    const chunksToInsert: Array<Record<string, unknown>> = [];
+    for (const { qs, chunks } of chunkResults) {
+      for (const chunk of chunks) {
+        chunksToInsert.push({
+          source_app: "strategic-tool",
+          engagement_id: survey.engagement_id,
+          source_type: "survey",
+          source_id: survey.id,
+          document_source: survey.name,
+          section_reference: qs.header,
+          chunk_text: chunk.chunk_text,
+          chunk_summary: chunk.chunk_summary,
+          topic_tags: chunk.topic_tags,
+          content_type: "survey",
+          is_active: true,
+          extraction_version: "st-survey-1.1",
+        });
+      }
+    }
+    let chunksCreated = 0;
+    if (chunksToInsert.length > 0) {
+      const { error } = await supabase
+        .from("knowledge_chunks")
+        .insert(chunksToInsert);
+      if (!error) {
+        chunksCreated = chunksToInsert.length;
+      } else {
+        console.error(`[bg] Chunk insert failed:`, error.message);
+      }
+    }
+    console.log(`[bg] Survey ${survey.id}: ${chunksCreated} chunks created`);
+
+    // 10. Final update — mark ingested
     await supabase
       .from("st_surveys")
       .update({
@@ -358,22 +553,19 @@ Deno.serve(async (req) => {
         overall_summary: overallSummary,
         processed_at: new Date().toISOString(),
       })
-      .eq("id", survey_id);
+      .eq("id", survey.id);
 
-    return jsonResponse({
-      success: true,
-      survey_id,
-      response_count: totalResponses,
-      questions_analysed: questionSummaries.length,
-      chunks_created: chunksCreated,
-      summary: overallSummary,
-    });
+    console.log(`[bg] Survey ${survey.id}: ingestion complete`);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Internal error";
-    console.error("st-ingest-survey error:", e);
-    return jsonResponse({ error: msg }, 500);
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[bg] Survey ${survey.id}: fatal error —`, msg);
+    await markFailed(
+      supabase,
+      survey.id,
+      `Background analysis failed: ${msg}`,
+    );
   }
-});
+}
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -402,10 +594,11 @@ async function parseFile(blob: Blob, fileType: string): Promise<ParsedSheet[]> {
         const sheet = workbook.Sheets[sheetName];
         const jsonData: Record<string, unknown>[][] = XLSX.utils.sheet_to_json(
           sheet,
-          { defval: "" }
+          { defval: "" },
         );
-        if (jsonData.length === 0)
+        if (jsonData.length === 0) {
           return { sheet_name: sheetName, headers: [], rows: [] };
+        }
 
         const headers = Object.keys(jsonData[0]);
         const rows = jsonData.map((row) => {
@@ -442,7 +635,7 @@ function parseJSONFromLLM(response: string): Record<string, unknown> | null {
 }
 
 function parseChunksFromLLM(
-  response: string
+  response: string,
 ): Array<{ chunk_text: string; chunk_summary: string; topic_tags: string[] }> {
   const trimmed = response.trim();
   const jsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -454,7 +647,7 @@ function parseChunksFromLLM(
     return parsed
       .filter(
         (item: unknown): item is Record<string, unknown> =>
-          typeof item === "object" && item !== null && "chunk_text" in item
+          typeof item === "object" && item !== null && "chunk_text" in item,
       )
       .map((item) => ({
         chunk_text: String(item.chunk_text || ""),
@@ -472,7 +665,7 @@ function parseChunksFromLLM(
 async function markFailed(
   supabase: ReturnType<typeof createClient>,
   surveyId: string,
-  reason: string
+  reason: string,
 ): Promise<void> {
   console.error(`Survey ${surveyId} ingestion failed: ${reason}`);
   await supabase

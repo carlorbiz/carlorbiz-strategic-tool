@@ -63,16 +63,24 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
         containsPii,
       });
 
-      toast.success('Survey uploaded successfully');
-
-      // Trigger ingestion (async)
+      // Kick off ingestion. Since 2026-05-19 this returns the moment the file
+      // is parsed and responses are saved — analysis continues in background
+      // under EdgeRuntime.waitUntil. The toast tells the user honestly that
+      // the slow part is happening server-side; they can leave the page.
       setIngesting(true);
       try {
-        await triggerSurveyIngestion(survey.id);
-        toast.success(`Survey analysed: ${survey.name}`);
+        const result = await triggerSurveyIngestion(survey.id);
+        toast.success(
+          `Parsed ${result.response_count} responses across ${result.questions_total} questions. ` +
+          `Nera is analysing them in the background — check the Surveys tab in a few minutes for the full breakdown.`,
+          { duration: 8000 },
+        );
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ingestion failed';
-        toast.error(`Upload succeeded but analysis failed: ${msg}. You can retry from the survey list.`);
+        toast.error(
+          `Upload succeeded but Nera could not start the analysis: ${msg}. ` +
+          `You can retry from the survey list.`,
+        );
       } finally {
         setIngesting(false);
       }
@@ -93,6 +101,10 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
     }
   };
 
+  // 'uploading' = file upload + storage write (fast).
+  // 'ingesting' = the 202-bound parse-and-save call (also fast now; the slow
+  // LLM analysis runs in the background and is visible via the survey list
+  // status, not via this spinner).
   const isWorking = uploading || ingesting;
 
   return (

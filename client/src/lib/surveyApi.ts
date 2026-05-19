@@ -50,8 +50,26 @@ export async function uploadSurvey(
 }
 
 // ── Trigger ingestion (calls st-ingest-survey edge function) ─────────────────
+//
+// Since 2026-05-19, st-ingest-survey returns 202 Accepted immediately after
+// parsing the file and inserting the response cells. The LLM analysis (per-
+// question themes + overall summary + chunk extraction) runs in the
+// background under EdgeRuntime.waitUntil. Callers should treat the resolved
+// metadata as "parsing complete, analysis running" — NOT as "analysis done".
+// Poll the survey row's status field until it changes from 'ingesting' to
+// 'ingested' or 'failed'.
 
-export async function triggerSurveyIngestion(surveyId: string): Promise<void> {
+export interface SurveyIngestionStarted {
+  survey_id: string;
+  response_count: number;
+  questions_total: number;
+  status: 'analysing' | 'ingesting';
+  message: string;
+}
+
+export async function triggerSurveyIngestion(
+  surveyId: string,
+): Promise<SurveyIngestionStarted> {
   if (!supabase) throw new Error('Supabase not configured');
 
   const neraApiBase = import.meta.env.VITE_SUPABASE_URL;
@@ -74,6 +92,7 @@ export async function triggerSurveyIngestion(surveyId: string): Promise<void> {
     const body = await resp.text();
     throw new Error(`Survey ingestion failed (${resp.status}): ${body}`);
   }
+  return (await resp.json()) as SurveyIngestionStarted;
 }
 
 // ── Fetch surveys for an engagement ──────────────────────────────────────────
