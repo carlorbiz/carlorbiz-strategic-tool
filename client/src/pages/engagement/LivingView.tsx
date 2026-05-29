@@ -115,7 +115,7 @@ export function EngagementLivingView() {
               signals (repeat presenters, theme silence, institution concentration)
               rather than strategic-plan drift. */}
           {!isResearchProfile && (
-            <>
+            <div data-tour="drift-section" className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold">{v.drift_plural ?? 'Drift Signals'}</h3>
                 {isEngagementAdmin && (
@@ -135,7 +135,7 @@ export function EngagementLivingView() {
               </div>
               <DriftSignals key={driftRefresh} />
               <NeraQuestions />
-            </>
+            </div>
           )}
 
           {/* Sample questions a prospect can click to demo Nera (research profile only) */}

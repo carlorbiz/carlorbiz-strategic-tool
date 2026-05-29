@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, LogOut, Sparkles } from 'lucide-react';
 import { EngagementNeraChatbot } from '@/components/chat/EngagementNeraChatbot';
-import { OnboardingWizard } from '@/components/engagement/OnboardingWizard';
+import { OnboardingWizard, hasOnboardingTour } from '@/components/engagement/OnboardingWizard';
 
 // Status-specific views
 import { EngagementDraftView } from '@/pages/engagement/DraftView';
@@ -19,7 +19,7 @@ import { EngagementArchivedView } from '@/pages/engagement/ArchivedView';
 function EngagementNav({ onTakeTour }: { onTakeTour: () => void }) {
   const { engagement, aiConfig } = useEngagement();
   const { signOut } = useAuth();
-  const isResearchProfile = aiConfig?.profile_key === 'research-intelligence';
+  const showTourButton = hasOnboardingTour(aiConfig?.profile_key);
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -38,7 +38,7 @@ function EngagementNav({ onTakeTour }: { onTakeTour: () => void }) {
           )}
         </div>
         <div className="flex items-center gap-1">
-          {isResearchProfile && (
+          {showTourButton && (
             <Button
               variant="ghost"
               size="sm"

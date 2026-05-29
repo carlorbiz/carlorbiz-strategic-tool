@@ -198,10 +198,83 @@ INSERT INTO st_reporting_templates (
 );
 
 
+-- ─── Organisational pillars (strategic intent above Priorities) ─────────────
+-- Pillars are the organisation's standing strategic intent — what the plan is
+-- ultimately in service of. They sit above the five Priorities and let Nera
+-- answer pillar-level questions ("which pillar is being advanced?") rather
+-- than only priority-level ones. Each Priority below maps to one or more
+-- pillars conceptually (compliance + workforce + technology serve operational
+-- integrity; controlled growth serves disciplined growth; governance serves
+-- fiduciary stewardship).
+
+INSERT INTO st_organisational_pillars (
+  id, engagement_id, title, description, success_signal,
+  distinctiveness_claim, pillar_level, order_index
+) VALUES
+  ('d0000001-0001-4000-8000-000000000001',
+   'a1b2c3d4-0001-4000-8000-000000000001',
+   'Operational Integrity at Scale',
+   'Run a 120-outlet footprint safely, compliantly, and consistently with a tiny central team. Every outlet should feel the same to a regulator, a hospital partner, and a customer regardless of which jurisdiction it sits in.',
+   'Zero critical audit failures across two consecutive financial years AND outlet manager turnover below 35% annually.',
+   'Most multi-site operators scale by adding head office. Acme has chosen to scale by tightening the operating model so the central team stays small as the footprint grows — operational integrity earned through system design, not headcount.',
+   'organisational', 1),
+  ('d0000001-0001-4000-8000-000000000002',
+   'a1b2c3d4-0001-4000-8000-000000000001',
+   'Disciplined Growth',
+   'Add the right new outlets in the right contracts at the right pace. Growth is opt-in: a new site enters the network only when its margin profile and compliance risk pass a documented threshold.',
+   'Net 30 new outlets by FY2029 with head office headcount increasing by no more than 2 FTE and no outlet onboarded outside the risk framework.',
+   'Most competitors bid every contract they can win. Acme deliberately declines contracts that would degrade the operating model — growth is a function of fit, not appetite.',
+   'organisational', 2),
+  ('d0000001-0001-4000-8000-000000000003',
+   'a1b2c3d4-0001-4000-8000-000000000001',
+   'Fiduciary Stewardship',
+   'Equip a three-person voluntary board to discharge its governance obligations at a 120-outlet scale without a company secretary. Boardroom information is engineered for the board the company actually has, not the board a textbook assumes.',
+   'Board self-assessment score reaches "good" within 12 months; risk register is reviewed at every quarterly meeting with documented owner accountability.',
+   'Most operators of this scale have a 5–7 person board with paid secretariat. Acme is engineering its governance posture so a lean voluntary board can meet the same bar — board capability through tooling, not headcount.',
+   'organisational', 3)
+ON CONFLICT (id) DO NOTHING;
+
+
+-- ─── st_ai_config (per-engagement profile + vocabulary) ─────────────────────
+-- Binds the engagement to the strategic-planning profile (DEFAULT vocabulary:
+-- Priorities / Initiatives / Lenses / documents / drift signals). Without this
+-- row, the dashboard falls back to default labels but the onboarding wizard
+-- and any other profile-gated UI is suppressed.
+
+INSERT INTO st_ai_config (
+  id, engagement_id, profile_key, llm_provider, llm_model, vocabulary_map
+) VALUES (
+  'ac000001-0001-4000-8000-000000000001',
+  'a1b2c3d4-0001-4000-8000-000000000001',
+  'strategic-planning',
+  'anthropic',
+  'claude-sonnet-4-20250514',
+  '{
+    "commitment_top_singular": "Priority",
+    "commitment_top_plural": "Priorities",
+    "commitment_sub_singular": "Initiative",
+    "commitment_sub_plural": "Initiatives",
+    "cross_cut_singular": "Lens",
+    "cross_cut_plural": "Lenses",
+    "commitment_add_verb": "introduce",
+    "commitment_archive_verb": "retire",
+    "evidence_singular": "document",
+    "evidence_plural": "documents",
+    "update_singular": "update",
+    "update_plural": "updates",
+    "drift_singular": "drift signal",
+    "drift_plural": "drift signals"
+  }'::jsonb
+)
+ON CONFLICT (id) DO NOTHING;
+
+
 -- =============================================================================
 -- End of Acme Catering Group demo seed.
--- This engagement is in 'living' status with 5 Priorities, 10 Initiatives,
--- 3 Lenses, 1 closed workshop stage, and 2 reporting templates (Board Pre-Read
--- and Quarterly Compliance Summary). It's ready for document uploads,
--- pulse checks, drift-watch runs, and report generation.
+-- This engagement is in 'living' status with 3 organisational Pillars,
+-- 5 Priorities, 10 Initiatives, 3 Lenses, 1 closed workshop stage, and 2
+-- reporting templates (Board Pre-Read and Quarterly Compliance Summary).
+-- The strategic-planning profile is bound, so the onboarding wizard fires
+-- on first visit. Ready for document uploads, pulse checks, drift-watch
+-- runs, and report generation.
 -- =============================================================================
