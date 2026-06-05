@@ -52,7 +52,9 @@ function sseEvent(event: string, data: unknown): string {
 
 // ─── Auth ─────────────────────────────────────────────────────
 // Decode the JWT (signature verification handled at the gateway).
-async function decodeUser(req: Request): Promise<string> {
+async function decodeUser(
+  req: Request,
+): Promise<{ userId: string; isAnonymous: boolean }> {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) throw new Error("Missing bearer token");
@@ -62,40 +64,107 @@ async function decodeUser(req: Request): Promise<string> {
   const payload = JSON.parse(atob(parts[1]));
   const sub = payload.sub;
   if (!sub) throw new Error("Invalid bearer token");
-  return sub as string;
+  // Supabase stamps is_anonymous=true on anonymous (signInAnonymously) sessions.
+  return { userId: sub as string, isAnonymous: payload.is_anonymous === true };
 }
 
-async function authoriseEngagementAccess(
+// ─── Access tiers & turn caps ─────────────────────────────────
+// Who may query Nera in this engagement, and how many turns they get:
+//   admin   — internal_admin, uncapped
+//   member  — has a real role on a real (non-sandbox) engagement, uncapped
+//   sandbox — has a role on a Tier-2 prospect sandbox, 20-turn cap
+//   demo    — roleless (incl. anonymous) on one of the 3 public demos, 5-turn cap
+// Anyone else is denied.
+type Tier = "admin" | "member" | "sandbox" | "demo";
+
+interface AccessTier {
+  tier: Tier;
+  turnCap: number | null; // null = uncapped
+}
+
+const SANDBOX_TURN_CAP = 20;
+const DEMO_TURN_CAP = 5;
+// Backstop so one IP can't mint endless anonymous sessions to dodge the 5-turn
+// per-user cap. Mirrors the IP throttle the website nera-query already uses.
+const DEMO_IP_DAILY_CAP = 30;
+
+async function resolveAccessTier(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   engagementId: string,
-): Promise<{ role: string; isAdmin: boolean }> {
-  // Internal admins bypass per-engagement membership checks.
+): Promise<AccessTier> {
+  // Internal admins bypass everything, uncapped.
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("role")
     .eq("user_id", userId)
-    .single();
-
+    .maybeSingle();
   if (profile?.role === "internal_admin") {
-    return { role: "internal_admin", isAdmin: true };
+    return { tier: "admin", turnCap: null };
   }
 
+  // A non-revoked role on this engagement → member or sandbox.
   const { data: roles } = await supabase
     .from("st_user_engagement_roles")
-    .select("role:st_engagement_roles(role_key, permissions)")
+    .select("id")
     .eq("user_id", userId)
-    .eq("engagement_id", engagementId);
+    .eq("engagement_id", engagementId)
+    .is("revoked_at", null);
 
-  if (!roles || roles.length === 0) {
-    throw new Error("No access to this engagement");
+  if (roles && roles.length > 0) {
+    const { data: eng } = await supabase
+      .from("st_engagements")
+      .select("is_sandbox")
+      .eq("id", engagementId)
+      .maybeSingle();
+    // deno-lint-ignore no-explicit-any
+    return (eng as any)?.is_sandbox
+      ? { tier: "sandbox", turnCap: SANDBOX_TURN_CAP }
+      : { tier: "member", turnCap: null };
   }
 
-  // deno-lint-ignore no-explicit-any
-  const first = roles[0] as any;
-  const roleKey = first?.role?.role_key ?? "external_stakeholder";
-  const isAdmin = !!first?.role?.permissions?.admin;
-  return { role: roleKey, isAdmin };
+  // No role: the only thing a roleless / anonymous user may query is a demo.
+  const { data: isDemo } = await supabase.rpc("st_is_demo_engagement", {
+    eng_id: engagementId,
+  });
+  if (isDemo === true) return { tier: "demo", turnCap: DEMO_TURN_CAP };
+
+  throw new Error("No access to this engagement");
+}
+
+function clientIp(req: Request): string {
+  const xff = req.headers.get("x-forwarded-for") || "";
+  return xff.split(",")[0].trim() || "unknown";
+}
+
+// How many turns this user has already spent in this engagement.
+async function countUserTurns(
+  supabase: ReturnType<typeof createClient>,
+  engagementId: string,
+  userId: string,
+): Promise<number> {
+  const { count } = await supabase
+    .from("nera_queries")
+    .select("id", { count: "exact", head: true })
+    .eq("source_app", "strategic-tool")
+    .eq("engagement_id", engagementId)
+    .eq("user_id", userId);
+  return count ?? 0;
+}
+
+// How many demo turns this IP has spent across all demos in the last 24h.
+async function countDemoTurnsByIp(
+  supabase: ReturnType<typeof createClient>,
+  ip: string,
+): Promise<number> {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("nera_queries")
+    .select("id", { count: "exact", head: true })
+    .eq("source_app", "strategic-tool")
+    .gte("created_at", since)
+    .eq("accumulated_context->>client_ip", ip);
+  return count ?? 0;
 }
 
 // ─── Engagement context ───────────────────────────────────────
@@ -512,6 +581,7 @@ interface LogParams {
   sourcesCited: string[];
   retrievalMethod: string;
   responseLatencyMs: number;
+  accumulatedContext?: Record<string, unknown>;
 }
 
 async function logQuery(
@@ -531,7 +601,7 @@ async function logQuery(
     response_latency_ms: p.responseLatencyMs,
     response_type: "answer",
     turn_number: 1,
-    accumulated_context: {},
+    accumulated_context: p.accumulatedContext ?? {},
   };
   if (p.id) row.id = p.id;
 
@@ -583,13 +653,14 @@ Deno.serve(async (req) => {
 
   let userId: string;
   try {
-    userId = await decodeUser(req);
+    ({ userId } = await decodeUser(req));
   } catch (e) {
     return jsonResponse(
       { error: e instanceof Error ? e.message : "Unauthorised" },
       401,
     );
   }
+  const ip = clientIp(req);
 
   let body: Record<string, unknown>;
   try {
@@ -627,13 +698,48 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "query is required" }, 400);
   }
 
+  let access: AccessTier;
   try {
-    await authoriseEngagementAccess(supabase, userId, engagementId);
+    access = await resolveAccessTier(supabase, userId, engagementId);
   } catch (e) {
     return jsonResponse(
       { error: e instanceof Error ? e.message : "Forbidden" },
       403,
     );
+  }
+
+  // Enforce the per-tier turn cap before spending an LLM call.
+  let turnsUsed = 0;
+  if (access.turnCap !== null) {
+    turnsUsed = await countUserTurns(supabase, engagementId, userId);
+    if (turnsUsed >= access.turnCap) {
+      return jsonResponse(
+        {
+          error: "turn_limit_reached",
+          limit_reached: true,
+          tier: access.tier,
+          turns_used: turnsUsed,
+          turns_limit: access.turnCap,
+        },
+        429,
+      );
+    }
+    // Open (anonymous) demo tier also has a per-IP daily backstop.
+    if (access.tier === "demo") {
+      const ipUsed = await countDemoTurnsByIp(supabase, ip);
+      if (ipUsed >= DEMO_IP_DAILY_CAP) {
+        return jsonResponse(
+          {
+            error: "demo_ip_limit_reached",
+            limit_reached: true,
+            tier: "demo",
+            turns_used: turnsUsed,
+            turns_limit: access.turnCap,
+          },
+          429,
+        );
+      }
+    }
   }
 
   let ctx: EngagementContext;
@@ -701,6 +807,12 @@ Deno.serve(async (req) => {
             type: "answer",
             sources,
             query_id: answerQueryId,
+            // Tier + usage so the client can show "3 of 5 questions used" and
+            // surface the upgrade CTA as the cap approaches. Uncapped tiers
+            // report turns_limit: null.
+            tier: access.tier,
+            turns_used: access.turnCap !== null ? turnsUsed + 1 : null,
+            turns_limit: access.turnCap,
           }),
         ),
       );
@@ -761,6 +873,7 @@ Deno.serve(async (req) => {
         sourcesCited: sources,
         retrievalMethod,
         responseLatencyMs: latency,
+        accumulatedContext: { client_ip: ip, tier: access.tier },
       });
 
       controller.enqueue(encoder.encode(sseEvent("done", {})));

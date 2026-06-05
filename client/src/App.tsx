@@ -13,6 +13,7 @@ import Login from "@/pages/Login";
 
 // Lazy load heavier pages
 const EngagementShell = lazy(() => import("@/pages/EngagementShell"));
+const DemoEntry = lazy(() => import("@/pages/DemoEntry"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -35,6 +36,15 @@ function App() {
               <Suspense fallback={<Loading />}>
                 <ResetPasswordPage />
               </Suspense>
+            </Route>
+
+            {/* ── Public read-only demo (anonymous session, 3 seeded plans) ─ */}
+            <Route path="/demo">
+              <ErrorBoundary>
+                <Suspense fallback={<Loading />}>
+                  <DemoEntry />
+                </Suspense>
+              </ErrorBoundary>
             </Route>
 
             {/* ── Engagement list (landing page, requires auth) ─ */}
