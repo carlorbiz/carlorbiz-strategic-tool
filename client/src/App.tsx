@@ -15,6 +15,7 @@ import Login from "@/pages/Login";
 const EngagementShell = lazy(() => import("@/pages/EngagementShell"));
 const DemoEntry = lazy(() => import("@/pages/DemoEntry"));
 const Admin = lazy(() => import("@/pages/Admin"));
+const SandboxRequestsAdmin = lazy(() => import("@/pages/SandboxRequestsAdmin"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -63,6 +64,13 @@ function App() {
             <Route path="/admin">
               <Suspense fallback={<Loading />}>
                 <ProtectedRoute component={Admin} />
+              </Suspense>
+            </Route>
+
+            {/* ── Sandbox request triage (admin only) ────────── */}
+            <Route path="/admin/sandbox">
+              <Suspense fallback={<Loading />}>
+                <ProtectedRoute component={SandboxRequestsAdmin} />
               </Suspense>
             </Route>
 

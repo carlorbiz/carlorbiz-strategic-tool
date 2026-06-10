@@ -6,6 +6,7 @@ import { fetchEngagement } from '@/lib/engagementApi';
 import type { Engagement } from '@/types/engagement';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RequestAccessDialog } from '@/components/demo/RequestAccessDialog';
 
 // The three seeded, read-only demo engagements (well-known UUIDs from
 // supabase/seed/demo/*.sql). Write access to these is blocked at the database
@@ -127,6 +128,14 @@ export default function DemoEntry() {
             </Card>
           </Link>
         ))}
+      </div>
+
+      <div className="mt-10 rounded-lg border bg-muted/40 p-6 text-center space-y-3">
+        <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+          Want to go further? We can set you up with a private sandbox — your own editable
+          copy of a plan, with more questions for Nera and changes that stick between visits.
+        </p>
+        <RequestAccessDialog triggerLabel="Request a private sandbox" triggerVariant="outline" />
       </div>
     </div>
   );

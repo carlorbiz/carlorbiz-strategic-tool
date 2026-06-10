@@ -19,6 +19,7 @@ import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
+import { RequestAccessDialog } from '@/components/demo/RequestAccessDialog';
 import { useMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +33,8 @@ export function EngagementNeraChatbot() {
     clearHistory,
     isOpen,
     setOpen,
+    usage,
+    limitReached,
   } = useStrategicChat();
   const { engagement } = useEngagement();
   const v = useVocabulary();
@@ -77,7 +80,9 @@ export function EngagementNeraChatbot() {
             <div>
               <SheetTitle className="text-left">Nera</SheetTitle>
               <p className="text-xs text-muted-foreground">
-                {engagement.name}
+                {usage && usage.limit != null
+                  ? `${usage.tier === 'sandbox' ? 'Sandbox' : 'Demo'} · ${Math.min(usage.used ?? 0, usage.limit)}/${usage.limit} questions`
+                  : engagement.name}
               </p>
             </div>
           </div>
@@ -156,11 +161,25 @@ export function EngagementNeraChatbot() {
           </ScrollArea>
 
           <div className={cn(isExpanded && 'max-w-3xl mx-auto w-full')}>
-            <ChatInput
-              onSend={sendMessage}
-              isLoading={isLoading || isStreaming}
-              placeholder={placeholder}
-            />
+            {limitReached && limitReached.tier === 'demo' ? (
+              <div className="border-t p-4 space-y-3 text-center">
+                <p className="text-sm text-muted-foreground">
+                  You've used all {limitReached.turns_limit} demo questions. Keep exploring
+                  with your own private sandbox.
+                </p>
+                <RequestAccessDialog
+                  demoEngagementId={engagement.id}
+                  triggerLabel="Request extended access"
+                  fullWidthTrigger
+                />
+              </div>
+            ) : (
+              <ChatInput
+                onSend={sendMessage}
+                isLoading={isLoading || isStreaming}
+                placeholder={placeholder}
+              />
+            )}
           </div>
         </div>
       </SheetContent>

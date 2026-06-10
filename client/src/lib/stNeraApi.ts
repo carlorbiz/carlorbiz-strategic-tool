@@ -19,11 +19,32 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   };
 }
 
+export interface NeraMeta {
+  type: string;
+  sources?: string[];
+  query_id?: string;
+  /** Access tier for this engagement: admin | member | sandbox | demo. */
+  tier?: string;
+  /** Turns used / allowed (null for uncapped tiers). */
+  turns_used?: number | null;
+  turns_limit?: number | null;
+}
+
+export interface NeraLimitInfo {
+  tier: string;
+  turns_used: number | null;
+  turns_limit: number | null;
+  reason: string;
+}
+
 export interface StStreamCallbacks {
-  onMeta: (meta: { type: string; sources?: string[]; query_id?: string }) => void;
+  onMeta: (meta: NeraMeta) => void;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
+  /** Fired when the server rejects the query because the tier's turn cap (or IP
+   *  backstop) is reached. Lets the UI show an upgrade CTA instead of an error. */
+  onLimit?: (info: NeraLimitInfo) => void;
 }
 
 export async function queryStNeraStreaming(
@@ -49,6 +70,18 @@ export async function queryStNeraStreaming(
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      // deno-lint-ignore no-explicit-any
+      let parsed: any = null;
+      try { parsed = body ? JSON.parse(body) : null; } catch { /* not JSON */ }
+      if (response.status === 429 && parsed?.limit_reached && callbacks.onLimit) {
+        callbacks.onLimit({
+          tier: parsed.tier ?? 'demo',
+          turns_used: parsed.turns_used ?? null,
+          turns_limit: parsed.turns_limit ?? null,
+          reason: parsed.error ?? 'turn_limit_reached',
+        });
+        return;
+      }
       callbacks.onError(`API error (${response.status}): ${body || response.statusText}`);
       return;
     }

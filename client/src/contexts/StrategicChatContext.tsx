@@ -12,13 +12,25 @@ import {
   submitStNeraFeedback,
   transformStSources,
 } from '@/lib/stNeraApi';
+import type { NeraLimitInfo } from '@/lib/stNeraApi';
 import type { ChatMessage, ChatSource } from '@/types/chat';
+
+export interface NeraUsage {
+  tier: string;
+  used: number | null;
+  limit: number | null;
+}
 
 interface StrategicChatContextType {
   messages: ChatMessage[];
   isLoading: boolean;
   isStreaming: boolean;
   sessionId: string;
+  /** Tier + turn usage from the last response (null on uncapped tiers). */
+  usage: NeraUsage | null;
+  /** Set when the tier's turn cap is hit — drives the upgrade CTA. */
+  limitReached: NeraLimitInfo | null;
+  dismissLimit: () => void;
   /** Is the bottom-right Nera sheet open? Controlled so sample-question chips
    *  can pop it open programmatically. */
   isOpen: boolean;
@@ -59,15 +71,21 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isOpen, setOpen] = useState(false);
+  const [usage, setUsage] = useState<NeraUsage | null>(null);
+  const [limitReached, setLimitReached] = useState<NeraLimitInfo | null>(null);
   const [sessionId, setSessionId] = useState<string>(() =>
     engagementId ? getOrCreateSessionId(engagementId) : generateId(),
   );
+
+  const dismissLimit = useCallback(() => setLimitReached(null), []);
 
   // When the engagement changes (e.g. user navigates to a different engagement
   // without unmounting), reset the chat so cross-engagement context can't leak.
   React.useEffect(() => {
     if (!engagementId) return;
     setMessages([]);
+    setUsage(null);
+    setLimitReached(null);
     setSessionId(getOrCreateSessionId(engagementId));
   }, [engagementId]);
 
@@ -105,6 +123,15 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
           };
           setMessages((prev) => [...prev, msg]);
           messageCreated = true;
+          if (meta.turns_limit != null) {
+            setUsage({
+              tier: meta.tier ?? 'demo',
+              used: meta.turns_used ?? null,
+              limit: meta.turns_limit,
+            });
+          } else if (meta.tier) {
+            setUsage({ tier: meta.tier, used: null, limit: null });
+          }
           setIsLoading(false);
           setIsStreaming(true);
         },
@@ -118,6 +145,30 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
           );
         },
         onDone: () => {
+          setIsStreaming(false);
+        },
+        onLimit: (info) => {
+          // Not an error — the prospect has used their allotted turns. Drop the
+          // upgrade CTA in place of a normal answer.
+          setLimitReached(info);
+          setUsage({
+            tier: info.tier,
+            used: info.turns_limit,
+            limit: info.turns_limit,
+          });
+          const capMsg: ChatMessage = {
+            id: assistantMsgId,
+            role: 'assistant',
+            content:
+              info.tier === 'sandbox'
+                ? "You've reached the question limit for this trial sandbox. Reach out and we'll lift it so you can keep testing."
+                : "That's the last of your demo questions. Want to keep going with your own private sandbox — your own data, more questions, and changes that stick? Request extended access below.",
+            timestamp: new Date(),
+            responseType: 'answer',
+          };
+          setMessages((prev) => [...prev, capMsg]);
+          messageCreated = true;
+          setIsLoading(false);
           setIsStreaming(false);
         },
         onError: (errMsg) => {
@@ -196,6 +247,9 @@ export function StrategicChatProvider({ children }: { children: React.ReactNode 
         isLoading,
         isStreaming,
         sessionId,
+        usage,
+        limitReached,
+        dismissLimit,
         isOpen,
         setOpen,
         sendMessage,
