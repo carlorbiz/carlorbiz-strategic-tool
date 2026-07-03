@@ -1,5 +1,7 @@
 # Pricing & Go-to-Market Research - Carlorbiz Strategic Tool
 
+> **v2 (3 Jul 2026, evening):** Part B below adds the NORTH AMERICA / UK market-entry analysis (second 105-agent verified research run) after Carla removed the Australia restriction. Where Part B conflicts with Part A's AU framing, Part B governs for NA/UK go-to-market and the Google for Startups application.
+
 **Date:** 3 July 2026
 **Method:** Deep-research harness - 5 search angles, 22 sources fetched, 101 claims extracted, top 25 adversarially verified by 3-vote panels (20 confirmed, 5 refuted). All vendor pages fetched live 3 July 2026. USD→AUD conversions at ~0.66.
 **Companion documents:** `docs/PRODUCT_DOSSIER.md` (this repo), `knowledge-lake-source/docs/GOOGLE_FOR_STARTUPS_DECISION_MEMO.md`
@@ -62,6 +64,54 @@ Hebbia's creator/consumer seat split is a useful packaging idea: consultant-oper
 - "The whole category is quote-only" - refuted as a blanket claim; scoped version (the five verified vendors) stands.
 - "Hebbia costs $20k+/user like a Bloomberg Terminal" - refuted 1-2 (use ~$10k/seat estimate).
 - "Standard 3-year SaaS discount is 15-25% / avg 22%" - refuted 0-3.
+
+---
+
+# PART B - North America / UK Market Entry (v2, 3 Jul 2026 evening)
+
+**Method:** second deep-research run - 105 agents, 10 findings surviving 3-vote adversarial verification, 6 claims refuted. Commissioned after Carla removed the AU restriction: consultancy lead-in is online, product is digital, async AI interviews convert the AU timezone into overnight turnaround.
+
+## B1. Primary ICP - US nonprofits & foundations (VALIDATED, high confidence)
+
+Strategic planning is among the most in-demand, highest-earning consulting services US nonprofits buy (Nonprofit.ist annual survey, 300+ consultants; 2024 edition: the single most common service at 67%). Board-driven planning cycles = standing budget for exactly this engagement.
+
+**Pricing fit:** full 3-4 month strategic-planning engagements already run **US$15,000-60,000** (Mission Met $20-60k; Giddings $15-50k; corroborated by two further sources). A **Year-1 US$25-35k** implementation+consulting+licence sits upper-middle of established norms - inside budget expectations, not above them. Volume caveat: the market's centre of mass is $10-35k, so target nonprofits with scale (larger budgets, multi-site, federated structures) rather than the small end. **The US$12-18k/yr living-dashboard licence is the genuinely novel component** - no incumbent nonprofit consultant sells a post-engagement subscription at that level. That is the differentiation AND a selling job: pitch it as "your plan stops dying in a drawer," not as a software line-item.
+
+**UK note:** UK-specific ICP evidence (charities, housing associations, NHS-adjacent) did NOT survive verification - the UK is a second wave on evidence, not a co-primary. See B4 for why UK mechanics are nonetheless easy when it comes.
+
+## B2. Secondary ICP - the consultant channel (EXISTS, economics inverted)
+
+The channel is real and precisely targetable: **EOS Implementers, Vistage Chairs, Certified Exit Planning Advisors, business coaches, peer-group leaders, fractional executives** - named verbatim as the partner segments incumbent platforms (Ninety, Bloom Growth, Metronome) court. BUT incumbent economics run the opposite way: Ninety's coach program is FREE to join with revenue-share on referrals; Metronome's per-client SaaS is US$380-1,270/yr. **A paid white-label per-client deployment licence would be a novel pricing model in this channel** - unproven willingness-to-pay (the "2,000 coach partners" scale claim was REFUTED - do not cite it).
+
+**Strategic read:** for the Google application, frame the consultant channel as the DISTRIBUTION/scale mechanism (every boutique strategist is a channel), not as proven licence revenue. Whether consultants will pay (e.g., US$3-8k/client/yr against a $25k engagement uplift) is a design-partner question, not a desk-research one - logged as open.
+
+## B3. Contract shape for the US (VALIDATED - and one critical papering warning)
+
+- **The proposed structure maps onto US provider-side legal best practice:** resist unrestricted termination-for-convenience; accepted compromises are an initial non-cancellable term, non-refundable upfront payment, or predetermined termination fees (Mayer Brown). Practitioner evidence: experienced vendors categorically refuse TFC - a buyer's TFC request is negotiable posture, not procurement law. The AU UCT caution from Part A does NOT constrain US deals.
+- **⚠ PAPERING WARNING (legal to-do before first US contract):** do NOT write the bundle on a generic professional-services agreement - standard PSA templates assign deliverable IP to the client, which would give away the platform. Required: ONE master agreement with distinct SaaS terms (provider retains ALL platform IP) + services terms (client owns their deliverables/data).
+- **Auto-renewal:** most state statutes are consumer-only, BUT Colorado SB 25-145 (in force Feb 2026) arguably reaches B2B subscriptions. Build clear renewal disclosure + advance-notice mechanics into standard terms; never rely on silent auto-renewal. (The claims that the FTC negative-option rule covers B2B were REFUTED 0-3 - state-law analysis only; re-check federal before finalising templates.)
+
+## B4. Market-entry friction list
+
+| Item | Status | Action |
+|---|---|---|
+| **UK VAT** | LOW friction | B2B reverse charge: invoice GBP, no UK VAT charged, reverse-charge notation, NO UK VAT registration needed for B2B general-rule supplies. ⚠ Exception: a charity receiving in NON-business capacity breaks this (zero-threshold registration) - screen UK charity deals for capacity. |
+| **US sales tax** | MONITOR | SaaS taxable in ~25 jurisdictions (2025 count); post-Wayfair economic nexus applies to foreign sellers (typical ~US$100k/state or transaction thresholds). At $25-35k deals, 3-4 clients in one state approaches nexus. NY/TX/WA/PA/MA tax SaaS; CA/FL don't; Chicago has its own ~11% lease tax. Use a monitoring tool (Anrok-class) once US deals flow. |
+| **US withholding / W-8BEN-E** | ONE-TIME ADVICE | AU-US treaty limitation-on-benefits provisions are narrow; the Part III certification is case-by-case, and SaaS fees carry royalty-characterisation risk. Budget one cross-border tax consult at entry - do not treat the form as a formality. |
+| **E&O / professional indemnity for US contracts** | OPEN | No verified evidence either way - ask the insurance question alongside the tax consult. |
+
+## B5. Honest gaps (two research cycles, still unanswered - answer by DOING)
+
+1. **Remote-trust signals** (what closes a fully-remote deal with a foreign solo consultant): no surviving evidence. Answer via design partners.
+2. **US pilot/design-partner pricing conventions**: twice unanswered by desk research. Set them yourself: paid-but-credited pilots remain the sensible default.
+3. **Consultant-channel willingness-to-pay** for white-label licences: test with 1-2 friendly consultants before building the licensing motion.
+
+## B6. What changes vs Part A
+
+- Currency and anchor: **USD $25-35k Year 1 + $12-18k/yr** (UK: ~£20-28k + £10-14k/yr when the second wave opens) replaces the AUD structure for NA/UK.
+- The AU UCT caution stays for AU deals only; US deals may carry a non-cancellable Year-1 with confidence.
+- The ICP sharpens from "corporates and NFP boards" to **US nonprofits/foundations with scale as the primary wedge**, mid-market corporates opportunistic, UK second wave.
+- Do-not-cite list grows: Ninety's "2,000 partners" (refuted), the "2-5% of org budget for consulting" heuristic (refuted 0-3), FTC negative-option B2B applicability (refuted 0-3).
 
 ## Source register
 
