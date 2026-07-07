@@ -73,6 +73,32 @@ Two tiers, both live in the codebase:
 
 This converts "can I see it?" into a self-serve pilot with real hands-on time, at near-zero marginal cost and no exposure of client data.
 
+### 2.5 Multi-stakeholder elicitation campaigns (one shared engagement, many respondents)
+
+*Added 7 July 2026, when this pattern was operationalised for the first live client elicitation (Aventine AI). The engine capabilities below are verified against the schema and code; the Aventine campaign is the first production use.*
+
+A third entry path, distinct from the per-prospect sandbox (§2.4). Where the sandbox clones **one engagement per prospect** (right for independent leads evaluating the tool), a strategic-elicitation **campaign** does the inverse: **one shared engagement with many respondents attached to it**, each conducting their own private Nera conversation, with insights aggregated **de-identified** across the cohort. This is how the tool runs a team-wide strategic diagnostic — eliciting mission/vision/point-of-difference/systems-maturity from every member of a client's leadership team and synthesising the anonymous spread of answers into a consultant-grade deliverable.
+
+**Why the engine supports this natively (do NOT clone per user for this case):**
+
+- `ie_conversations` is keyed by `(user_id, engagement_id)` — many users share one engagement while each keeps a separate, private conversation and coverage state. A shared engagement is the container; per-person privacy is preserved.
+- `st_user_engagement_roles(user_id, engagement_id, role_id)` is the attach mechanism — inserting N rows with the *same* `engagement_id` places N users under one engagement. This is the key contrast with `st-provision-sandbox`, which mints a *fresh* engagement per user.
+- The **authorable elicitation script** lives in `interview_modules` (per-module `system_prompt`, `opener`, `technique_family`, `max_turns`, `fallback_strategy`, `insight_card_format`, coverage dimensions carried by `ie_prompt_library` / `ie_prompt_coverage`) and `interview_campaigns` (binds a module + `campaign_overrides` + surface + `client_scope`). A campaign is therefore a reusable, coverage-gated interview *design* — not per-respondent bespoke work. As of 7 July 2026 the only seeded module is `laddering-v2` (the public-site demo); a client campaign authors its own module.
+- Each respondent gets a personal **magic link** landing them on `/e/:engagementId`, where `EngagementNeraChatbot` drives their conversation over the interview engine (select-prompt → extract → evaluate-state → summarise-session), staying live until every required dimension is covered.
+
+**De-identification is the selling point, by design:** respondents authenticate (their email does the access work) so each conversation is theirs and resumable across devices, but the analysis layer discards identity — responses go "into the wash" and Nera surfaces themes, alignment-vs-divergence, and blind spots across the anonymous cohort. No role/seniority tagging in the output.
+
+**Provisioning runbook — one engagement, N respondents:**
+
+1. **Author (or clone) the campaign's `interview_module`** — the elicitation `system_prompt` across the target dimensions, in the Nera voice, coverage-gated.
+2. **Create the shared engagement** (`st_engagements`: `client_name`, Nera `branding_overrides`) and wire it to the module/campaign.
+3. *(Optional)* **Seed the client's own public materials** into `knowledge_chunks` tagged with a campaign source value, so Nera can gently test answers against what the client publicly claims.
+4. **For each respondent email**: create/find the auth user + `user_profiles` row, insert a participant row in `st_user_engagement_roles` against the shared `engagement_id`, and generate a magic link — the same primitives `st-provision-sandbox` uses, **minus the per-user clone**.
+5. **Set the campaign's model config.** The Aventine engagement follows the proven feedback-elicitation setup: **Claude for both the conversation and the synthesis** (not the Gemini-for-extraction split used elsewhere), because the elicitation quality is the deliverable.
+6. **Aggregate** with `st-synthesise-stage` / `summarise-session` / `st-generate-report`, scoped to the engagement, producing the de-identified cohort synthesis.
+
+**Commercial significance:** this turns the tool from a per-client engagement platform into a **team-wide diagnostic instrument** — the front end of a strategic engagement, and the natural on-ramp to the Carlorbiz B2B digital-transformation evaluation product. A campaign design is reusable across clients by cloning the module and standing up a new engagement.
+
 ---
 
 ## 3. How it works
