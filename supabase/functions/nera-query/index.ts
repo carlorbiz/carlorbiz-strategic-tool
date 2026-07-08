@@ -88,7 +88,7 @@ interface AIConfig {
 
 const DEFAULT_CONFIG: AIConfig = {
   llm_provider: "anthropic",
-  llm_model: "claude-sonnet-4-20250514",
+  llm_model: "claude-sonnet-4-5",
   system_prompt: null,
   classify_prompt: null,
   no_chunks_response: null,

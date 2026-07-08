@@ -187,7 +187,7 @@ IMPORTANT:
 
     const config: LLMConfig = {
       provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-5",
       apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "",
     };
 

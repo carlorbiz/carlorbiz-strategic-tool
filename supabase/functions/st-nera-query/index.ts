@@ -288,7 +288,7 @@ async function loadEngagementContext(
   const model = (cfg.llm_model as string) ||
     (provider === "google" ? "gemini-2.5-flash"
       : provider === "openai" ? "gpt-4o-mini"
-        : "claude-sonnet-4-20250514");
+        : "claude-sonnet-4-5");
   const apiKey = LLM_API_KEYS[provider];
   if (!apiKey) {
     throw new Error(`No API key configured for LLM provider: ${provider}`);
