@@ -1,11 +1,12 @@
 import { Switch, Route } from "wouter";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { CMSProvider } from "@/contexts/CMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { getBrand, applyBrandDocument } from "@/lib/brand";
 
 // ── Strategic-tool pages ────────────────────────────────────────────────────
 import EngagementList from "@/pages/EngagementList";
@@ -18,6 +19,7 @@ const AventineElicitationPage = lazy(() => import("@/pages/AventineElicitationPa
 const Admin = lazy(() => import("@/pages/Admin"));
 const SandboxRequestsAdmin = lazy(() => import("@/pages/SandboxRequestsAdmin"));
 const CampaignProvisionAdmin = lazy(() => import("@/pages/CampaignProvisionAdmin"));
+const MtmotProductPage = lazy(() => import("@/pages/MtmotProductPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -28,6 +30,11 @@ const Loading = () => (
 );
 
 function App() {
+  const brand = getBrand();
+  useEffect(() => {
+    applyBrandDocument(brand);
+  }, [brand.key]);
+
   return (
     <AuthProvider>
       <ChatProvider>
@@ -50,8 +57,19 @@ function App() {
               </ErrorBoundary>
             </Route>
 
-            {/* ── Engagement list (landing page, requires auth) ─ */}
-            <Route path="/" component={EngagementList} />
+            {/* ── Root: MTMOT product page (public) on the mtmot host;
+                   the auth-gated engagement list on the carlorbiz host ─ */}
+            <Route path="/">
+              {brand.isMtmot ? (
+                <ErrorBoundary>
+                  <Suspense fallback={<Loading />}>
+                    <MtmotProductPage />
+                  </Suspense>
+                </ErrorBoundary>
+              ) : (
+                <EngagementList />
+              )}
+            </Route>
 
             {/* ── Aventine strategic-elicitation surface (CC-75; magic-link) ─ */}
             <Route path="/elicit/:engagementId">

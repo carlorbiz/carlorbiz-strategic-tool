@@ -7,6 +7,7 @@ import type { Engagement } from '@/types/engagement';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RequestAccessDialog } from '@/components/demo/RequestAccessDialog';
+import { getBrand } from '@/lib/brand';
 
 // The three seeded, read-only demo engagements (well-known UUIDs from
 // supabase/seed/demo/*.sql). Write access to these is blocked at the database
@@ -30,6 +31,7 @@ export default function DemoEntry() {
   const [demos, setDemos] = useState<Engagement[]>([]);
   const [loadingDemos, setLoadingDemos] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const brand = getBrand();
 
   // Mint an anonymous session once auth has settled and we're not signed in.
   useEffect(() => {
@@ -100,7 +102,7 @@ export default function DemoEntry() {
       <div className="mb-8 space-y-3">
         <Badge variant="secondary" className="uppercase tracking-wide">Read-only demo</Badge>
         <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
-          Explore the Carlorbiz Strategic Tool
+          Explore the {brand.productName}
         </h1>
         <p className="text-muted-foreground max-w-2xl">
           These are three fully worked strategic plans — pick one, take the guided tour, and
