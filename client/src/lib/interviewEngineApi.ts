@@ -61,7 +61,8 @@ async function currentUserProfileId(): Promise<string> {
 export async function startConversation(
   goal: string,
   engagementId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  productId: string = PRODUCT_ID
 ): Promise<IeConversation> {
   if (!supabase) throw new Error('Supabase not configured');
 
@@ -71,7 +72,7 @@ export async function startConversation(
     .from('ie_conversations')
     .insert({
       user_id: profileId,
-      product_id: PRODUCT_ID,
+      product_id: productId,
       engagement_id: engagementId ?? null,
       goal,
       cadence_mode: 'single',
@@ -90,7 +91,8 @@ export async function startConversation(
 export async function selectPrompt(
   conversationId: string,
   userId: string,
-  engagementId?: string
+  engagementId?: string,
+  productId: string = PRODUCT_ID
 ): Promise<{
   prompt_id: string;
   prompt_text: string;
@@ -99,7 +101,7 @@ export async function selectPrompt(
 }> {
   const result = await callEngineFunction('interview-engine-select-prompt', {
     user_id: userId,
-    product_id: PRODUCT_ID,
+    product_id: productId,
     conversation_id: conversationId,
     engagement_id: engagementId,
   });

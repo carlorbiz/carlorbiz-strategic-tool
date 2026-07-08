@@ -14,8 +14,10 @@ import Login from "@/pages/Login";
 // Lazy load heavier pages
 const EngagementShell = lazy(() => import("@/pages/EngagementShell"));
 const DemoEntry = lazy(() => import("@/pages/DemoEntry"));
+const AventineElicitationPage = lazy(() => import("@/pages/AventineElicitationPage"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const SandboxRequestsAdmin = lazy(() => import("@/pages/SandboxRequestsAdmin"));
+const CampaignProvisionAdmin = lazy(() => import("@/pages/CampaignProvisionAdmin"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -51,6 +53,15 @@ function App() {
             {/* ── Engagement list (landing page, requires auth) ─ */}
             <Route path="/" component={EngagementList} />
 
+            {/* ── Aventine strategic-elicitation surface (CC-75; magic-link) ─ */}
+            <Route path="/elicit/:engagementId">
+              <ErrorBoundary>
+                <Suspense fallback={<Loading />}>
+                  <AventineElicitationPage />
+                </Suspense>
+              </ErrorBoundary>
+            </Route>
+
             {/* ── Engagement shell (the status/role router) ──── */}
             <Route path="/e/:engagementId">
               <ErrorBoundary>
@@ -71,6 +82,13 @@ function App() {
             <Route path="/admin/sandbox">
               <Suspense fallback={<Loading />}>
                 <ProtectedRoute component={SandboxRequestsAdmin} />
+              </Suspense>
+            </Route>
+
+            {/* ── Campaign respondent provisioning (admin only) ─ */}
+            <Route path="/admin/campaign">
+              <Suspense fallback={<Loading />}>
+                <ProtectedRoute component={CampaignProvisionAdmin} />
               </Suspense>
             </Route>
 
