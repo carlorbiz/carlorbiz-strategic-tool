@@ -1,5 +1,5 @@
 import { Switch, Route } from "wouter";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { CMSProvider } from "@/contexts/CMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ChatProvider } from "@/contexts/ChatContext";
@@ -28,6 +28,23 @@ const Loading = () => (
     <p className="text-muted-foreground">Loading...</p>
   </div>
 );
+
+// Host-guard (CC-84): the mtmot host (strategy.mtmot.com) is the public,
+// demo-only product surface — admin/console routes belong to the Carlorbiz
+// consulting instance. If an admin route is reached on the mtmot host, bounce
+// it to the same path on strategy.carlorbiz.com.au rather than exposing a login
+// on the product front door. Non-mtmot hosts render the route unchanged.
+function CarlorbizOnly({ children }: { children: ReactNode }) {
+  const brand = getBrand();
+  useEffect(() => {
+    if (brand.isMtmot && typeof window !== "undefined") {
+      const { pathname, search } = window.location;
+      window.location.replace(`https://strategy.carlorbiz.com.au${pathname}${search}`);
+    }
+  }, [brand.isMtmot]);
+  if (brand.isMtmot) return <Loading />;
+  return <>{children}</>;
+}
 
 function App() {
   const brand = getBrand();
@@ -91,23 +108,29 @@ function App() {
 
             {/* ── Global admin (internal_admin only) ─────────── */}
             <Route path="/admin">
-              <Suspense fallback={<Loading />}>
-                <ProtectedRoute component={Admin} />
-              </Suspense>
+              <CarlorbizOnly>
+                <Suspense fallback={<Loading />}>
+                  <ProtectedRoute component={Admin} />
+                </Suspense>
+              </CarlorbizOnly>
             </Route>
 
             {/* ── Sandbox request triage (admin only) ────────── */}
             <Route path="/admin/sandbox">
-              <Suspense fallback={<Loading />}>
-                <ProtectedRoute component={SandboxRequestsAdmin} />
-              </Suspense>
+              <CarlorbizOnly>
+                <Suspense fallback={<Loading />}>
+                  <ProtectedRoute component={SandboxRequestsAdmin} />
+                </Suspense>
+              </CarlorbizOnly>
             </Route>
 
             {/* ── Campaign respondent provisioning (admin only) ─ */}
             <Route path="/admin/campaign">
-              <Suspense fallback={<Loading />}>
-                <ProtectedRoute component={CampaignProvisionAdmin} />
-              </Suspense>
+              <CarlorbizOnly>
+                <Suspense fallback={<Loading />}>
+                  <ProtectedRoute component={CampaignProvisionAdmin} />
+                </Suspense>
+              </CarlorbizOnly>
             </Route>
 
             {/* ── 404 ────────────────────────────────────────── */}

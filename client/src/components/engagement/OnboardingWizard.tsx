@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
+import { getBrand, type Brand } from '@/lib/brand';
 import type { Engagement, VocabularyMap } from '@/types/engagement';
 
 interface OnboardingWizardProps {
@@ -71,7 +72,7 @@ export function OnboardingWizard({ forceStart = false, onClose }: OnboardingWiza
   const steps = useMemo<Step[]>(() => {
     if (!engagement || !hasTour) return [];
     const builder = STEP_SETS[profileKey as TouredProfile];
-    return builder ? builder(engagement, v) : [];
+    return builder ? builder(engagement, v, getBrand()) : [];
   }, [engagement, hasTour, profileKey, v]);
 
   if (!engagement || !hasTour || steps.length === 0) return null;
@@ -150,9 +151,9 @@ export function useOnboardingWizard() {
 // Themes/Cross-cuts/Documents) match what the dashboard is rendering.
 // ──────────────────────────────────────────────────────────────────────────
 
-type StepBuilder = (engagement: Engagement, v: VocabularyMap) => Step[];
+type StepBuilder = (engagement: Engagement, v: VocabularyMap, brand: Brand) => Step[];
 
-const researchSteps: StepBuilder = (engagement, v) => [
+const researchSteps: StepBuilder = (engagement, v, brand) => [
   {
     target: 'body',
     placement: 'center',
@@ -160,8 +161,8 @@ const researchSteps: StepBuilder = (engagement, v) => [
     content: (
       <div className="space-y-2 text-sm">
         <p>
-          This is a <strong>research intelligence hub</strong> — a working installation of the
-          Carlorbiz Strategic Tool. It sits between the research your organisation harvests
+          This is a <strong>research intelligence hub</strong> — a working installation of the{' '}
+          {brand.productName}. It sits between the research your organisation harvests
           and the strategic decisions your organisation has to make next.
         </p>
         <p>
@@ -270,7 +271,7 @@ const researchSteps: StepBuilder = (engagement, v) => [
   },
 ];
 
-const strategicPlanningSteps: StepBuilder = (engagement, v) => {
+const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
   const topPlural = v.commitment_top_plural.toLowerCase();
   const topSingular = v.commitment_top_singular.toLowerCase();
   const subPlural = v.commitment_sub_plural.toLowerCase();
@@ -284,8 +285,8 @@ const strategicPlanningSteps: StepBuilder = (engagement, v) => {
       content: (
         <div className="space-y-2 text-sm">
           <p>
-            This is a <strong>living strategic plan</strong> — a working installation of the
-            Carlorbiz Strategic Tool. The plan that came out of your workshop isn't sitting in
+            This is a <strong>living strategic plan</strong> — a working installation of the{' '}
+            {brand.productName}. The plan that came out of your workshop isn't sitting in
             a PDF; it's running here, with {topPlural}, {subPlural}, and cross-cutting{' '}
             {v.cross_cut_plural.toLowerCase()} you can interrogate.
           </p>
