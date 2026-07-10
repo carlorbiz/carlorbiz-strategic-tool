@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, LogOut, Sparkles } from 'lucide-react';
 import { EngagementNeraChatbot } from '@/components/chat/EngagementNeraChatbot';
 import { OnboardingWizard, hasOnboardingTour } from '@/components/engagement/OnboardingWizard';
+import { isDemoEngagement } from '@/lib/demo';
 
 // Status-specific views
 import { EngagementDraftView } from '@/pages/engagement/DraftView';
@@ -87,7 +88,11 @@ function EngagementContent() {
     );
   }
 
-  if (!activeRoleKey) {
+  // Public demo engagements are viewable with NO engagement role — a prospect
+  // enters via /demo on an anonymous session (RLS allows read-only). Only gate
+  // real (non-demo) engagements on the role. Without this exemption the demo
+  // shows "Access denied" behind the onboarding wizard.
+  if (!activeRoleKey && !isDemoEngagement(engagement.id)) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center space-y-4">

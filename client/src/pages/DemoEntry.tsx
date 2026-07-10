@@ -8,16 +8,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { RequestAccessDialog } from '@/components/demo/RequestAccessDialog';
 import { getBrand } from '@/lib/brand';
+import { DEMO_ENGAGEMENT_IDS } from '@/lib/demo';
 
-// The three seeded, read-only demo engagements (well-known UUIDs from
-// supabase/seed/demo/*.sql). Write access to these is blocked at the database
-// layer by migration 0012 — a prospect can browse and run the wizard but
-// cannot insert, edit, or delete anything.
-const DEMO_ENGAGEMENT_IDS = [
-  'a1b2c3d4-0001-4000-8000-000000000001', // Acme Catering Group
-  'a1b2c3d4-0002-4000-8000-000000000001', // National Allied Health Peak Council
-  'a1b2c3d4-0003-4000-8000-000000000001', // Rural Futures Australia
-];
+// The three seeded, read-only demo engagements live in `@/lib/demo` (shared with
+// the engagement shell so the role gate exempts them). Write access is blocked
+// at the database layer by migration 0012 — a prospect can browse and run the
+// wizard but cannot insert, edit, or delete anything.
 
 /**
  * Public demo entry. A prospect opens this with no account; we mint an
