@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, MessagesSquare, Layers, FileCheck2, Radar } from 'lucide-react';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 
 // MTMOT Strategy Engine product page (CC-84) — the public front door at
 // strategy.mtmot.com. Positions the Engine as the board-level (ELEVATE) tier of
@@ -38,9 +39,13 @@ export default function MtmotProductPage() {
       {/* Minimal header */}
       <header className="w-full border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
-          <span className="font-bold tracking-tight text-lg" style={{ fontFamily: 'var(--font-heading)' }}>
-            MTMOT <span style={{ color: GREEN }}>Strategy Engine</span>
-          </span>
+          <div className="flex items-center gap-3 min-w-0">
+            {/* MTMOT house mark (EP3/ELEVATE green) → back to the mtmot.com landing (CC-89). */}
+            <BrandLogo imgClassName="h-9 w-auto object-contain" />
+            <span className="hidden sm:inline text-sm font-semibold shrink-0" style={{ color: GREEN }}>
+              Strategy Engine
+            </span>
+          </div>
           <Link href="/demo">
             <span className="text-sm font-semibold cursor-pointer hover:opacity-80" style={{ color: GREEN }}>
               Walk the demo →
