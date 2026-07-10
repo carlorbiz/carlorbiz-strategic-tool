@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Menu, X, LogIn, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export function Navbar() {
   const [location] = useLocation();
@@ -67,17 +68,11 @@ export function Navbar() {
         <div className={`transition-all duration-500 ease-out flex justify-center w-full ${
           isScrolled ? "py-2" : "py-10"
         }`}>
-          <Link href="/">
-            <div className="cursor-pointer transition-transform hover:scale-[1.01] flex flex-col justify-center">
-              <img
-                src="/images/carlorbiz-logo.webp"
-                alt="Carlorbiz Logo"
-                className={`transition-all duration-500 ease-out w-auto object-contain ${
-                  isScrolled ? "h-[40px]" : "h-[110px]"
-                }`}
-              />
-            </div>
-          </Link>
+          <BrandLogo
+            imgClassName={`transition-all duration-500 ease-out w-auto object-contain ${
+              isScrolled ? "h-[40px]" : "h-[110px]"
+            }`}
+          />
         </div>
 
         {/* Navigation Links Section */}
@@ -113,15 +108,7 @@ export function Navbar() {
       {/* MOBILE LAYOUT (Classic Inline Row)                        */}
       {/* ========================================================= */}
       <div className="md:hidden flex w-full items-center justify-between px-4 py-3 bg-white border-b border-gray-100 shadow-sm">
-        <Link href="/">
-          <div className="cursor-pointer transition-transform hover:scale-[1.02]">
-            <img 
-              src="/images/carlorbiz-logo.webp" 
-              alt="Carlorbiz Logo" 
-              className="h-[46px] w-auto object-contain"
-            />
-          </div>
-        </Link>
+        <BrandLogo imgClassName="h-[46px] w-auto object-contain" />
 
         {/* Mobile Menu Toggle Button */}
         <Button 

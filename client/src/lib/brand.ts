@@ -17,6 +17,13 @@ export interface Brand {
   shortName: string;
   title: string;
   description: string;
+  /** Header logo asset (in /public). */
+  logo: string;
+  /** Accessible name for the logo. */
+  logoAlt: string;
+  /** Where the header logo links. External (mtmot.com estate landing) on the
+   *  MTMOT skin; in-app home on the Carlorbiz skin. */
+  homeUrl: string;
 }
 
 const MTMOT: Brand = {
@@ -27,6 +34,9 @@ const MTMOT: Brand = {
   title: 'MTMOT Strategy Engine — board-grade strategy, self-serve',
   description:
     'A conversational evidence platform for board-level strategic engagements. See how a real consultancy runs its client engagements on the Engine — walk three live worked plans, no sign-up.',
+  logo: '/images/mtmot-logo.png',
+  logoAlt: 'MTMOT',
+  homeUrl: 'https://mtmot.com',
 };
 
 const CARLORBIZ: Brand = {
@@ -37,6 +47,9 @@ const CARLORBIZ: Brand = {
   title: 'Carlorbiz — Strategic Consulting & AI Knowledge Systems',
   description:
     'Carlorbiz helps organisations turn complex expertise into AI-powered knowledge systems. Strategic consulting, PWA development, and Nera AI.',
+  logo: '/images/carlorbiz-logo.webp',
+  logoAlt: 'Carlorbiz',
+  homeUrl: '/',
 };
 
 function readOverride(): BrandKey | null {
