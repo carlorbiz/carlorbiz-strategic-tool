@@ -11,6 +11,7 @@ import {
   AVENTINE_PRODUCT_ID,
   AVENTINE_GOAL,
   AVENTINE_CONTEXT,
+  AVENTINE_WELCOME,
   AVENTINE_EXTRACTION_SCHEMA,
   AVENTINE_REQUIRED_DIMENSIONS,
 } from '@/lib/aventineElicitation';
@@ -69,7 +70,9 @@ export function useAventineElicitation() {
     if (state.conversationId) return; // already started
     setState(s => ({ ...s, isLoading: true, error: null }));
     try {
-      const profileId = await resolveProfileId();
+      // Validate access (provisions the profile; gives a friendly error if the
+      // magic link hasn't fully set them up yet) before we open the conversation.
+      await resolveProfileId();
 
       const conversation = await startConversation(
         AVENTINE_GOAL,
@@ -78,29 +81,25 @@ export function useAventineElicitation() {
         AVENTINE_PRODUCT_ID,
       );
 
-      const opening = await selectPrompt(
-        conversation.id,
-        profileId,
-        engagement.id,
-        AVENTINE_PRODUCT_ID,
-      );
-
-      const openingMessage: IeMessage = {
+      // Open with a purpose-setting welcome in Nera's voice (Carla's steer). The
+      // first real question arrives on the respondent's first reply — selectPrompt
+      // runs inside sendReply as the steer Nera weaves in.
+      const welcomeMessage: IeMessage = {
         id: crypto.randomUUID(),
         conversation_id: conversation.id,
         role: 'assistant',
-        content: opening.prompt_text,
+        content: AVENTINE_WELCOME,
         extracted_data: null,
         confidence_scores: null,
         justifications: null,
-        prompt_id: opening.prompt_id,
+        prompt_id: null,
         created_at: new Date().toISOString(),
       };
 
       setState(s => ({
         ...s,
         conversationId: conversation.id,
-        messages: [openingMessage],
+        messages: [welcomeMessage],
         isLoading: false,
       }));
     } catch (err) {

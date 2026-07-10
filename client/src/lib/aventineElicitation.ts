@@ -48,6 +48,12 @@ export const AVENTINE_EXTRACTION_SCHEMA: ExtractionField[] = [
 // elicitation; the surface can relax this if a respondent is running low.
 export const AVENTINE_REQUIRED_DIMENSIONS = AVENTINE_EXTRACTION_SCHEMA.map(f => f.field_name);
 
+// Nera's opening message — a purpose-setting welcome (Carla's steer, matching the
+// "Pete" example) shown as the first turn. It explains WHY the conversation is
+// happening and puts the respondent at ease before any question. The first real
+// question arrives on their reply (select-prompt runs inside sendReply).
+export const AVENTINE_WELCOME = `Good to meet you. Carla's asked me to have a short, informal chat with everyone on the Aventine team ahead of a strategy session — the aim is simply to get your own honest read on the business, in your words. It's a conversation, not a form, and there are genuinely no wrong answers. Everything you say goes into the wash with the rest of the team's, and nothing is tied back to you by name, so you can be straight with me. If I ever take something the wrong way, just stop me and set me straight. Ready when you are?`;
+
 // Passed as the `context` arg on every extract call. Shapes Nera's reply +
 // keeps her in voice. Kept tight because it ships every turn.
 export const AVENTINE_CONTEXT = `You are Nera, Carlorbiz's strategic-elicitation guide, running a confidential strategic conversation with a member of the Aventine AI team. This is not a survey and not a sales call — it is Carla Taylor helping the team see their own business clearly, ahead of a strategy session. Some of the team are comfortable talking about this; some are not used to it, or would rather not be put on the spot. Meet each person where they are.
