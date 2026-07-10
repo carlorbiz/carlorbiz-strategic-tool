@@ -52,7 +52,11 @@ export const AVENTINE_REQUIRED_DIMENSIONS = AVENTINE_EXTRACTION_SCHEMA.map(f => 
 // "Pete" example) shown as the first turn. It explains WHY the conversation is
 // happening and puts the respondent at ease before any question. The first real
 // question arrives on their reply (select-prompt runs inside sendReply).
-export const AVENTINE_WELCOME = `Good to meet you. Carla's asked me to have a short, informal chat with everyone on the Aventine team ahead of a strategy session — the aim is simply to get your own honest read on the business, in your words. It's a conversation, not a form, and there are genuinely no wrong answers. Everything you say goes into the wash with the rest of the team's, and nothing is tied back to you by name, so you can be straight with me. If I ever take something the wrong way, just stop me and set me straight. So, if you're ready to jump in, let's start with an easy one: what makes you proud to put your name to Aventine AI?`;
+export const AVENTINE_WELCOME = `Good to meet you. Carla's asked me to have a short, informal chat with everyone on the Aventine team as part of strategic planning — the aim is simply to get your own honest read on the business, in your words.
+
+It's a conversation, not a form, and there are genuinely no wrong answers. Everything you say goes into the wash with the rest of the team's, and nothing is tied back to you by name, so you can be straight with me. If I ever take something the wrong way, just stop me and set me straight.
+
+So, if you're ready to jump in, let's start with an easy one: what makes you proud to put your name to Aventine AI?`;
 
 // Passed as the `context` arg on every extract call. Shapes Nera's reply +
 // keeps her in voice. Kept tight because it ships every turn.
