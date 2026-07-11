@@ -20,6 +20,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const SandboxRequestsAdmin = lazy(() => import("@/pages/SandboxRequestsAdmin"));
 const CampaignProvisionAdmin = lazy(() => import("@/pages/CampaignProvisionAdmin"));
 const MtmotProductPage = lazy(() => import("@/pages/MtmotProductPage"));
+import { MtmotHeader } from "@/components/layout/MtmotHeader";
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -56,6 +57,9 @@ function App() {
     <AuthProvider>
       <ChatProvider>
         <CMSProvider>
+          {/* CC-89: the mtmot.com menu header, replicated verbatim on the MTMOT
+              host only — the Carlorbiz skin is untouched. */}
+          {brand.isMtmot && <MtmotHeader />}
           <Switch>
             {/* ── Public routes ──────────────────────────────── */}
             <Route path="/login" component={Login} />
