@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { uploadDocument, triggerIngestion, linkDocumentToCommitments } from '@/lib/documentApi';
+import type { StDocument } from '@/types/engagement';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,9 +28,13 @@ const NONE_VALUE = '__none__';
 
 interface DocumentUploadProps {
   onUploadComplete?: () => void;
+  /** Called with the created st_documents row as soon as the upload lands
+   *  (before chunking finishes) — lets callers track a specific document,
+   *  e.g. the Setup Wizard marking the first upload as the strategic plan. */
+  onUploaded?: (doc: StDocument) => void;
 }
 
-export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
+export function DocumentUpload({ onUploadComplete, onUploaded }: DocumentUploadProps) {
   const { engagement, commitments } = useEngagement();
   const v = useVocabulary();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,6 +130,8 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         doi: doi.trim() || undefined,
         externalLink: externalLink.trim() || undefined,
       });
+
+      onUploaded?.(doc);
 
       // 2. Link to commitments — primary as 'primary', lenses/extras as 'tagged'
       if (primaryCommitmentId) {

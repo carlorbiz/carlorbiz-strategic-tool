@@ -10,8 +10,9 @@
 //       1. st_engagements shell (status 'draft', slug from the name with a
 //          -2/-3 suffix on collision, created_by = caller).
 //       2. Per-engagement st_ai_config cloned from the global row
-//          (engagement_id IS NULL) so provider/model/vocabulary/prompts
-//          start from the house defaults.
+//          (engagement_id IS NULL), or — when no global row exists (prod) —
+//          from the most recently updated engagement-scoped row, so
+//          provider/model/vocabulary/prompts start from the house-tuned set.
 //       3. Two st_engagement_roles: 'client_admin' + 'participant'.
 //       4. One 'onboarding' st_engagement_stages row titled 'Getting started'
 //          seeded with DEFAULT_QUESTIONS.
@@ -209,7 +210,11 @@ Deno.serve(async (req) => {
   }
   engagementId = engagement.id as string;
 
-  // 4. Per-engagement AI config cloned from the global defaults row.
+  // 4. Per-engagement AI config cloned from the best available source:
+  //    global defaults row (engagement_id IS NULL) → else the most recently
+  //    updated engagement-scoped row (prod has no global row; the newest
+  //    engagement config carries the house-tuned prompts/provider/model/
+  //    vocabulary) → else column defaults.
   const { data: globalConfig } = await supabase
     .from("st_ai_config")
     .select("*")
@@ -217,22 +222,34 @@ Deno.serve(async (req) => {
     .limit(1)
     .maybeSingle();
 
-  const aiConfigRow = globalConfig
+  let sourceConfig = globalConfig;
+  if (!sourceConfig) {
+    const { data: recentConfig } = await supabase
+      .from("st_ai_config")
+      .select("*")
+      .not("engagement_id", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    sourceConfig = recentConfig;
+  }
+
+  const aiConfigRow = sourceConfig
     ? {
         engagement_id: engagementId,
-        profile_key: globalConfig.profile_key,
-        llm_provider: globalConfig.llm_provider,
-        llm_model: globalConfig.llm_model,
-        vocabulary_map: globalConfig.vocabulary_map,
-        system_prompt_interview: globalConfig.system_prompt_interview,
-        system_prompt_workshop: globalConfig.system_prompt_workshop,
-        system_prompt_pulse: globalConfig.system_prompt_pulse,
-        system_prompt_drift_watch: globalConfig.system_prompt_drift_watch,
-        system_prompt_brief: globalConfig.system_prompt_brief,
-        system_prompt_report: globalConfig.system_prompt_report,
-        system_prompt_update: globalConfig.system_prompt_update,
-        drift_watch_config: globalConfig.drift_watch_config,
-        dashboard_layout: globalConfig.dashboard_layout,
+        profile_key: sourceConfig.profile_key,
+        llm_provider: sourceConfig.llm_provider,
+        llm_model: sourceConfig.llm_model,
+        vocabulary_map: sourceConfig.vocabulary_map,
+        system_prompt_interview: sourceConfig.system_prompt_interview,
+        system_prompt_workshop: sourceConfig.system_prompt_workshop,
+        system_prompt_pulse: sourceConfig.system_prompt_pulse,
+        system_prompt_drift_watch: sourceConfig.system_prompt_drift_watch,
+        system_prompt_brief: sourceConfig.system_prompt_brief,
+        system_prompt_report: sourceConfig.system_prompt_report,
+        system_prompt_update: sourceConfig.system_prompt_update,
+        drift_watch_config: sourceConfig.drift_watch_config,
+        dashboard_layout: sourceConfig.dashboard_layout,
       }
     : { engagement_id: engagementId }; // column defaults still give a sane config
 

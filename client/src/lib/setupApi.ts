@@ -25,11 +25,38 @@ export const DEFAULT_QUESTIONS: { id: string; question: string }[] = [
   { id: 'anything_else', question: 'Anything else Nera should know before we start?' },
 ];
 
+// One proposed pillar from st-extract-pillars, matching the columns of
+// st_organisational_pillars the wizard writes on lock-in.
+export interface PillarProposal {
+  title: string;
+  description: string;
+  success_signal: string;
+  pillar_level: 'organisational' | 'departmental' | 'programmatic';
+}
+
+// Vocabulary labels st-extract-pillars suggests ONLY when the plan itself
+// uses distinctive terms (plural forms). Absent keys mean "keep house default".
+export interface VocabularySuggestions {
+  priorities_label?: string;
+  initiatives_label?: string;
+  lenses_label?: string;
+}
+
+// Shape of st_engagement_setup.pillar_proposals. The strategic-plan document
+// id lives INSIDE this jsonb (no schema change): Step 2 stashes
+// source_document_id on first upload; st-extract-pillars fills the rest.
+export interface PillarProposalsPayload {
+  source_document_id?: string | null;
+  proposals?: PillarProposal[];
+  vocabulary_suggestions?: VocabularySuggestions | null;
+  extracted_at?: string | null;
+}
+
 export interface EngagementSetup {
   id: string;
   engagement_id: string;
   current_step: number;
-  pillar_proposals: unknown | null;
+  pillar_proposals: PillarProposalsPayload | null;
   questionnaire_answers: unknown | null;
   completed_at: string | null;
   created_at: string;
@@ -42,13 +69,13 @@ export interface CreateEngagementResult {
   setup_id: string;
 }
 
-async function callSetupFunction<T>(payload: Record<string, unknown>): Promise<T> {
+async function callFunction<T>(fn: string, payload: Record<string, unknown>): Promise<T> {
   if (!supabase) throw new Error('Supabase not configured');
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;
   if (!accessToken) throw new Error('Not signed in');
 
-  const resp = await fetch(`${SUPABASE_URL}/functions/v1/st-setup-engagement`, {
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -64,6 +91,9 @@ async function callSetupFunction<T>(payload: Record<string, unknown>): Promise<T
   }
   return body as T;
 }
+
+const callSetupFunction = <T,>(payload: Record<string, unknown>): Promise<T> =>
+  callFunction<T>('st-setup-engagement', payload);
 
 export async function createEngagementSetup(params: {
   name: string;
@@ -93,4 +123,34 @@ export async function updateSetupStep(engagementId: string, step: number): Promi
     .update({ current_step: step })
     .eq('engagement_id', engagementId);
   if (error) throw error;
+}
+
+// Patch arbitrary wizard fields (pillar_proposals, questionnaire_answers,
+// completed_at) directly under the same UPDATE RLS.
+export async function updateSetupFields(
+  engagementId: string,
+  fields: Partial<
+    Pick<EngagementSetup, 'current_step' | 'pillar_proposals' | 'questionnaire_answers' | 'completed_at'>
+  >,
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase not configured');
+  const { error } = await supabase
+    .from('st_engagement_setup')
+    .update(fields)
+    .eq('engagement_id', engagementId);
+  if (error) throw error;
+}
+
+// Ask Nera to propose pillars from the strategic-plan document. The function
+// writes the payload to st_engagement_setup.pillar_proposals and returns it;
+// on any LLM/parse failure it returns an error and saves nothing.
+export async function extractPillars(
+  engagementId: string,
+  documentId: string,
+): Promise<PillarProposalsPayload> {
+  const result = await callFunction<{ pillar_proposals: PillarProposalsPayload }>(
+    'st-extract-pillars',
+    { engagement_id: engagementId, document_id: documentId },
+  );
+  return result.pillar_proposals;
 }

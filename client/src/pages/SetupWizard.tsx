@@ -1,13 +1,17 @@
-// Engagement Setup Wizard (CC-94, increment 1).
+// Engagement Setup Wizard (CC-94, increments 1-2).
 //
 // /setup            → start a new engagement (Step 1: Details)
 // /setup/:engagementId → resume a wizard already in progress
 //
 // Five steps: Details → Documents → Pillars → Questionnaire → Invite.
-// This increment implements Step 1 and the stepper chrome; steps 2-5 are
-// labelled placeholders that arrive in the next increment. The current step
-// is persisted to st_engagement_setup on every transition so an admin can
-// close the tab and pick up where they left off.
+// Steps 1-3 are live (Details; Documents with the first upload treated as the
+// strategic plan; Pillars proposed by st-extract-pillars and reviewed here).
+// Steps 4-5 are labelled placeholders that arrive in the next increment. The
+// current step is persisted to st_engagement_setup on every transition so an
+// admin can close the tab and pick up where they left off.
+//
+// Steps 2+ render inside an EngagementProvider so the existing document
+// primitives (DocumentUpload / DocumentList) and vocabulary hooks just work.
 //
 // Internal-admin only: everyone else gets a polite not-available card.
 // Deliberately NOT wired into the CarlorbizOnly host guard — host policy
@@ -17,11 +21,15 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'wouter';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { EngagementProvider } from '@/contexts/EngagementContext';
 import {
   createEngagementSetup,
   getEngagementSetup,
   updateSetupStep,
+  type PillarProposalsPayload,
 } from '@/lib/setupApi';
+import { SetupDocumentsStep } from '@/components/setup/SetupDocumentsStep';
+import { SetupPillarsStep } from '@/components/setup/SetupPillarsStep';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -45,16 +53,6 @@ const STEPS = [
 ] as const;
 
 const PLACEHOLDER_COPY: Record<number, { title: string; blurb: string }> = {
-  2: {
-    title: 'Documents',
-    blurb:
-      "Here you'll share the documents that tell the organisation's story — plans, reports, anything useful. Nera reads them so nobody has to repeat themselves later.",
-  },
-  3: {
-    title: 'Pillars',
-    blurb:
-      'Nera will suggest the handful of big things the organisation is really about, based on what it has read. You review, reword or reject — nothing is decided without you.',
-  },
   4: {
     title: 'Questionnaire',
     blurb:
@@ -77,6 +75,10 @@ export default function SetupWizard() {
   const [engagementName, setEngagementName] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(engagementId));
   const [loadError, setLoadError] = useState<string | null>(null);
+  // st_engagement_setup.pillar_proposals, lifted so Documents (which stashes
+  // the strategic plan's document id in it) and Pillars (which reviews the
+  // proposals) stay in sync without refetching between steps.
+  const [pillarProposals, setPillarProposals] = useState<PillarProposalsPayload | null>(null);
 
   // Step 1 form
   const [name, setName] = useState('');
@@ -96,6 +98,7 @@ export default function SetupWizard() {
       .then(({ engagement, setup }) => {
         if (cancelled) return;
         setEngagementName(engagement.name);
+        setPillarProposals(setup?.pillar_proposals ?? null);
         setStep(Math.min(Math.max(setup?.current_step ?? 2, 1), 5));
       })
       .catch(err => {
@@ -300,31 +303,55 @@ export default function SetupWizard() {
         </Card>
       )}
 
-      {step >= 2 && placeholder && (
-        <Card>
-          <CardHeader>
-            <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>{placeholder.title}</CardTitle>
-            <CardDescription>{placeholder.blurb}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              This step is built in the next increment — your progress is saved, so it's safe to
-              come back later.
-            </p>
-          </CardContent>
-          <CardFooter className="justify-between">
-            <Button variant="outline" onClick={() => goToStep(step - 1)} disabled={step <= 2}>
-              Back
-            </Button>
-            {step < 5 ? (
-              <Button onClick={() => goToStep(step + 1)}>Next</Button>
-            ) : (
-              <Link href="/">
-                <Button variant="outline">Save and finish later</Button>
-              </Link>
-            )}
-          </CardFooter>
-        </Card>
+      {step >= 2 && engagementId && (
+        <EngagementProvider engagementId={engagementId}>
+          {step === 2 && (
+            <SetupDocumentsStep
+              engagementId={engagementId}
+              pillarProposals={pillarProposals}
+              onPillarProposalsChange={setPillarProposals}
+              onBack={() => goToStep(1)}
+              onNext={() => goToStep(3)}
+            />
+          )}
+
+          {step === 3 && (
+            <SetupPillarsStep
+              engagementId={engagementId}
+              pillarProposals={pillarProposals}
+              onPillarProposalsChange={setPillarProposals}
+              onBack={() => goToStep(2)}
+              onNext={() => goToStep(4)}
+            />
+          )}
+
+          {step >= 4 && placeholder && (
+            <Card>
+              <CardHeader>
+                <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>{placeholder.title}</CardTitle>
+                <CardDescription>{placeholder.blurb}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  This step is built in the next increment — your progress is saved, so it's safe to
+                  come back later.
+                </p>
+              </CardContent>
+              <CardFooter className="justify-between">
+                <Button variant="outline" onClick={() => goToStep(step - 1)}>
+                  Back
+                </Button>
+                {step < 5 ? (
+                  <Button onClick={() => goToStep(step + 1)}>Next</Button>
+                ) : (
+                  <Link href="/">
+                    <Button variant="outline">Save and finish later</Button>
+                  </Link>
+                )}
+              </CardFooter>
+            </Card>
+          )}
+        </EngagementProvider>
       )}
     </div>
   );
