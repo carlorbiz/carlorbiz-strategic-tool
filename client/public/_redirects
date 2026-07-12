@@ -2,6 +2,8 @@
 # Cloudflare Pages rejects /* /index.html 200 as an infinite loop,
 # but accepts /index 200 rewrites for specific path patterns.
 /e/*  /index 200
+/setup  /index 200
+/setup/*  /index 200
 /admin  /index 200
 /login  /index 200
 /reset-password  /index 200
