@@ -36,23 +36,10 @@ const FEATURES = [
 export default function MtmotProductPage() {
   return (
     <div className="min-h-screen bg-white text-[#1f2a24]">
-      {/* Minimal header */}
-      <header className="w-full border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* MTMOT house mark (EP3/ELEVATE green) → back to the mtmot.com landing (CC-89). */}
-            <BrandLogo imgClassName="h-9 w-auto object-contain" />
-            <span className="hidden sm:inline text-sm font-semibold shrink-0" style={{ color: GREEN }}>
-              Strategy Engine
-            </span>
-          </div>
-          <Link href="/demo">
-            <span className="text-sm font-semibold cursor-pointer hover:opacity-80" style={{ color: GREEN }}>
-              Walk the demo →
-            </span>
-          </Link>
-        </div>
-      </header>
+      {/* No per-surface header here (CC-89): the replicated mtmot.com header
+          (App.tsx) is the ONLY top bar on the MTMOT skin. The bar that used to
+          sit here — EP3 green logo, "Strategy Engine", "Walk the demo →" —
+          now lives in the page footer below. */}
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center">
@@ -146,10 +133,28 @@ export default function MtmotProductPage() {
         </div>
       </section>
 
+      {/* Footer — carries the per-surface bar moved out of the header (CC-89):
+          the EP3 green house mark → mtmot.com, the "Strategy Engine" surface
+          name, and the local "Walk the demo →" action. Non-sticky. */}
       <footer className="border-t border-gray-100">
-        <div className="max-w-5xl mx-auto px-6 py-8 text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>MTMOT Strategy Engine — a Make The Most of Today Pty Ltd product.</span>
-          <Link href="/demo"><span className="cursor-pointer hover:opacity-80" style={{ color: GREEN }}>Walk the demo →</span></Link>
+        <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* MTMOT house mark (EP3/ELEVATE green) → back to the mtmot.com landing. */}
+            <BrandLogo imgClassName="h-9 w-auto object-contain" />
+            <span className="text-sm font-semibold shrink-0" style={{ color: GREEN }}>
+              Strategy Engine
+            </span>
+          </div>
+          <Link href="/demo">
+            <span className="text-sm font-semibold cursor-pointer hover:opacity-80" style={{ color: GREEN }}>
+              Walk the demo →
+            </span>
+          </Link>
+        </div>
+        <div className="border-t border-gray-100">
+          <div className="max-w-5xl mx-auto px-6 py-5 text-sm text-gray-500 text-center sm:text-left">
+            MTMOT Strategy Engine — a Make The Most of Today Pty Ltd product.
+          </div>
         </div>
       </footer>
     </div>
