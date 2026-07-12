@@ -1,11 +1,11 @@
 # Carlorbiz Strategic Tool — Product Dossier
 
 **Product**: Carlorbiz Strategic Tool - a conversational evidence platform for strategic engagements
-**Production URL**: strategy.carlorbiz.com (Cloudflare Pages; repo docs also reference the planned subdomain strategy.carlorbiz.com.au)
+**Production URLs**: one Cloudflare Pages deployment, two custom domains, host-decided skin (see §2.6): strategy.mtmot.com (MTMOT Strategy Engine) and strategy.carlorbiz.com.au (Carlorbiz Strategic Tool)
 **Repository**: carlorbiz-strategic-tool (private, GitHub)
 **Owner**: Carla (Carlorbiz) - strategic consultant, former CEO
-**Dossier date**: 3 July 2026
-**Purpose of this document**: investor / accelerator / buyer diligence collateral. Every claim below was verified against the codebase on 3 July 2026. Where something is planned rather than built, it is labelled as such.
+**Dossier date**: 3 July 2026, refreshed 13 July 2026
+**Purpose of this document**: investor / accelerator / buyer diligence collateral. Every claim below was verified against the codebase, the git history, and the live Supabase project on 13 July 2026. Where something is planned rather than built, it is labelled as such.
 
 ---
 
@@ -23,7 +23,7 @@ What a corporate buyer gets:
 
 The engagement fee (~$30k AUD target) captures the value because the tool, the taxonomy, and two years of accumulated organisational memory belong to the client at the end. The next strategic refresh starts from that corpus, which is where a returning consultant adds maximum value.
 
-The product is live, feature-complete through its delivery and living phases, seeded with three fictionalised demo engagements, and equipped with a public demo plus a prospect sandbox pipeline. It has not yet had a paying customer; see §8.
+The product is live, feature-complete through its delivery and living phases, seeded with three fictionalised demo engagements, and equipped with a public demo plus a prospect sandbox pipeline. Since 9 July 2026 the same deployment also serves as the **MTMOT Strategy Engine** on strategy.mtmot.com - a second, host-selected brand skin over the identical engine (§2.6). An Engagement Setup Wizard that lets a consultant stand up a new engagement end-to-end with no developer involvement is code-complete and awaiting owner walkthrough + merge (§2.7). It has not yet had a paying customer; see §8.
 
 ---
 
@@ -64,6 +64,8 @@ A distinctive design decision: **every user-facing label renders through an admi
 
 Nera is the AI assistant across the whole product (on Carlorbiz surfaces the assistant is always "Nera"). The engagement-scoped chatbot (`st-nera-query`) retrieves evidence scoped to `source_app='strategic-tool'` and the specific engagement, streams responses over SSE, cites sources, and enforces access tiers (see §2.4). System prompts and provider/model selection load from `st_ai_config` per engagement, so different roles and deployments get differently-tuned assistants over the same corpus.
 
+*Refined 10-11 July 2026 during the first live client elicitation (Aventine, §2.5):* Nera now opens with a purpose-setting welcome that ends on an easy question, and the system prompt carries a **conversational-flow rule** - on ambiguous or context-building follow-ups she opens with a one-line paraphrase of what she understood before answering, so the participant can correct a misread; clear self-contained questions are answered directly. Deployed to production as `st-nera-query` v7 (11 July); the three demo engagements' `st_ai_config` rows were aligned to `claude-sonnet-4-5` at the same time (verified live 13 July).
+
 ### 2.4 Demo and sandbox flow (the pilot machine)
 
 Two tiers, both live in the codebase:
@@ -72,6 +74,8 @@ Two tiers, both live in the codebase:
 - **Tier 2 - prospect sandbox** (`st-provision-sandbox` + migration `0013_demo_sandbox_and_requests.sql`): a prospect requests extended access; an internal admin approves; the edge function creates (or finds) an auth user, clones a chosen demo into a private sandbox the prospect owns (guarded so only demos can be cloned), and returns a magic link that drops the prospect straight into their sandbox. Sandbox Nera queries are capped at 20 turns.
 
 This converts "can I see it?" into a self-serve pilot with real hands-on time, at near-zero marginal cost and no exposure of client data.
+
+*Production state, verified 13 July 2026:* the `st_sandbox_requests` table now exists on the live Supabase project (RLS enabled, empty). The `st-provision-sandbox` edge function itself is **not yet deployed** to production - Tier 2 is code-complete in the repo but the live approval-to-magic-link loop cannot run until that function is deployed. The public demo (Tier 1) is live, including a fix (10 July) exempting the public demo engagements from the engagement role gate.
 
 ### 2.5 Multi-stakeholder elicitation campaigns (one shared engagement, many respondents)
 
@@ -99,13 +103,40 @@ A third entry path, distinct from the per-prospect sandbox (§2.4). Where the sa
 
 **Commercial significance:** this turns the tool from a per-client engagement platform into a **team-wide diagnostic instrument** — the front end of a strategic engagement, and the natural on-ramp to the Carlorbiz B2B digital-transformation evaluation product. A campaign design is reusable across clients by cloning the module and standing up a new engagement.
 
+### 2.6 Host-based branding: one engine, two products (MTMOT Strategy Engine)
+
+*Shipped 9-12 July 2026 (CC-84 host-aware branding, CC-89 MTMOT chrome). Verified against `client/src/lib/brand.ts`, `MtmotHeader.tsx`, and the 10-12 July merge history.*
+
+The single Cloudflare Pages deployment now serves two custom domains, and the hostname decides the skin (`client/src/lib/brand.ts`):
+
+- **strategy.mtmot.com** → **MTMOT Strategy Engine** - the product surface inside the MTMOT estate. Header logo is the MTMOT mark and links out to https://mtmot.com.
+- **strategy.carlorbiz.com.au** → **Carlorbiz Strategic Tool** - Carla's consulting instance. Carlorbiz logo, in-app home link.
+
+Carlorbiz is deliberately *not* scrubbed from the MTMOT skin: on either surface the demo engagements are run by Carlorbiz Consulting, which is the proof point - a real consultancy running the Engine for its clients. A `?brand=` query override lets either skin be previewed on any host.
+
+**Chrome (12 July):** the MTMOT skin renders a replicated mtmot.com menu header (`MtmotHeader.tsx`) as the *only* top bar. The per-surface bars (product-page header, `EngagementNav`) move to the bottom of the page as non-sticky footers, eliminating double chrome (two logos, two sign-in buttons). Every change is `brand.isMtmot`-gated or lives on MTMOT-only routes - **the Carlorbiz skin renders the exact prior tree, untouched.**
+
+### 2.7 Engagement Setup Wizard (code-complete, awaiting owner walkthrough + merge)
+
+*Built 12-13 July 2026 (CC-94). Frontend + migration live on branch `feat/cc94-setup-wizard` at `ca4b6d6` - four increments, **not yet merged to main**. The three backing edge functions and the database migration are already deployed to production (verified live 13 July: `st-setup-engagement` v3, `st-extract-pillars` v2, `st-seed-questionnaire` v2, tables `st_engagements.sector` + `st_engagement_setup`), so merging the branch turns the feature on.*
+
+The wizard at `/setup` closes the longest-standing roadmap gap (§9 "engagement-creation wizard"): a consultant or internal admin stands up a complete engagement end-to-end with **no developer involvement**. Five steps, progress persisted to `st_engagement_setup.current_step` on every transition so the admin can close the tab and resume at `/setup/:engagementId`:
+
+1. **Details** - name, client, free-text sector, description. One call to `st-setup-engagement` scaffolds everything: the draft engagement, a per-engagement `st_ai_config` cloned from the house-tuned row, `client_admin` + `participant` roles, a "Getting started" onboarding stage with default questions, and the setup-progress row. Inserts clean up after themselves on failure - a failed step never leaves a half-built engagement.
+2. **Documents** - upload via the existing document primitives; the first upload is treated as the client's strategic plan.
+3. **Pillars** - `st-extract-pillars` reads the strategic plan's chunks (bounded ~40k-char context, priority to chunks mentioning priorities/pillars/goals/strategy) and asks the engagement's configured model for 3-7 proposed pillars plus optional vocabulary suggestions. The admin reviews and edits before accepting - on any parse failure the function returns an error and saves nothing; **pillars are never fabricated**.
+4. **Questionnaire** (optional) - a getting-started questionnaire whose answers `st-seed-questionnaire` writes verbatim into `knowledge_chunks` as evidence (one chunk per answer, deterministic summaries, no LLM). Idempotent: re-running the step replaces rather than duplicates.
+5. **Invite** - participant emails become provisioned users with personal magic links (copy individually or export all); finishing with zero invites is a first-class path. Finish sets `completed_at` and flips the engagement to **Active**.
+
+Two deliberate security/scope notes: the three wizard functions **verify caller JWTs against the auth server (signature + expiry) via `auth.getUser`** - deliberately stronger than the decode-only pattern in the repo's older functions (§8.11) - and the page gates on `internal_admin` in-app while the host-guard question (should `/setup` be reachable on strategy.mtmot.com, or Carlorbiz-host-only?) is **deliberately deferred** (§8.13).
+
 ---
 
 ## 3. How it works
 
 ### 3.1 Plain-English architecture
 
-The product is a single-page React app hosted on Cloudflare Pages, backed entirely by one Supabase project (PostgreSQL, Auth, Storage, Deno Edge Functions). There is **no separate application server**: the browser talks to Postgres through Supabase's client library (protected by Row Level Security on every table) and to 25 Deno edge functions for anything involving an LLM, file processing, or privileged operations.
+The product is a single-page React app hosted on Cloudflare Pages, backed entirely by one Supabase project (PostgreSQL, Auth, Storage, Deno Edge Functions). There is **no separate application server**: the browser talks to Postgres through Supabase's client library (protected by Row Level Security on every table) and to Deno edge functions for anything involving an LLM, file processing, or privileged operations - 25 functions on main, 28 once the setup-wizard branch merges (§2.7); the live project runs 26 deployed functions as of 13 July 2026.
 
 All evidence - documents, surveys, interview transcripts, workshop outputs, the deliverable itself - is broken into small self-contained "chunks" stored in the `knowledge_chunks` table, tagged with the engagement and the commitments they relate to. Retrieval works by extracting keywords from the user's question and running **weighted PostgreSQL full-text search** over chunk summaries, text, and section references, with a recency fallback when few matches are found. The pgvector extension is installed in the schema for future semantic (embedding-based) retrieval, but retrieval today is full-text search - no embeddings are generated or stored. Retrieved chunks are handed to the LLM as context, and answers cite their sources.
 
@@ -134,11 +165,14 @@ All evidence - documents, surveys, interview transcripts, workshop outputs, the 
                      │  Storage ── st-documents, st-surveys,       │
                      │    st-workshop-photos, st-deliverables      │
                      │                                             │
-                     │  25 Deno Edge Functions                     │
+                     │  Deno Edge Functions (25 on main; +3 on    │
+                     │  the setup-wizard branch, already deployed) │
                      │    st-nera-query        st-generate-report  │
                      │    st-ingest-document   st-drift-watch      │
                      │    st-ingest-survey     st-synthesise-stage │
                      │    st-provision-sandbox interview-engine-*  │
+                     │    st-setup-engagement  st-extract-pillars  │
+                     │    st-seed-questionnaire                    │
                      │    + shared pipeline fns (pdf, media, url,  │
                      │      insights, summaries, classification)   │
                      └───────┬─────────────────────────┬───────────┘
@@ -159,6 +193,7 @@ All evidence - documents, surveys, interview transcripts, workshop outputs, the 
 - **Access tiers in the chatbot**: admin (uncapped) → member (uncapped) → sandbox (20 turns) → demo (5 turns, IP-throttled). Enforced in `st-nera-query`.
 - **Hard data policy**: no individual patient information, ever - enforced through terms of service, UI prompts, `contains_pii` survey flagging (blocks verbatim quoting), and generation-time constraints. This keeps the product outside healthcare-grade compliance obligations by design.
 - **Auth**: Supabase magic links only; no third-party auth providers; anonymous sessions restricted to read-only demo content at the database layer.
+- **Edge-function authentication - two generations in service**: most functions deploy with gateway JWT verification off (`--no-verify-jwt`, the in-repo convention) and validate the caller token in-function. The three setup-wizard functions (July 2026) verify the JWT against the auth server - signature and expiry - via `auth.getUser`. Roughly 18 older functions only *decode* the JWT payload without verifying its signature; RLS remains the backstop for data access, but estate-wide hardening to the verified pattern is tracked work (§8.11).
 
 ---
 
@@ -218,11 +253,11 @@ Edge function secrets (set via `supabase secrets set`):
 The full procedure lives in `docs/DEPLOYMENT_GUIDE.md` (per-instance deployment) and `docs/extraction-plan.md` (the mechanical checklist of every table, function, bucket, and policy). Summarised:
 
 1. **Create a Supabase project** (any region; Australian buyers typically choose Sydney).
-2. **Run the schema**: base schema files, then `migrations/strategic-tool/0001` through `0013` in order - this creates all `st_*` and `ie_*` tables, enums, ~80 RLS policies, helper functions, triggers, and the four private storage buckets.
+2. **Run the schema**: base schema files, then `migrations/strategic-tool/0001` through `0014` in order - this creates all `st_*` and `ie_*` tables, enums, ~80 RLS policies, helper functions, triggers, and the four private storage buckets (`0014_setup_wizard.sql`, currently on the wizard branch, adds `st_engagements.sector` and `st_engagement_setup`; it is already applied to the live project).
 3. **Create the admin user** in Supabase Auth and grant the `internal_admin` role.
 4. **Configure AI**: insert the `ai_config` / `st_ai_config` rows choosing `llm_provider` and model, and paste the system prompts (profile seed JSON under `supabase/seed/profiles/` provides defaults).
 5. **Set edge function secrets** (the API key matching the chosen provider, `CLIENT_NAME`, `ADMIN_NOTIFICATION_EMAIL`, `SITE_URL`).
-6. **Deploy the 25 edge functions** with the Supabase CLI (`supabase functions deploy <name>`; sandbox provisioning deploys with `--no-verify-jwt` per the in-repo convention).
+6. **Deploy the edge functions** with the Supabase CLI (`supabase functions deploy <name>`; most deploy with `--no-verify-jwt` per the in-repo convention - tokens are validated in-function). Where CLI access is unavailable, functions can also be deployed through the Supabase MCP (see §5.4).
 7. **Brand the frontend**: CSS custom properties in `client/src/index.css`, logo, title/meta - plus the in-app vocabulary map for domain language.
 8. **Build and host the frontend** (`npm run build`) on Cloudflare Pages (or any static host - a `vercel.json` is also present), set the three `VITE_*` variables, and point the client's domain at it.
 9. **Verify** against the post-deployment checklist (admin login, Nera answers with citations, document/survey ingestion, report generation, email notifications).
@@ -231,9 +266,17 @@ No servers to run, no containers, no cron infrastructure. Ongoing operational su
 
 ### 5.3 Current environments
 
-- **Production**: Cloudflare Pages deployment (strategy.carlorbiz.com), backed by the shared Carlorbiz Supabase project. Repo notes (last updated 14 April 2026) list "deploy new edge functions to live Supabase" and subdomain DNS as pending items - a buyer's diligence pass should confirm the live function set matches the repo.
+- **Production**: one Cloudflare Pages deployment serving strategy.mtmot.com (MTMOT skin) and strategy.carlorbiz.com.au (Carlorbiz skin), backed by the shared Carlorbiz Supabase project. As of 13 July 2026 the live project runs 26 deployed edge functions, including the current `st-nera-query` (v7) and the three setup-wizard functions; `st-provision-sandbox` and `regenerate-insights` exist in the repo but are not deployed.
 - **Local dev**: `.env` from `.env.example`, `npm run dev`.
 - **No staging environment** and **no CI pipeline** - builds and deploys are manual (see §8).
+
+### 5.4 Deploying edge functions via the Supabase MCP (no CLI)
+
+Recent production deploys (the setup-wizard functions, `st-nera-query` v7) were made through the Supabase MCP's `deploy_edge_function` rather than the CLI. Constraints learned in practice, recorded here so the next maintainer does not rediscover them:
+
+- **Single-call payload ceiling ~20k characters.** A function whose source exceeds it must be trimmed or split; the wizard functions were written with this budget in mind.
+- **No `../_shared` imports in the deployed bundle.** The MCP deploys one file; relative imports outside the function directory fail. Where a function uses the shared LLM helper (`_shared/llm.ts`), the deployed bundle **inlines** the needed helper code. The repo source - which keeps the clean `../_shared` import - **stays canonical**; treat the inlined production bundle as a build artefact, and redeploy from repo source (CLI) or re-inline (MCP) after any repo change.
+- Gateway JWT verification settings (`verify_jwt`) carry per-function; the in-repo convention (off, with in-function validation) still applies.
 
 ---
 
@@ -247,18 +290,18 @@ No servers to run, no containers, no cron infrastructure. Ongoing operational su
 
 ### 6.2 Model updates
 
-Provider/model for the main chatbot is database-configurable (`st_ai_config` / `ai_config`). However, **most pipeline functions hardcode model IDs** and a model deprecation requires a code edit + function redeploy. Verified hardcoded IDs as of 3 July 2026:
+Provider/model for the main chatbot is database-configurable (`st_ai_config` / `ai_config`). However, **most pipeline functions hardcode model IDs** and a model deprecation requires a code edit + function redeploy. This risk materialised on 9 July 2026 when `claude-sonnet-4-20250514` was retired by Anthropic and had to be replaced across 13 functions in one sweep (commit `027d078`); the replacement is the dateless alias `claude-sonnet-4-5`, which tracks the current Sonnet 4.5 snapshot and removes the single largest deprecation surface. Verified hardcoded IDs as of 13 July 2026 (including the wizard-branch functions):
 
 | Model ID | Where (all under `supabase/functions/`) |
 |---|---|
-| `claude-sonnet-4-20250514` | st-nera-query (fallback default), st-ingest-document, st-ingest-survey (summary), st-generate-report, st-drift-watch, st-synthesise-stage, interview-engine-select-prompt / -extract / -evaluate-state / -summarise-session, insight-extract, generate-summary, nera-query (default config) |
+| `claude-sonnet-4-5` (dateless alias) | st-nera-query (fallback default), st-ingest-document, st-ingest-survey (summary), st-generate-report, st-drift-watch, st-synthesise-stage, interview-engine-select-prompt / -extract / -evaluate-state / -summarise-session, insight-extract, generate-summary, nera-query (default config), st-extract-pillars (fallback) |
 | `claude-sonnet-4-5-20250929` | feedback-chat, process-pdf, convert-pdf-to-markdown, st-ingest-document (one path) |
 | `claude-sonnet-4-6` | generate-insights, regenerate-insights, extract-tab-chunks, ingest-url |
 | `claude-haiku-4-5-20251001` | branch-classify |
 | `gemini-2.5-flash` | st-ingest-survey (per-question analysis), process-media, st-nera-query (google fallback) |
 | `gpt-4o-mini` | st-nera-query (openai fallback) |
 
-Maintenance note: three different Claude Sonnet generations are in service simultaneously. A single shared model-constants module would reduce update surface; today, updating models means grep for the IDs above, edit, and `supabase functions deploy` each touched function.
+Maintenance note: the 9 July sweep consolidated most functions onto the dateless alias, but two other Claude generations remain in service and the IDs are still hardcoded per function. A single shared model-constants module would reduce update surface; today, updating models means grep for the IDs above, edit, and redeploy each touched function.
 
 ### 6.3 Supabase / RLS care
 
@@ -313,24 +356,25 @@ These are estimates, not measured production figures - there is no production us
 1. **No hard multi-tenancy.** There is no `org_id` isolation layer; access is scoped by engagement roles and `created_by` within a single-organisation deployment. This is consistent with the single-tenant-per-deployment model, but it means the product cannot be operated as shared SaaS without schema work.
 2. **Shared Supabase project pending extraction.** Production currently shares project `lgcmjneodjrtjtwbomsj` with carlorbiz-website (a cost decision, documented in `docs/supabase-strategy.md`). The `st_*` prefix discipline and `docs/extraction-plan.md` make the lift-out mechanical, but it has not been executed. A buyer verifying infrastructure independence should expect extraction as a pre-sale or completion step. A cross-product RLS bug in the shared project is a real (mitigated, tested-policy) risk until then.
 3. **Retrieval is full-text search, not semantic.** pgvector is installed but unused; no embeddings exist. FTS with keyword extraction works well on this corpus size but will miss paraphrase matches. Semantic retrieval is roadmap (§9), not current capability - any collateral claiming "vector search" today would be inaccurate.
-4. **Pending features** (per repo state, last updated 14 April 2026): pulse-check system (`st-run-pulse` recurring conversational check-ins - designed, not built), engagement-creation wizard, deployment of the newest edge functions to the live Supabase project, subdomain DNS completion, and seeding the Board Pre-Read template into the live database.
+4. **Pending features** (updated 13 July 2026): pulse-check system (`st-run-pulse` recurring conversational check-ins - designed, not built) and seeding the Board Pre-Read template into the live database. The engagement-creation wizard is now built (§2.7, awaiting merge); the live function set has been refreshed through the July deploys, though `st-provision-sandbox` remains undeployed (§2.4).
 5. **No CI pipeline and no automated tests.** Type-checking (`tsc --noEmit`) is the only automated gate; builds and edge-function deploys are manual CLI steps. For a ~$30k engagement product this is survivable; for licensing to other consultants it is the first infrastructure investment to make.
 6. **Drift watch is manual.** Button-triggered only; the "scheduled" behaviour described in the vision is not yet wired (no cron).
-7. **Hardcoded, inconsistent model IDs** across 25 edge functions (three Sonnet generations concurrently - see §6.2). Deprecation of any one model ID requires a multi-file edit and redeploy.
+7. **Hardcoded model IDs** across the edge-function estate (see §6.2). The 9 July 2026 retirement of `claude-sonnet-4-20250514` forced a 13-function emergency sweep - the exact failure mode this register predicted. Most functions now sit on the dateless `claude-sonnet-4-5` alias, which softens but does not remove the risk: IDs are still per-function, and two other Claude generations remain in service.
 8. **No customers yet.** The product has demo data and the founder's own engagements as proving ground, but zero external production deployments and therefore no reference customers, no measured cost baselines, and no churn/retention evidence.
 9. **Key-person dependency.** The methodology, prompts, and delivery capability currently live with one person. The profile pattern and documentation reduce this, but a licensing motion needs playbooks beyond the codebase.
 10. **Single-user editing.** No real-time collaboration; concurrent admin edits are out of scope by design (v1 constraint).
-
----
-
-## 9. Roadmap
+11. **Decode-only JWT authentication in ~18 older edge functions.** These functions read the caller's identity by base64-decoding the JWT payload **without verifying its signature**. RLS and service-role scoping limit the blast radius, and the gateway still requires a syntactically valid token, but a forged token could assert an arbitrary `sub` to these functions. The three setup-wizard functions (July 2026) already use the stronger `auth.getUser` server-verification pattern; migrating the remaining functions to it is tracked estate-wide hardening work (CC Inbox).
+12. **`knowledge_chunks` cross-engagement isolation is convention-only.** The table carries a public-read RLS policy (`using (true)`) - retained deliberately because the carlorbiz-website product reads its chunks anonymously from the same shared table. Strategic-tool queries scope by `source_app` and `engagement_id` in application code, not in policy. In a standalone client deployment (no website sharing) the policy should be tightened; in the shared project this is a known, accepted trade-off that a diligence pass should see named.
+13. **`/setup` host-guard decision pending.** The wizard page gates on `internal_admin` in-app, but whether the route should be reachable on strategy.mtmot.com at all (versus Carlorbiz-host-only, like the admin routes) is deliberately undecided - it was left out of the CC-94 scope so the walkthrough could settle it.
+14. **`st-synthesise-stage` column mismatch (pre-existing).** The function selects `extraction_result` from `st_stakeholder_inputs`, but the schema column is `extracted_insights` (0001_init.sql). PostgREST rejects the whole select, the code discards the error (`const { data: inputs }` with no error check), and synthesis proceeds with zero stakeholder inputs - **silently**. Stage synthesis therefore runs on workshop decisions and chunks only, without the interview transcripts it was designed to weight most heavily. Predates the July work; recorded here so it is fixed deliberately rather than rediscovered.
 
 Near-term (already specified in repo docs, not yet built):
 
 - **Pulse-check system** - `st-run-pulse` scheduled conversational check-ins with initiative owners via magic-link Nera conversations, synthesised into drift-watch reports (designed in `docs/living-platform-vision.md` §9; six-weekly default cadence).
-- **Engagement-creation wizard** - guided setup replacing manual draft configuration.
+- **Engagement-creation wizard** - ~~guided setup replacing manual draft configuration~~ **built** (§2.7, 12-13 July 2026); remaining steps are the owner walkthrough, the merge of `feat/cc94-setup-wizard`, and the `/setup` host-guard decision.
+- **Edge-function auth hardening** - migrate the ~18 decode-only functions to the `auth.getUser` verification pattern the wizard functions established (§8.11).
 - **Scheduled drift watch** - cron-triggered `st-drift-watch` per engagement configuration, replacing the manual button.
-- **Live-environment completion** - deploy newest edge functions, finish subdomain DNS, seed live report templates.
+- **Live-environment completion** - deploy `st-provision-sandbox` (the last major undeployed function), seed live report templates.
 - **Standalone Supabase extraction** - execute `docs/extraction-plan.md` when the first licensee or infrastructure-verification demand arrives.
 - **Merge-watcher** (`st-merge-watcher`) - scheduled semantic-similarity suggestions for redundant commitments (specified; depends on scheduled execution and better similarity tooling).
 - **CI + smoke tests** - minimum viable pipeline before any consultant licensing.
@@ -344,4 +388,4 @@ Clearly-labelled FUTURE work (not present in this product today):
 
 ---
 
-*Prepared from direct codebase inspection on 3 July 2026. Key sources: `docs/living-platform-vision.md` (product vision and resolved design decisions), `docs/extraction-plan.md` (complete infrastructure inventory), `docs/DEPLOYMENT_GUIDE.md` (clone procedure), `docs/supabase-strategy.md` (shared-project rationale), `CLAUDE.md` (build status), and the `supabase/functions/`, `migrations/strategic-tool/`, and `client/src/` trees.*
+*Prepared from direct codebase inspection on 3 July 2026; refreshed 13 July 2026 against the git history (main through `dfd87b3`, branch `feat/cc94-setup-wizard` through `ca4b6d6`) and the live Supabase project (deployed function versions, applied migrations, `st_ai_config` rows). Key sources: `docs/living-platform-vision.md` (product vision and resolved design decisions), `docs/extraction-plan.md` (complete infrastructure inventory), `docs/DEPLOYMENT_GUIDE.md` (clone procedure), `docs/supabase-strategy.md` (shared-project rationale), `CLAUDE.md` (build status), and the `supabase/functions/`, `migrations/strategic-tool/`, and `client/src/` trees.*
