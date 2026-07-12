@@ -67,16 +67,17 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function decodeUid(req: Request): string {
+// Verify the caller's JWT against the auth server (signature + expiry) —
+// deliberately stronger than the repo's older decode-only pattern.
+// deno-lint-ignore no-explicit-any
+async function verifyUid(req: Request, supabase: any): Promise<string> {
   const token = (req.headers.get("authorization") || "")
     .replace(/^Bearer\s+/i, "")
     .trim();
   if (!token) throw new Error("Missing bearer token");
-  const parts = token.split(".");
-  if (parts.length !== 3) throw new Error("Invalid bearer token");
-  const payload = JSON.parse(atob(parts[1]));
-  if (!payload.sub) throw new Error("Invalid bearer token");
-  return payload.sub as string;
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user?.id) throw new Error("Invalid or expired token");
+  return data.user.id as string;
 }
 
 // ── Context assembly ─────────────────────────────────────────────────────────
@@ -196,7 +197,7 @@ Deno.serve(async (req) => {
   // 1. Authn + admin authz.
   let callerUid: string;
   try {
-    callerUid = decodeUid(req);
+    callerUid = await verifyUid(req, supabase);
   } catch (e) {
     return jsonResponse({ error: e instanceof Error ? e.message : "Unauthorised" }, 401);
   }
