@@ -10,6 +10,7 @@ import { EngagementNeraChatbot } from '@/components/chat/EngagementNeraChatbot';
 import { OnboardingWizard, hasOnboardingTour } from '@/components/engagement/OnboardingWizard';
 import { isDemoEngagement } from '@/lib/demo';
 import { BrandLogo } from '@/components/layout/BrandLogo';
+import { getBrand } from '@/lib/brand';
 
 // Status-specific views
 import { EngagementDraftView } from '@/pages/engagement/DraftView';
@@ -18,47 +19,61 @@ import { EngagementDeliveredView } from '@/pages/engagement/DeliveredView';
 import { EngagementLivingView } from '@/pages/engagement/LivingView';
 import { EngagementArchivedView } from '@/pages/engagement/ArchivedView';
 
-function EngagementNav({ onTakeTour }: { onTakeTour: () => void }) {
+// The per-surface engagement bar: EP3 green logo, back-to-engagements, the
+// engagement name, tour re-launch, and the local sign-out. On the Carlorbiz
+// skin it is the sticky top nav (unchanged). On the MTMOT skin the replicated
+// mtmot.com header (App.tsx) is the ONLY top bar, so this entire bar renders
+// as a non-sticky page FOOTER instead (CC-89 — same links/actions, EP3 logo
+// preserved, just moved to the bottom of the page).
+function EngagementNav({ onTakeTour, asFooter = false }: { onTakeTour: () => void; asFooter?: boolean }) {
   const { engagement, aiConfig } = useEngagement();
   const { signOut } = useAuth();
   const showTourButton = hasOnboardingTour(aiConfig?.profile_key);
 
+  const inner = (
+    <div className="container mx-auto flex items-center justify-between h-12 px-4 max-w-5xl">
+      <div className="flex items-center gap-2">
+        <BrandLogo imgClassName="h-6 w-auto object-contain" />
+        <Link href="/">
+          <Button variant="ghost" size="sm" className="gap-1">
+            <ArrowLeft className="w-4 h-4" />
+            Engagements
+          </Button>
+        </Link>
+        {engagement && (
+          <span className="text-sm text-muted-foreground hidden sm:inline">
+            / {engagement.name}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-1">
+        {showTourButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onTakeTour}
+            className="gap-1 text-muted-foreground"
+            title="Re-launch the demo tour"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span className="hidden sm:inline">Take the tour</span>
+          </Button>
+        )}
+        <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-1 text-muted-foreground">
+          <LogOut className="w-3 h-3" />
+          Sign out
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (asFooter) {
+    return <footer className="border-t bg-background">{inner}</footer>;
+  }
+
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-      <div className="container mx-auto flex items-center justify-between h-12 px-4 max-w-5xl">
-        <div className="flex items-center gap-2">
-          <BrandLogo imgClassName="h-6 w-auto object-contain" />
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-1">
-              <ArrowLeft className="w-4 h-4" />
-              Engagements
-            </Button>
-          </Link>
-          {engagement && (
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              / {engagement.name}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          {showTourButton && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onTakeTour}
-              className="gap-1 text-muted-foreground"
-              title="Re-launch the demo tour"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span className="hidden sm:inline">Take the tour</span>
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-1 text-muted-foreground">
-            <LogOut className="w-3 h-3" />
-            Sign out
-          </Button>
-        </div>
-      </div>
+      {inner}
     </nav>
   );
 }
@@ -178,12 +193,28 @@ function EngagementShellInner() {
   // Manual-relaunch counter so the "Take the tour" button re-fires the wizard
   // (remounting OnboardingWizard with a fresh forceStart=true each click).
   const [tourNonce, setTourNonce] = useState(0);
+  const brand = getBrand();
+  const takeTour = () => setTourNonce((n) => n + 1);
 
   return (
     <>
       <CanonicalUrlRedirect />
-      <EngagementNav onTakeTour={() => setTourNonce((n) => n + 1)} />
-      <EngagementContent />
+      {/* Carlorbiz skin: sticky top nav, exactly as before. MTMOT skin: the
+          replicated mtmot.com header is the only top bar, so the engagement
+          bar renders below the content as a footer (CC-89). Mid-flow controls
+          stay reachable regardless: the demo wizard carries its own step/close
+          controls and the Nera chatbot floats — neither depends on this bar. */}
+      {!brand.isMtmot && <EngagementNav onTakeTour={takeTour} />}
+      {brand.isMtmot ? (
+        <div className="flex min-h-screen flex-col">
+          <div className="flex-1">
+            <EngagementContent />
+          </div>
+          <EngagementNav asFooter onTakeTour={takeTour} />
+        </div>
+      ) : (
+        <EngagementContent />
+      )}
       <EngagementNeraChatbot />
       <OnboardingWizard
         key={tourNonce}
