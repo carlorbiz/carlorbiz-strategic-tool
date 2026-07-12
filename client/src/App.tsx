@@ -20,6 +20,7 @@ const Admin = lazy(() => import("@/pages/Admin"));
 const SandboxRequestsAdmin = lazy(() => import("@/pages/SandboxRequestsAdmin"));
 const CampaignProvisionAdmin = lazy(() => import("@/pages/CampaignProvisionAdmin"));
 const MtmotProductPage = lazy(() => import("@/pages/MtmotProductPage"));
+const SetupWizard = lazy(() => import("@/pages/SetupWizard"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -102,6 +103,23 @@ function App() {
               <ErrorBoundary>
                 <Suspense fallback={<Loading />}>
                   <EngagementShell />
+                </Suspense>
+              </ErrorBoundary>
+            </Route>
+
+            {/* ── Engagement Setup Wizard (CC-94; page gates on
+                   internal_admin itself — host policy decided later) ─ */}
+            <Route path="/setup/:engagementId">
+              <ErrorBoundary>
+                <Suspense fallback={<Loading />}>
+                  <SetupWizard />
+                </Suspense>
+              </ErrorBoundary>
+            </Route>
+            <Route path="/setup">
+              <ErrorBoundary>
+                <Suspense fallback={<Loading />}>
+                  <SetupWizard />
                 </Suspense>
               </ErrorBoundary>
             </Route>

@@ -79,6 +79,11 @@ export default function EngagementList() {
               ? 'Create your first engagement to get started.'
               : "You haven't been invited to any engagements yet."}
           </p>
+          {profile?.role === 'internal_admin' && (
+            <Link href="/setup">
+              <Button>New engagement</Button>
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -86,9 +91,16 @@ export default function EngagementList() {
 
   return (
     <div className="container mx-auto py-12 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8" style={{ fontFamily: 'var(--font-heading)' }}>
-        Engagements
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
+          Engagements
+        </h1>
+        {profile?.role === 'internal_admin' && (
+          <Link href="/setup">
+            <Button>New engagement</Button>
+          </Link>
+        )}
+      </div>
       <div className="grid gap-4">
         {engagements.map(eng => {
           const badge = STATUS_BADGE[eng.status];
