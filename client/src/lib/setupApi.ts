@@ -52,12 +52,26 @@ export interface PillarProposalsPayload {
   extracted_at?: string | null;
 }
 
+// One saved questionnaire answer. The question text is stored alongside the
+// answer so the seeded chunks stay honest even if the question set changes.
+export interface QuestionnaireAnswer {
+  question: string;
+  answer: string;
+}
+
+// Shape of st_engagement_setup.questionnaire_answers. answered_at is null
+// while the answers are a draft (autosave) and set on "Save and continue".
+export interface QuestionnaireAnswersPayload {
+  answers: Record<string, QuestionnaireAnswer>;
+  answered_at?: string | null;
+}
+
 export interface EngagementSetup {
   id: string;
   engagement_id: string;
   current_step: number;
   pillar_proposals: PillarProposalsPayload | null;
-  questionnaire_answers: unknown | null;
+  questionnaire_answers: QuestionnaireAnswersPayload | null;
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -144,6 +158,14 @@ export async function updateSetupFields(
 // Ask Nera to propose pillars from the strategic-plan document. The function
 // writes the payload to st_engagement_setup.pillar_proposals and returns it;
 // on any LLM/parse failure it returns an error and saves nothing.
+// Turn the saved questionnaire answers into knowledge_chunks (verbatim Q&A,
+// no LLM). Idempotent server-side — re-running never duplicates.
+export async function seedQuestionnaire(engagementId: string): Promise<{ seeded: number }> {
+  return callFunction<{ seeded: number }>('st-seed-questionnaire', {
+    engagement_id: engagementId,
+  });
+}
+
 export async function extractPillars(
   engagementId: string,
   documentId: string,

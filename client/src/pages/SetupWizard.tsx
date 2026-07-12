@@ -1,14 +1,16 @@
-// Engagement Setup Wizard (CC-94, increments 1-2).
+// Engagement Setup Wizard (CC-94, increments 1-3).
 //
 // /setup            → start a new engagement (Step 1: Details)
 // /setup/:engagementId → resume a wizard already in progress
 //
 // Five steps: Details → Documents → Pillars → Questionnaire → Invite.
-// Steps 1-3 are live (Details; Documents with the first upload treated as the
-// strategic plan; Pillars proposed by st-extract-pillars and reviewed here).
-// Steps 4-5 are labelled placeholders that arrive in the next increment. The
-// current step is persisted to st_engagement_setup on every transition so an
-// admin can close the tab and pick up where they left off.
+// Steps 1-4 are live (Details; Documents with the first upload treated as the
+// strategic plan; Pillars proposed by st-extract-pillars and reviewed here;
+// the getting-started Questionnaire seeded into Nera's knowledge by
+// st-seed-questionnaire). Step 5 is a labelled placeholder that arrives in
+// the next increment. The current step is persisted to st_engagement_setup
+// on every transition so an admin can close the tab and pick up where they
+// left off.
 //
 // Steps 2+ render inside an EngagementProvider so the existing document
 // primitives (DocumentUpload / DocumentList) and vocabulary hooks just work.
@@ -30,6 +32,7 @@ import {
 } from '@/lib/setupApi';
 import { SetupDocumentsStep } from '@/components/setup/SetupDocumentsStep';
 import { SetupPillarsStep } from '@/components/setup/SetupPillarsStep';
+import { SetupQuestionnaireStep } from '@/components/setup/SetupQuestionnaireStep';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -53,11 +56,6 @@ const STEPS = [
 ] as const;
 
 const PLACEHOLDER_COPY: Record<number, { title: string; blurb: string }> = {
-  4: {
-    title: 'Questionnaire',
-    blurb:
-      "A short set of getting-started questions to fill the gaps the documents don't cover. Plain questions, plain answers.",
-  },
   5: {
     title: 'Invite',
     blurb:
@@ -325,7 +323,15 @@ export default function SetupWizard() {
             />
           )}
 
-          {step >= 4 && placeholder && (
+          {step === 4 && (
+            <SetupQuestionnaireStep
+              engagementId={engagementId}
+              onBack={() => goToStep(3)}
+              onNext={() => goToStep(5)}
+            />
+          )}
+
+          {step === 5 && placeholder && (
             <Card>
               <CardHeader>
                 <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>{placeholder.title}</CardTitle>
