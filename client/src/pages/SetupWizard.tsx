@@ -1,16 +1,16 @@
-// Engagement Setup Wizard (CC-94, increments 1-3).
+// Engagement Setup Wizard (CC-94, increments 1-4 — complete).
 //
 // /setup            → start a new engagement (Step 1: Details)
 // /setup/:engagementId → resume a wizard already in progress
 //
-// Five steps: Details → Documents → Pillars → Questionnaire → Invite.
-// Steps 1-4 are live (Details; Documents with the first upload treated as the
-// strategic plan; Pillars proposed by st-extract-pillars and reviewed here;
-// the getting-started Questionnaire seeded into Nera's knowledge by
-// st-seed-questionnaire). Step 5 is a labelled placeholder that arrives in
-// the next increment. The current step is persisted to st_engagement_setup
-// on every transition so an admin can close the tab and pick up where they
-// left off.
+// Five steps, all live: Details → Documents (first upload treated as the
+// strategic plan) → Pillars (proposed by st-extract-pillars, reviewed here) →
+// Questionnaire (seeded into Nera's knowledge by st-seed-questionnaire) →
+// Invite (participants provisioned with magic links; finishing sets
+// completed_at and flips the engagement to 'active'). The current step is
+// persisted to st_engagement_setup on every transition so an admin can close
+// the tab and pick up where they left off. Resuming a COMPLETED setup
+// redirects straight to the engagement instead of reopening the steps.
 //
 // Steps 2+ render inside an EngagementProvider so the existing document
 // primitives (DocumentUpload / DocumentList) and vocabulary hooks just work.
@@ -31,6 +31,7 @@ import {
   type PillarProposalsPayload,
 } from '@/lib/setupApi';
 import { SetupDocumentsStep } from '@/components/setup/SetupDocumentsStep';
+import { SetupInviteStep } from '@/components/setup/SetupInviteStep';
 import { SetupPillarsStep } from '@/components/setup/SetupPillarsStep';
 import { SetupQuestionnaireStep } from '@/components/setup/SetupQuestionnaireStep';
 import { Button } from '@/components/ui/button';
@@ -55,14 +56,6 @@ const STEPS = [
   { n: 5, label: 'Invite' },
 ] as const;
 
-const PLACEHOLDER_COPY: Record<number, { title: string; blurb: string }> = {
-  5: {
-    title: 'Invite',
-    blurb:
-      "Finally, invite the people whose voices matter. Each person gets their own private conversation with Nera — no logins to remember, just a link.",
-  },
-};
-
 export default function SetupWizard() {
   const params = useParams<{ engagementId?: string }>();
   const engagementId = params.engagementId ?? null;
@@ -71,6 +64,9 @@ export default function SetupWizard() {
 
   const [step, setStep] = useState(1);
   const [engagementName, setEngagementName] = useState<string | null>(null);
+  // Human-readable slug for the /e/ routes (fetchEngagement also accepts the
+  // UUID, so a null slug just means the id route is used instead).
+  const [engagementSlug, setEngagementSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(engagementId));
   const [loadError, setLoadError] = useState<string | null>(null);
   // st_engagement_setup.pillar_proposals, lifted so Documents (which stashes
@@ -95,7 +91,14 @@ export default function SetupWizard() {
     getEngagementSetup(engagementId)
       .then(({ engagement, setup }) => {
         if (cancelled) return;
+        // Already finished? The wizard's job is done — go to the engagement.
+        if (setup?.completed_at) {
+          toast.success(`${engagement.name} is already set up — taking you there now.`);
+          setLocation(`/e/${engagement.slug ?? engagementId}`);
+          return;
+        }
         setEngagementName(engagement.name);
+        setEngagementSlug(engagement.slug ?? null);
         setPillarProposals(setup?.pillar_proposals ?? null);
         setStep(Math.min(Math.max(setup?.current_step ?? 2, 1), 5));
       })
@@ -204,8 +207,6 @@ export default function SetupWizard() {
   }
 
   // ── Wizard chrome ──────────────────────────────────────────────────────────
-
-  const placeholder = PLACEHOLDER_COPY[step];
 
   return (
     <div className="container mx-auto py-12 px-4 max-w-2xl">
@@ -331,31 +332,12 @@ export default function SetupWizard() {
             />
           )}
 
-          {step === 5 && placeholder && (
-            <Card>
-              <CardHeader>
-                <CardTitle style={{ fontFamily: 'var(--font-heading)' }}>{placeholder.title}</CardTitle>
-                <CardDescription>{placeholder.blurb}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  This step is built in the next increment — your progress is saved, so it's safe to
-                  come back later.
-                </p>
-              </CardContent>
-              <CardFooter className="justify-between">
-                <Button variant="outline" onClick={() => goToStep(step - 1)}>
-                  Back
-                </Button>
-                {step < 5 ? (
-                  <Button onClick={() => goToStep(step + 1)}>Next</Button>
-                ) : (
-                  <Link href="/">
-                    <Button variant="outline">Save and finish later</Button>
-                  </Link>
-                )}
-              </CardFooter>
-            </Card>
+          {step === 5 && (
+            <SetupInviteStep
+              engagementId={engagementId}
+              slug={engagementSlug}
+              onBack={() => goToStep(4)}
+            />
           )}
         </EngagementProvider>
       )}
