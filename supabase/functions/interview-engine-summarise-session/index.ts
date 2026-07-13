@@ -4,11 +4,11 @@ import type { LLMConfig } from "../_shared/llm.ts";
 import {
   fetchConversationHistory,
   formatMessagesForLLM,
+  resolveLLMConfig,
 } from "../_shared/interview-engine-helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -103,12 +103,13 @@ Deno.serve(async (req) => {
       .map((m) => `${m.role}: ${m.content}`)
       .join("\n");
 
-    // 4. Call LLM
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
+    // 4. Call LLM — provider/model from ai_config, defaulting to the cheap+fast
+    // structured-JSON tier (summarisation + entity extraction is well-bounded).
+    const llmConfig: LLMConfig = await resolveLLMConfig(
+      supabase,
+      conversation.engagement_id,
+      { provider: "google", model: "gemini-3.5-flash" },
+    );
 
     const result = await callLLM(
       llmConfig,
