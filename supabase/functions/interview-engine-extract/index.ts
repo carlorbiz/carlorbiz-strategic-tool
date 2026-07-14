@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
     const llmConfig: LLMConfig = await resolveLLMConfig(
       supabase,
       conversation.engagement_id,
-      { provider: "google", model: "gemini-3.1-pro" },
+      { provider: "google", model: "gemini-3.1-pro-preview" },
     );
 
     // Native structured output only applies to Gemini; anthropic/openai ignore it
