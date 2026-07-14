@@ -11,9 +11,18 @@
 //   3. Ensures a user_profiles row (id = user_id = auth uid).
 //   4. Attaches them to the shared engagement via st_user_engagement_roles
 //      (idempotent — no duplicate active grant).
-//   5. Generates a magic link that drops them onto the elicitation surface.
+//   5. Mints a 48-hour REUSABLE opaque access token and returns a link to the
+//      elicitation surface carrying it as ?access=<token>.
 //
-// Returns { user_id, email, magic_link } for the admin to send on.
+// Why a reusable token, not a magic link: single-use Supabase magic links are
+// consumed by corporate email scanners that prefetch links, so the real user
+// hits "One-time token not found". Our token survives prefetch because it is
+// reusable within its 48h window (a scanner hit does not lock the user out).
+// We store only the SHA-256 hash; the plaintext appears only in the link.
+//
+// Returns { user_id, email, magic_link } for the admin to send on. (The
+// `magic_link` field name is kept for response-shape compatibility; it now
+// carries the ?access= link.)
 //
 // Deploy WITHOUT gateway JWT verification (project convention — tokens are
 // validated in-function): supabase functions deploy st-provision-campaign-user --no-verify-jwt
@@ -52,6 +61,29 @@ function decodeUid(req: Request): string {
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+const ACCESS_TOKEN_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours
+
+// Hex-encode an ArrayBuffer.
+function toHex(buf: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// SHA-256 hex of a UTF-8 string.
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return toHex(digest);
+}
+
+// A high-entropy opaque token: 32 random bytes, hex-encoded (256 bits).
+function mintAccessToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return toHex(bytes.buffer);
+}
 
 // deno-lint-ignore no-explicit-any
 async function findUserIdByEmail(admin: any, email: string): Promise<string | null> {
@@ -168,21 +200,32 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 6. Magic link onto the elicitation surface.
-  const redirectTo = redirectBase ? `${redirectBase}${landingPath}` : undefined;
-  const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-    options: redirectTo ? { redirectTo } : undefined,
-  });
-  if (linkErr) {
+  // 6. Mint a 48-hour REUSABLE access token (prefetch-proof) and build the link.
+  //    Store only the SHA-256 hash; the plaintext appears only in the returned link.
+  const plaintextToken = mintAccessToken();
+  const tokenHash = await sha256Hex(plaintextToken);
+  const expiresAt = new Date(Date.now() + ACCESS_TOKEN_TTL_MS).toISOString();
+
+  const { error: tokenErr } = await supabase
+    .from("st_campaign_access_tokens")
+    .insert({
+      token_hash: tokenHash,
+      user_id: uid,
+      engagement_id: engagementId,
+      expires_at: expiresAt,
+    });
+  if (tokenErr) {
     return jsonResponse(
-      { user_id: uid, email, magic_link: null, warning: `Attached but magic-link generation failed: ${linkErr.message}` },
+      { user_id: uid, email, magic_link: null, warning: `Attached but access-token creation failed: ${tokenErr.message}` },
       200,
     );
   }
-  // deno-lint-ignore no-explicit-any
-  const magicLink = (linkData as any)?.properties?.action_link ?? null;
 
-  return jsonResponse({ user_id: uid, email, magic_link: magicLink });
+  // Build the access link onto the elicitation surface. Kept in `magic_link`
+  // for response-shape compatibility with existing callers.
+  const base = redirectBase || "";
+  const sep = landingPath.includes("?") ? "&" : "?";
+  const accessLink = `${base}${landingPath}${sep}access=${plaintextToken}`;
+
+  return jsonResponse({ user_id: uid, email, magic_link: accessLink });
 });
