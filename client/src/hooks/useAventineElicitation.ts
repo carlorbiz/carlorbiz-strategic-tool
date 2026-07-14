@@ -1,12 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import {
-  startConversation,
+  getOrStartConversation,
+  findResumableConversation,
+  fetchConversation,
+  fetchConversationCoverage,
   selectPrompt,
   sendMessage,
 } from '@/lib/interviewEngineApi';
 import { supabase } from '@/lib/supabase';
-import type { IeMessage, ExtractedField } from '@/types/interview-engine';
+import type { IeConversation, IeMessage, ExtractedField } from '@/types/interview-engine';
 import {
   AVENTINE_PRODUCT_ID,
   AVENTINE_GOAL,
@@ -36,7 +39,44 @@ interface AventineState {
   covered: string[];
   isLoading: boolean;
   isComplete: boolean;
+  // True while the mount-time resume probe is in flight — lets the surface hold
+  // the "Begin" screen back so a returning respondent doesn't flash it before
+  // their in-progress conversation rehydrates.
+  isResuming: boolean;
   error: string | null;
+}
+
+// Nera's purpose-setting welcome is shown as the first turn but never persisted
+// to ie_messages (the edge function only writes real user/assistant turns). On
+// resume we synthesise it locally so the rehydrated transcript reads coherently
+// from the top — the first persisted row is the respondent's reply to it.
+function makeWelcomeMessage(conversationId: string): IeMessage {
+  return {
+    id: crypto.randomUUID(),
+    conversation_id: conversationId,
+    role: 'assistant',
+    content: AVENTINE_WELCOME,
+    extracted_data: null,
+    confidence_scores: null,
+    justifications: null,
+    prompt_id: null,
+    created_at: new Date().toISOString(),
+  };
+}
+
+// Build the covered-dimensions set from persisted coverage rows, using the SAME
+// rule the live turn uses (confidence >= threshold AND a required dimension) so
+// resumed state and freshly-extracted state are identical in shape.
+function coveredFromConfidence(
+  entries: { field_name: string; confidence: number }[]
+): Set<string> {
+  const covered = new Set<string>();
+  for (const e of entries) {
+    if (e.confidence >= COVERAGE_CONFIDENCE && AVENTINE_REQUIRED_DIMENSIONS.includes(e.field_name)) {
+      covered.add(e.field_name);
+    }
+  }
+  return covered;
 }
 
 async function resolveProfileId(): Promise<string> {
@@ -62,8 +102,64 @@ export function useAventineElicitation() {
     covered: [],
     isLoading: false,
     isComplete: false,
+    isResuming: true,
     error: null,
   });
+
+  // Rehydrate the hook from an existing in-progress conversation: prior turns
+  // into `messages`, persisted coverage into `covered`. New turns proceed as
+  // normal from here — nothing is re-extracted or re-counted.
+  const rehydrateFrom = useCallback(async (conversation: IeConversation) => {
+    const [{ messages: priorMessages }, coverageRows] = await Promise.all([
+      fetchConversation(conversation.id),
+      fetchConversationCoverage(conversation.id),
+    ]);
+
+    const covered = coveredFromConfidence(
+      coverageRows.map(r => ({ field_name: r.field_name, confidence: r.last_confidence ?? 0 })),
+    );
+
+    setState(s => ({
+      ...s,
+      conversationId: conversation.id,
+      // Synthesised welcome first, then the persisted transcript in order.
+      messages: [makeWelcomeMessage(conversation.id), ...priorMessages],
+      covered: Array.from(covered),
+      isComplete: covered.size >= COMPLETION_THRESHOLD,
+      isLoading: false,
+      isResuming: false,
+      error: null,
+    }));
+  }, []);
+
+  // On mount (once the engagement + auth are settled), probe for an existing
+  // in-progress conversation and resume it. If there is none — a first-time
+  // respondent — do nothing: the surface shows the "Begin" screen exactly as
+  // before, and creation happens on their click via `start`. Any probe error
+  // (e.g. profile not yet provisioned) is non-fatal; we fall back to Begin.
+  const resumeAttempted = useRef(false);
+  useEffect(() => {
+    if (!engagement || !supabase) return;
+    if (resumeAttempted.current) return;
+    resumeAttempted.current = true;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const existing = await findResumableConversation(engagement.id, AVENTINE_PRODUCT_ID);
+        if (cancelled) return;
+        if (existing) {
+          await rehydrateFrom(existing);
+          return;
+        }
+      } catch {
+        // Non-fatal — first-timers (or a not-yet-provisioned profile) just see Begin.
+      }
+      if (!cancelled) setState(s => ({ ...s, isResuming: false }));
+    })();
+
+    return () => { cancelled = true; };
+  }, [engagement, rehydrateFrom]);
 
   const start = useCallback(async () => {
     if (!engagement || !supabase) return;
@@ -74,39 +170,37 @@ export function useAventineElicitation() {
       // magic link hasn't fully set them up yet) before we open the conversation.
       await resolveProfileId();
 
-      const conversation = await startConversation(
+      // Resume-or-create: if a fresh reload already produced (or somehow left) an
+      // in-progress conversation, pick it up instead of inserting a duplicate.
+      const { conversation, resumed } = await getOrStartConversation(
         AVENTINE_GOAL,
         engagement.id,
         { client_name: engagement.client_name, campaign: AVENTINE_PRODUCT_ID },
         AVENTINE_PRODUCT_ID,
       );
 
-      // Open with a purpose-setting welcome in Nera's voice (Carla's steer). The
-      // first real question arrives on the respondent's first reply — selectPrompt
-      // runs inside sendReply as the steer Nera weaves in.
-      const welcomeMessage: IeMessage = {
-        id: crypto.randomUUID(),
-        conversation_id: conversation.id,
-        role: 'assistant',
-        content: AVENTINE_WELCOME,
-        extracted_data: null,
-        confidence_scores: null,
-        justifications: null,
-        prompt_id: null,
-        created_at: new Date().toISOString(),
-      };
+      if (resumed) {
+        await rehydrateFrom(conversation);
+        return;
+      }
+
+      // Fresh start — open with a purpose-setting welcome in Nera's voice (Carla's
+      // steer). The first real question arrives on the respondent's first reply —
+      // selectPrompt runs inside sendReply as the steer Nera weaves in.
+      const welcomeMessage = makeWelcomeMessage(conversation.id);
 
       setState(s => ({
         ...s,
         conversationId: conversation.id,
         messages: [welcomeMessage],
         isLoading: false,
+        isResuming: false,
       }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Could not start the conversation';
       setState(s => ({ ...s, isLoading: false, error: msg }));
     }
-  }, [engagement, state.conversationId]);
+  }, [engagement, state.conversationId, rehydrateFrom]);
 
   const sendReply = useCallback(async (text: string) => {
     if (!state.conversationId || !engagement) return;
@@ -181,12 +275,14 @@ export function useAventineElicitation() {
   }, [state.conversationId, engagement]);
 
   const reset = useCallback(() => {
+    resumeAttempted.current = false;
     setState({
       conversationId: null,
       messages: [],
       covered: [],
       isLoading: false,
       isComplete: false,
+      isResuming: false,
       error: null,
     });
   }, []);

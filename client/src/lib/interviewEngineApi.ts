@@ -1,5 +1,11 @@
 import { supabase } from '@/lib/supabase';
-import type { IeConversation, IeMessage, ExtractionField, ExtractionResult } from '@/types/interview-engine';
+import type {
+  IeConversation,
+  IeMessage,
+  IePromptCoverage,
+  ExtractionField,
+  ExtractionResult,
+} from '@/types/interview-engine';
 
 // ─── Interview Engine Client API ─────────────────────────────────────────────
 // Wraps the 4 interview-engine-* edge functions + direct Supabase queries
@@ -84,6 +90,79 @@ export async function startConversation(
 
   if (error) throw error;
   return data as IeConversation;
+}
+
+// ── Find the caller's resumable (in-progress) conversation ───────────────────
+// A returning respondent (fresh page load via the 96h reusable access link)
+// must pick up where they left off instead of starting a blank conversation.
+// Returns the caller's MOST RECENT still-in-progress conversation for this
+// engagement + product, or null if there is none. "In progress" = status
+// 'active' AND completed_at IS NULL (a summarised/closed session is neither).
+
+export async function findResumableConversation(
+  engagementId?: string,
+  productId: string = PRODUCT_ID
+): Promise<IeConversation | null> {
+  if (!supabase) return null;
+
+  const profileId = await currentUserProfileId();
+
+  let query = supabase
+    .from('ie_conversations')
+    .select('*')
+    .eq('user_id', profileId)
+    .eq('product_id', productId)
+    .eq('status', 'active')
+    .is('completed_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  // Scope to the exact engagement so a respondent in two engagements never
+  // resumes the wrong one. Mirror startConversation's null handling.
+  query = engagementId
+    ? query.eq('engagement_id', engagementId)
+    : query.is('engagement_id', null);
+
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return (data as IeConversation) ?? null;
+}
+
+// ── Resume the in-progress conversation, or start a fresh one ─────────────────
+// The single entry point the surface should use: RESUME an existing
+// in-progress conversation if one exists (returns resumed: true), otherwise
+// fall through to startConversation for a first-time respondent (resumed:
+// false). No new row is inserted on the resume path.
+
+export async function getOrStartConversation(
+  goal: string,
+  engagementId?: string,
+  metadata?: Record<string, unknown>,
+  productId: string = PRODUCT_ID
+): Promise<{ conversation: IeConversation; resumed: boolean }> {
+  const existing = await findResumableConversation(engagementId, productId);
+  if (existing) return { conversation: existing, resumed: true };
+
+  const conversation = await startConversation(goal, engagementId, metadata, productId);
+  return { conversation, resumed: false };
+}
+
+// ── Fetch a conversation's coverage rows (direct Supabase query) ─────────────
+// Used to rehydrate the "covered dimensions" set on resume so select-prompt's
+// gap logic and the completion gate agree with the persisted state.
+
+export async function fetchConversationCoverage(
+  conversationId: string
+): Promise<IePromptCoverage[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('ie_prompt_coverage')
+    .select('*')
+    .eq('conversation_id', conversationId);
+
+  if (error) throw error;
+  return (data ?? []) as IePromptCoverage[];
 }
 
 // ── Select the next prompt ───────────────────────────────────────────────────
