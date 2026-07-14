@@ -82,6 +82,7 @@ function ElicitationInner() {
     messages,
     isLoading,
     isComplete,
+    isResuming,
     error,
     coveredCount,
     totalDimensions,
@@ -102,6 +103,20 @@ function ElicitationInner() {
     setInput('');
     await sendReply(text);
   };
+
+  // While the mount-time resume probe runs, hold the surface on a spinner so a
+  // returning respondent lands straight in their conversation rather than
+  // flashing the "Begin" screen first.
+  if (!conversationId && isResuming) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-muted/20">
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Opening your conversation…</span>
+        </div>
+      </div>
+    );
+  }
 
   // Welcome
   if (!conversationId) {
