@@ -6,11 +6,11 @@ import {
   fetchUserState,
   fetchPromptCoverage,
   formatMessagesForLLM,
+  resolveLLMConfig,
 } from "../_shared/interview-engine-helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -144,11 +144,13 @@ Deno.serve(async (req) => {
 
     const selectionInput = `Conversation history:\n${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}\n\nUser engagement mode: ${userState.engagement_mode}\nCapacity: ${userState.capacity_score ?? "unknown"}\n\nCandidate prompts:\n${candidateList}`;
 
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
+    // Provider/model come from the engagement's ai_config, defaulting to a
+    // cheap+fast structured-JSON tier (prompt selection is a mechanical pick).
+    const llmConfig: LLMConfig = await resolveLLMConfig(
+      supabase,
+      engagement_id,
+      { provider: "google", model: "gemini-3.5-flash" },
+    );
 
     let selectedId: string;
     let rationale: string;

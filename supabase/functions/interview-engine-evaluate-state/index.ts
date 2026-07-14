@@ -5,11 +5,11 @@ import {
   fetchConversationHistory,
   fetchUserState,
   formatMessagesForLLM,
+  resolveLLMConfig,
 } from "../_shared/interview-engine-helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,6 +94,15 @@ Deno.serve(async (req) => {
     // 2. Fetch existing user state
     const userState = await fetchUserState(supabase, user_id, product_id);
 
+    // 2b. Resolve the engagement for ai_config lookup (not in the request body).
+    const { data: convRow } = await supabase
+      .from("ie_conversations")
+      .select("engagement_id")
+      .eq("id", conversation_id)
+      .maybeSingle();
+    const engagementId = (convRow as { engagement_id?: string | null } | null)
+      ?.engagement_id ?? null;
+
     // 3. Build evaluation input
     const userMessages = messages.filter((m) => m.role === "user");
     const formattedHistory = formatMessagesForLLM(messages);
@@ -105,12 +114,13 @@ Previous sentiment: ${userState.sentiment_trend ?? "none"}
 Recent conversation (${messages.length} messages, ${userMessages.length} from user):
 ${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
 
-    // 4. Call LLM
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
+    // 4. Call LLM — provider/model from ai_config, defaulting to the cheap+fast
+    // structured-JSON tier (capacity scoring is a bounded classification task).
+    const llmConfig: LLMConfig = await resolveLLMConfig(
+      supabase,
+      engagementId,
+      { provider: "google", model: "gemini-3.5-flash" },
+    );
 
     const result = await callLLM(
       llmConfig,

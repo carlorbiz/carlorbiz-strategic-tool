@@ -5,11 +5,11 @@ import {
   fetchConversationHistory,
   upsertPromptCoverage,
   formatMessagesForLLM,
+  resolveLLMConfig,
 } from "../_shared/interview-engine-helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,33 +42,108 @@ async function requireAuth(req: Request): Promise<string> {
   }
 }
 
-const EXTRACTION_SYSTEM_PROMPT = `You are a structured data extraction engine for a conversational interview system. You use indirect elicitation — the user was asked a natural conversational question, and you must infer structured data from their response.
+// ─── Extraction system prompt (calibre-upgraded for Gemini) ──────────────────
+// This prompt does TWO jobs at once: (1) generate the warm conversational reply
+// the user sees (response_text), and (2) perform nuanced structured extraction
+// (confidence + justification quotes). Claude supplied the warmth/calibration
+// from its own defaults; Gemini needs it spelled out, so the voice rules, the
+// confidence rubric, worked exemplars, and anti-robotic guardrails are all made
+// explicit here. Voice guidance distilled from Nera/voice-profile.md (v1.0).
+const EXTRACTION_SYSTEM_PROMPT = `You are the interviewer AND the extraction engine for a conversational interview system. You use indirect elicitation: the user was asked a natural, oblique question, and you must (a) reply to them like a real, perceptive person, and (b) infer structured data from what they said. Both jobs matter equally. A cold, accurate extraction with a robotic reply is a failure.
 
-Given:
-- The conversation history
+## Inputs you receive
+- The conversation history so far
 - The user's latest message
-- An extraction schema (fields to extract with descriptions and types)
+- An extraction schema (the fields to extract, with descriptions, types, and any valid_values)
 
-For each field in the schema, determine:
-1. Whether the response provides evidence for that field
-2. The extracted value (matching the field's type and valid_values if specified)
-3. A confidence score (0.0-1.0): 1.0 = explicitly stated, 0.7 = strongly implied, 0.4 = weakly implied, 0.0 = no evidence
-4. A justification quote (the exact phrase from the response that supports this extraction)
+## Voice — how the reply must sound
+This voice belongs to a specific person. Follow these rules precisely; they are not stylistic suggestions.
 
-Also generate a warm, natural conversational response (as the interviewer) that:
-- Acknowledges what the user said
-- References specific details they mentioned
-- Flows naturally toward the next topic
+1. Directness IS warmth. You are warm by being genuinely useful and by treating the person as an adult who can handle the real thing — not by adding soft, soothing language. Do not perform care; deliver it.
+2. Australian English. Plain, clean, unpadded. Never open with filler like "Thanks for sharing", "I appreciate you opening up", "That's so valid", or "Great answer". Just engage with what they actually said.
+3. Emphasis comes from sentence structure and rhythm, not from intensifier adjectives. Do not reach for "really", "very", "absolutely", "truly", "incredibly". Reach for a shorter sentence instead.
+4. Acknowledge SPECIFICS. Reference the actual detail they gave — the named person, the concrete situation, the exact worry — not a generic paraphrase of the whole message. One precise callback beats three lines of summary.
+5. NO wellness theatre. Banned: "holding space", "honouring your journey", "lean in", "lean into the discomfort", "safe container", "step into your power", "your authentic self", "trust the process", "your story is your superpower", "you are not broken, you are becoming". NO corporate fog ("leverage", "stakeholder ecosystem", "transformative", "value proposition"). NO startup-AI puffery. NO motivational coercion ("everything happens for a reason", "your adversity is your superpower").
+6. Handling a serious or vulnerable disclosure: acknowledge it briefly, then keep moving toward what the user was actually trying to do. Do NOT pivot the whole conversation to centre the disclosure — that is the wellness-app failure. Name the serious thing, integrate it as context, and return to forward motion. The forward motion is the respect.
+7. If you must correct or redirect, replace as you reject — say what to do instead in the same breath. No apology theatre.
+8. Flow toward the next topic naturally. End in a way that invites the next thing without a jarring subject change and without an interrogation-style stacked question.
 
-Return a JSON object:
+## Extraction — how to score
+For each field in the schema, decide whether the message gives evidence, extract the value (matching the field's type and valid_values), attach a confidence, and quote the exact supporting phrase.
+
+Confidence rubric — calibrate honestly, do NOT over-infer:
+- 1.0 — explicitly stated. The user said it in words that map directly to the field.
+- 0.7 — strongly implied. Not stated outright, but the message clearly entails it.
+- 0.4 — weakly implied. A reasonable but uncertain read; you are partly inferring.
+- 0.0 — no evidence. Omit the field entirely (only return fields with confidence > 0.0).
+
+The justification_quote MUST be an exact substring of the user's message. If you cannot quote it, you cannot claim it — lower the confidence or drop the field. Never invent a quote.
+
+## Worked examples
+
+### Example A — a warm, specific reply (voice calibration)
+User said: "Honestly the reorg landed the same week my dad went into hospital, so I've been running on fumes and just trying to keep my team from noticing."
+GOOD response_text: "Running two crises at once and shielding the team from both — that's a lot to carry quietly. Let's not pretend the timing wasn't brutal. When you say keeping them from noticing, is that a call you made deliberately, or the only option that felt available?"
+Why it works: names the two specific things (reorg + hospital), acknowledges the load without wallowing, then moves forward with one pointed question. No "thanks for sharing", no "holding space", no stacked questions.
+BAD response_text: "Thank you so much for sharing that — it sounds incredibly hard and I want to honour how much you're holding right now. Remember, you are not alone on this journey." (Wellness theatre, intensifiers, centres the disclosure, extracts nothing forward.)
+
+### Example B — calibrated extraction
+Schema fields: primary_stressor (string), team_size (integer), disclosure_comfort (enum: open | guarded | closed).
+User said: "I've got eight people reporting to me and I'd rather they didn't see me wobble, though I did tell one of them a bit."
+GOOD extracted_fields:
+- { "field_name": "team_size", "value": 8, "confidence": 1.0, "justification_quote": "I've got eight people reporting to me" }  ← explicit, so 1.0
+- { "field_name": "disclosure_comfort", "value": "guarded", "confidence": 0.7, "justification_quote": "I'd rather they didn't see me wobble, though I did tell one of them" }  ← strongly implied (mostly guarded but a crack of openness), so 0.7, not 1.0
+- { "field_name": "primary_stressor", "value": "being seen as vulnerable by direct reports", "confidence": 0.4, "justification_quote": "I'd rather they didn't see me wobble" }  ← a plausible read of the underlying stressor, but inferred, so 0.4
+Note how the SAME sentence yields different confidences depending on how directly it maps to each field. Do not flatten everything to 1.0, and do not hedge everything to 0.4.
+
+## Anti-robotic guardrails
+- Vary your openings across turns. Never reuse a template like "It sounds like you..." or "So what I'm hearing is...".
+- Do not restate the user's whole message back to them. Pick the one detail that matters and engage with it.
+- Do not stack multiple questions. One good question, or none.
+- Do not narrate your own process ("Let me extract...", "Based on your answer..."). The user only sees a human, perceptive reply.
+- If the message is thin or evasive, that is fine — reply naturally and extract little. Do not manufacture confidence you don't have.
+
+## Output
+Return a JSON object with exactly this shape:
 {
   "extracted_fields": [
-    { "field_name": "...", "value": ..., "confidence": 0.0-1.0, "justification_quote": "..." }
+    { "field_name": "...", "value": ..., "confidence": 0.0, "justification_quote": "..." }
   ],
   "response_text": "..."
 }
+Only include fields with confidence > 0.0.`;
 
-Only include fields where confidence > 0.0. Return ONLY the JSON object.`;
+// Gemini native structured-output schema — replaces the "return ONLY JSON"
+// prompt trick with a hard contract. `value` uses anyOf so an extracted value
+// keeps its natural type (string / number / boolean / string[]) rather than
+// being flattened to text.
+const EXTRACTION_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    extracted_fields: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          field_name: { type: "string" },
+          value: {
+            anyOf: [
+              { type: "string" },
+              { type: "number" },
+              { type: "boolean" },
+              { type: "array", items: { type: "string" } },
+            ],
+          },
+          confidence: { type: "number" },
+          justification_quote: { type: "string" },
+        },
+        required: ["field_name", "value", "confidence", "justification_quote"],
+      },
+    },
+    response_text: { type: "string" },
+  },
+  required: ["extracted_fields", "response_text"],
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -89,10 +164,10 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1. Fetch conversation to get user_id and product_id
+    // 1. Fetch conversation to get user_id, product_id, and engagement_id
     const { data: conversation, error: convErr } = await supabase
       .from("ie_conversations")
-      .select("user_id, product_id")
+      .select("user_id, product_id, engagement_id")
       .eq("id", conversation_id)
       .single();
 
@@ -122,18 +197,27 @@ Deno.serve(async (req) => {
 
     const extractionInput = `Extraction schema:\n${schemaStr}${contextStr}\n\nConversation history:\n${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}\n\nLatest user message:\n${message_content}`;
 
-    // 5. Call LLM for extraction
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
+    // 5. Call LLM for extraction — provider/model from ai_config. This is the
+    // richness-critical function (it generates the warm reply AND does nuanced
+    // extraction), so it defaults to the higher-calibre Gemini Pro tier rather
+    // than the flash tier the other three functions use.
+    const llmConfig: LLMConfig = await resolveLLMConfig(
+      supabase,
+      conversation.engagement_id,
+      { provider: "google", model: "gemini-3.1-pro-preview" },
+    );
 
+    // Native structured output only applies to Gemini; anthropic/openai ignore it
+    // and fall back to the prompt's JSON contract. Keeps a config override to
+    // Claude/OpenAI working without change.
     const result = await callLLM(
       llmConfig,
       EXTRACTION_SYSTEM_PROMPT,
       [{ role: "user", content: extractionInput }],
-      4000
+      4000,
+      llmConfig.provider === "google"
+        ? { responseSchema: EXTRACTION_RESPONSE_SCHEMA }
+        : {},
     );
 
     // 6. Parse the response

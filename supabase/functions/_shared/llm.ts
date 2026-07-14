@@ -19,19 +19,32 @@ export interface LLMMessage {
   content: string;
 }
 
+/**
+ * Optional per-call tuning. `responseSchema` is currently honoured by the Gemini
+ * path only: it switches Gemini into native structured-output mode
+ * (responseMimeType application/json + a responseSchema in generationConfig) so
+ * JSON comes back reliably instead of relying on a "return ONLY the JSON" prompt
+ * trick. The anthropic/openai paths ignore it and are unchanged.
+ */
+export interface LLMCallOptions {
+  // deno-lint-ignore no-explicit-any
+  responseSchema?: Record<string, any>;
+}
+
 // ─── Non-streaming call ────────────────────────────────────────
 
 export async function callLLM(
   config: LLMConfig,
   systemPrompt: string,
   messages: LLMMessage[],
-  maxTokens = 2048
+  maxTokens = 2048,
+  options: LLMCallOptions = {}
 ): Promise<string> {
   switch (config.provider) {
     case "anthropic":
       return callAnthropic(config, systemPrompt, messages, maxTokens);
     case "google":
-      return callGemini(config, systemPrompt, messages, maxTokens);
+      return callGemini(config, systemPrompt, messages, maxTokens, options);
     case "openai":
       return callOpenAI(config, systemPrompt, messages, maxTokens);
     default:
@@ -236,12 +249,21 @@ async function callGemini(
   config: LLMConfig,
   systemPrompt: string,
   messages: LLMMessage[],
-  maxTokens: number
+  maxTokens: number,
+  options: LLMCallOptions = {}
 ): Promise<string> {
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
+
+  // deno-lint-ignore no-explicit-any
+  const generationConfig: Record<string, any> = { maxOutputTokens: maxTokens };
+  // Native structured output: far more reliable than a "return ONLY JSON" prompt.
+  if (options.responseSchema) {
+    generationConfig.responseMimeType = "application/json";
+    generationConfig.responseSchema = options.responseSchema;
+  }
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`,
@@ -251,7 +273,7 @@ async function callGemini(
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents,
-        generationConfig: { maxOutputTokens: maxTokens },
+        generationConfig,
       }),
     }
   );
