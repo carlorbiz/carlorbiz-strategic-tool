@@ -11,13 +11,13 @@
 //   3. Ensures a user_profiles row (id = user_id = auth uid).
 //   4. Attaches them to the shared engagement via st_user_engagement_roles
 //      (idempotent — no duplicate active grant).
-//   5. Mints a 48-hour REUSABLE opaque access token and returns a link to the
+//   5. Mints a 96-hour REUSABLE opaque access token and returns a link to the
 //      elicitation surface carrying it as ?access=<token>.
 //
 // Why a reusable token, not a magic link: single-use Supabase magic links are
 // consumed by corporate email scanners that prefetch links, so the real user
 // hits "One-time token not found". Our token survives prefetch because it is
-// reusable within its 48h window (a scanner hit does not lock the user out).
+// reusable within its 96h window (a scanner hit does not lock the user out).
 // We store only the SHA-256 hash; the plaintext appears only in the link.
 //
 // Returns { user_id, email, magic_link } for the admin to send on. (The
@@ -62,7 +62,7 @@ function decodeUid(req: Request): string {
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-const ACCESS_TOKEN_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours
+const ACCESS_TOKEN_TTL_MS = 96 * 60 * 60 * 1000; // 96 hours (weekend-safe)
 
 // Hex-encode an ArrayBuffer.
 function toHex(buf: ArrayBuffer): string {
@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 6. Mint a 48-hour REUSABLE access token (prefetch-proof) and build the link.
+  // 6. Mint a 96-hour REUSABLE access token (prefetch-proof) and build the link.
   //    Store only the SHA-256 hash; the plaintext appears only in the returned link.
   const plaintextToken = mintAccessToken();
   const tokenHash = await sha256Hex(plaintextToken);

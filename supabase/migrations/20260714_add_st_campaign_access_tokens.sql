@@ -1,4 +1,4 @@
--- CC: 48-hour REUSABLE campaign access credential (prefetch-proof).
+-- CC: 96-hour REUSABLE campaign access credential (prefetch-proof, weekend-safe).
 -- Replaces the single-use magic link that corporate email scanners consume
 -- before the respondent's /verify completes ("One-time token not found").
 -- Applied to lgcmjneodjrtjtwbomsj via Supabase MCP apply_migration.

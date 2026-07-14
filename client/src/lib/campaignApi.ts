@@ -53,7 +53,7 @@ export interface CampaignExchangeResult {
 // Exchange a reusable ?access=<token> credential for a real Supabase session.
 // The token is the credential — no bearer auth is sent. Pairs with the
 // st-campaign-exchange edge function (deployed --no-verify-jwt). Prefetch-proof:
-// the token is reusable within its 48h window, so an email-scanner prefetch does
+// the token is reusable within its 96h window, so an email-scanner prefetch does
 // not lock the respondent out.
 export async function exchangeCampaignAccess(token: string): Promise<CampaignExchangeResult> {
   const resp = await fetch(`${SUPABASE_URL}/functions/v1/st-campaign-exchange`, {

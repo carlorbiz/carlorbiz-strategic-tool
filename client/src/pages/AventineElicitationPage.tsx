@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Send, MessageCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
 
-// ─── ?access= token exchange (48h reusable credential; prefetch-proof) ───────
+// ─── ?access= token exchange (96h reusable credential; prefetch-proof) ───────
 // Respondents land here with ?access=<token>. If there is no current session,
 // POST the token to st-campaign-exchange, set the returned session, and strip
-// the token from the URL. The token is REUSABLE within 48h, so a corporate
+// the token from the URL. The token is REUSABLE within 96h, so a corporate
 // email-scanner prefetch cannot lock the real user out. If a session already
 // exists, the param is ignored.
 type AccessState =
