@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchEngagements } from '@/lib/engagementApi';
@@ -6,6 +6,7 @@ import type { Engagement, EngagementStatus } from '@/types/engagement';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import EngagementAdminActions from '@/components/engagement/EngagementAdminActions';
 
 const STATUS_BADGE: Record<EngagementStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'outline' },
@@ -21,6 +22,13 @@ export default function EngagementList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadEngagements = useCallback(() => {
+    fetchEngagements()
+      .then(setEngagements)
+      .catch(err => setError(err.message))
+      .finally(() => setIsLoading(false));
+  }, []);
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -29,11 +37,10 @@ export default function EngagementList() {
       return;
     }
 
-    fetchEngagements()
-      .then(setEngagements)
-      .catch(err => setError(err.message))
-      .finally(() => setIsLoading(false));
-  }, [authLoading, isAuthenticated]);
+    loadEngagements();
+  }, [authLoading, isAuthenticated, loadEngagements]);
+
+  const isAdmin = profile?.role === 'internal_admin';
 
   if (authLoading || isLoading) {
     return (
@@ -108,9 +115,18 @@ export default function EngagementList() {
             <Link key={eng.id} href={`/e/${eng.short_code}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <CardTitle className="text-lg">{eng.name}</CardTitle>
-                    <Badge variant={badge.variant}>{badge.label}</Badge>
+                    <div className="flex items-center gap-3">
+                      {isAdmin && (
+                        <EngagementAdminActions
+                          engagementId={eng.id}
+                          engagementName={eng.name}
+                          onDone={loadEngagements}
+                        />
+                      )}
+                      <Badge variant={badge.variant}>{badge.label}</Badge>
+                    </div>
                   </div>
                   {eng.client_name && (
                     <CardDescription>{eng.client_name}</CardDescription>
