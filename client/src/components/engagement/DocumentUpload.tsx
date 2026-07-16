@@ -32,9 +32,13 @@ interface DocumentUploadProps {
    *  (before chunking finishes) — lets callers track a specific document,
    *  e.g. the Setup Wizard marking the first upload as the strategic plan. */
   onUploaded?: (doc: StDocument) => void;
+  /** Ingestion pass to kick off after upload. Defaults to the full chunk
+   *  ingest. The setup wizard passes 'text' for the fast raw-text pass so the
+   *  admin isn't blocked on chunking. */
+  ingestMode?: 'text' | 'chunk';
 }
 
-export function DocumentUpload({ onUploadComplete, onUploaded }: DocumentUploadProps) {
+export function DocumentUpload({ onUploadComplete, onUploaded, ingestMode }: DocumentUploadProps) {
   const { engagement, commitments } = useEngagement();
   const v = useVocabulary();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -144,16 +148,22 @@ export function DocumentUpload({ onUploadComplete, onUploaded }: DocumentUploadP
 
       toast.success('Document uploaded successfully');
 
-      // 3. Trigger ingestion (async — don't block the UI)
+      // 3. Trigger ingestion (async — don't block the UI). In 'text' mode this
+      //    is the fast raw-text pass (seconds); otherwise the full chunk pass.
       setIngesting(true);
       try {
-        await triggerIngestion(doc.id);
-        toast.success(`Document chunked: ${doc.title}`);
+        await triggerIngestion(doc.id, ingestMode);
+        toast.success(
+          ingestMode === 'text'
+            ? `Nera has read ${doc.title}`
+            : `Document chunked: ${doc.title}`,
+        );
       } catch (err) {
         // Ingestion failure is non-blocking — the document is saved,
         // ingestion can be retried from the document list
         const msg = err instanceof Error ? err.message : 'Ingestion failed';
-        toast.error(`Upload succeeded but chunking failed: ${msg}. You can retry from the document list.`);
+        const step = ingestMode === 'text' ? 'reading' : 'chunking';
+        toast.error(`Upload succeeded but ${step} failed: ${msg}. You can retry from the document list.`);
       } finally {
         setIngesting(false);
       }
@@ -411,9 +421,15 @@ export function DocumentUpload({ onUploadComplete, onUploaded }: DocumentUploadP
           {uploading ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
           ) : ingesting ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Chunking with Nera...</>
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {ingestMode === 'text' ? 'Nera is reading...' : 'Chunking with Nera...'}
+            </>
           ) : (
-            <><Upload className="w-4 h-4 mr-2" /> Upload and chunk</>
+            <>
+              <Upload className="w-4 h-4 mr-2" />
+              {ingestMode === 'text' ? 'Upload' : 'Upload and chunk'}
+            </>
           )}
         </Button>
       </CardContent>

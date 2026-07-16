@@ -69,7 +69,14 @@ export async function uploadDocument(
 
 // ── Trigger ingestion (calls the st-ingest-document edge function) ──────────
 
-export async function triggerIngestion(documentId: string): Promise<void> {
+// mode:
+//   undefined — full behaviour (download → extract → chunk → 'ingested').
+//   'text'    — fast pass: extract raw text only → 'text_ready' (seconds).
+//   'chunk'   — build the deep knowledge base (same work as the full path).
+export async function triggerIngestion(
+  documentId: string,
+  mode?: 'text' | 'chunk',
+): Promise<void> {
   if (!supabase) throw new Error('Supabase not configured');
 
   const neraApiBase = import.meta.env.VITE_SUPABASE_URL;
@@ -85,7 +92,7 @@ export async function triggerIngestion(documentId: string): Promise<void> {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ document_id: documentId }),
+    body: JSON.stringify(mode ? { document_id: documentId, mode } : { document_id: documentId }),
   });
 
   if (!resp.ok) {

@@ -10,16 +10,17 @@
 //
 // Flow:
 //   1. Authn (in-function JWT decode) + internal_admin authz.
-//   2. Read that document's knowledge_chunks (engagement_id + source_id).
-//   3. Assemble a bounded context (~40k chars): chunks whose text mentions
-//      priorities/pillars/goals/strategy get first claim on the budget, then
-//      the earliest chunks fill the remainder; everything is emitted in
-//      document order.
-//   4. One callLLM via the engagement's st_ai_config (fall back to the global
-//      row, then to anthropic / claude-sonnet-4-5) asking for 3-7 proposed
-//      pillars + optional vocabulary suggestions when the plan itself uses
-//      distinctive terms.
-//   5. Tolerant fenced-JSON parse. On parse failure we return an error and
+//   2. Assemble a bounded context (~40k chars) from the best available source:
+//        (a) the document's knowledge_chunks (keyword-first, then earliest, in
+//            document order) once the deep chunk pass has run; else
+//        (b) st_documents.raw_text — the fast text pass captured on upload,
+//            so pillars can be proposed before chunking finishes (setup wizard).
+//   3. One callLLM. Prefers Gemini (gemini-3.1-pro-preview) for cost rotation
+//      when a Google key is configured, else the engagement's st_ai_config
+//      provider/model (falling back to anthropic / claude-sonnet-4-5). Asks for
+//      3-7 proposed pillars + optional vocabulary suggestions when the plan
+//      itself uses distinctive terms.
+//   4. Tolerant fenced-JSON parse. On parse failure we return an error and
 //      save nothing — pillars are never fabricated.
 //   6. Write { source_document_id, proposals, vocabulary_suggestions,
 //      extracted_at } to st_engagement_setup.pillar_proposals and return it.
@@ -43,6 +44,12 @@ const API_KEYS: Record<string, string> = {
 
 const DEFAULT_PROVIDER = "anthropic";
 const DEFAULT_MODEL = "claude-sonnet-4-5";
+
+// The pillar pass prefers Gemini for cost rotation (multi-LLM mandate). We use
+// gemini-3.1-pro-preview specifically — plain "gemini-3.1-pro" 404s on the
+// generative-language endpoint. Used whenever a Google key is configured; the
+// st_ai_config provider/model is the fallback when it isn't.
+const GEMINI_MODEL = "gemini-3.1-pro-preview";
 
 // Context budget for the extraction call. Chunk text beyond this is dropped
 // (keyword-matching chunks first, then earliest chunks — see buildContext).
@@ -226,7 +233,7 @@ Deno.serve(async (req) => {
   // 3. Sanity: the document must belong to the engagement.
   const { data: doc } = await supabase
     .from("st_documents")
-    .select("id, engagement_id, title, status")
+    .select("id, engagement_id, title, status, raw_text")
     .eq("id", documentId)
     .maybeSingle();
   if (!doc || doc.engagement_id !== engagementId) {
@@ -243,7 +250,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "No setup record for this engagement" }, 404);
   }
 
-  // 4. Read the document's chunks (document order ≈ insertion order).
+  // 4. Assemble the extraction context. Two sources, in priority order:
+  //    (a) knowledge_chunks — the deep, semantically-chunked knowledge base.
+  //        Preferred when it exists (re-runs after the full chunk pass).
+  //    (b) raw_text — the fast text pass captured on upload, before chunking.
+  //        This is the setup-wizard path: pillars are proposed the moment the
+  //        raw text lands, so the wizard never waits on the slow chunker.
   const { data: chunks, error: chunksErr } = await supabase
     .from("knowledge_chunks")
     .select("chunk_text, chunk_summary")
@@ -255,19 +267,26 @@ Deno.serve(async (req) => {
   if (chunksErr) {
     return jsonResponse({ error: `Could not read the document's chunks: ${chunksErr.message}` }, 500);
   }
-  if (!chunks || chunks.length === 0) {
+
+  const rawText = typeof doc.raw_text === "string" ? doc.raw_text : "";
+  let context: string;
+  if (chunks && chunks.length > 0) {
+    context = buildContext(chunks as ChunkRow[]);
+  } else if (rawText.trim().length >= 200) {
+    // Fast path: bound the raw text to the same budget the chunk path uses.
+    context = rawText.slice(0, CONTEXT_CHAR_CAP);
+  } else {
     return jsonResponse(
       {
         error:
           doc.status === "ingested"
             ? "This document has no knowledge chunks to work from."
-            : "Nera hasn't finished reading this document yet — wait for it to show as chunked, then try again.",
+            : "Nera hasn't finished reading this document yet — wait for it to show as ready, then try again.",
       },
       409,
     );
   }
 
-  const context = buildContext(chunks as ChunkRow[]);
   if (context.trim().length < 200) {
     return jsonResponse(
       { error: "The document's content is too thin to propose pillars from." },
@@ -298,10 +317,20 @@ Deno.serve(async (req) => {
     aiConfig = globalConfig;
   }
 
-  let provider = (aiConfig?.llm_provider as string) || DEFAULT_PROVIDER;
-  let model = (aiConfig?.llm_model as string) || DEFAULT_MODEL;
+  let provider: string;
+  let model: string;
+  if (API_KEYS.google) {
+    // Prefer Gemini for the pillar pass (cost rotation) whenever a Google key
+    // is configured — same "prefer Gemini" pattern as st-ingest-survey.
+    provider = "google";
+    model = GEMINI_MODEL;
+  } else {
+    // No Google key — fall back to the configured provider / house default.
+    provider = (aiConfig?.llm_provider as string) || DEFAULT_PROVIDER;
+    model = (aiConfig?.llm_model as string) || DEFAULT_MODEL;
+  }
   if (!API_KEYS[provider]) {
-    // No key for the configured provider — fall back to the house default.
+    // No key for the resolved provider — fall back to the house default.
     provider = DEFAULT_PROVIDER;
     model = DEFAULT_MODEL;
   }

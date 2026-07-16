@@ -68,6 +68,113 @@ Return ONLY the JSON array, no other text.`;
 // ─── Summary generation prompt ────────────────────────────────
 const SUMMARY_PROMPT = `Write a single sentence (under 150 characters) summarising what this document is about. Be specific — mention the organisation, topic, or decision if apparent. Return ONLY the sentence, no quotes, no prefix.`;
 
+// Cap the raw text stored on the fast pass. Pillar proposal only ever reads
+// ~40k chars; storing the whole of a 200-page document would bloat the row for
+// no benefit. Generous enough to always cover the extraction budget.
+const RAW_TEXT_CHAR_CAP = 200_000;
+
+// ─── Fast text pass (mode:'text') ─────────────────────────────
+// Download the file, extract its raw text ONLY (no LLM chunking), store it on
+// st_documents.raw_text and flip the status to 'text_ready'. Seconds for text
+// files; for PDFs it uses a library text extractor (no LLM) with a single-slice
+// Document-API fallback for scanned/empty PDFs. Runs synchronously — the caller
+// awaits it and gets 'text_ready' back. The deep knowledge base (knowledge_chunks)
+// is built later by the mode:'chunk' / default path.
+async function runTextPass(
+  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  doc: any,
+): Promise<{ chars: number }> {
+  const documentId = doc.id;
+
+  const { data: fileData, error: fileErr } = await supabase.storage
+    .from("st-documents")
+    .download(doc.file_path);
+  if (fileErr || !fileData) {
+    throw new Error("Failed to download file from storage");
+  }
+
+  const rawText = await extractRawText(fileData, doc.file_type);
+  if (!rawText || rawText.trim().length < 10) {
+    throw new Error("Extracted text too short or empty");
+  }
+
+  const bounded = rawText.slice(0, RAW_TEXT_CHAR_CAP);
+  await supabase
+    .from("st_documents")
+    .update({ raw_text: bounded, status: "text_ready" })
+    .eq("id", documentId);
+
+  console.log(`[st-ingest-document] ${documentId} → text_ready (${bounded.length} chars, fast pass)`);
+  return { chars: bounded.length };
+}
+
+// Raw-text extraction WITHOUT the semantic chunker. For text-like formats this
+// is instant; for PDFs it uses a library extractor (unpdf/pdfjs), no LLM.
+async function extractRawText(blob: Blob, fileType: string): Promise<string> {
+  switch (fileType) {
+    case "md":
+    case "txt":
+    case "csv":
+      return await blob.text();
+
+    case "json": {
+      const raw = await blob.text();
+      try {
+        return JSON.stringify(JSON.parse(raw), null, 2);
+      } catch {
+        return raw;
+      }
+    }
+
+    case "docx": {
+      const text = await blob.text();
+      return text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    }
+
+    case "pdf": {
+      const pdfBytes = new Uint8Array(await blob.arrayBuffer());
+      return await extractPdfTextFast(pdfBytes);
+    }
+
+    case "image":
+      throw new Error(
+        "Image files should be uploaded via the workshop photo pipeline, not the document pipeline.",
+      );
+
+    default:
+      return await blob.text();
+  }
+}
+
+// Fast PDF → text. Primary path: unpdf (pdfjs under the hood), no LLM, whole
+// document in seconds. It is dynamically imported so the default/chunk path
+// never loads it. Fallback (scanned/empty PDFs, or an import failure): a single
+// Document-API slice of the opening pages — bounded, and enough for pillars.
+async function extractPdfTextFast(pdfBytes: Uint8Array): Promise<string> {
+  try {
+    // deno-lint-ignore no-explicit-any
+    const mod: any = await import("https://esm.sh/unpdf");
+    const pdf = await mod.getDocumentProxy(pdfBytes);
+    const { text } = await mod.extractText(pdf, { mergePages: true });
+    const merged = typeof text === "string"
+      ? text
+      : Array.isArray(text)
+        ? text.join("\n\n")
+        : "";
+    if (merged && merged.trim().length >= 10) return merged;
+    console.warn("[st-ingest-document] unpdf returned empty text — falling back to Document API slice");
+  } catch (e) {
+    console.warn(
+      "[st-ingest-document] unpdf text extraction failed, falling back to Document API slice:",
+      e instanceof Error ? e.message : String(e),
+    );
+  }
+  // Fallback: opening pages via the proven Document-API slice path (bounded ~1 min).
+  const { markdown } = await convertPdfSliceToMarkdown(pdfBytes, 0);
+  return markdown;
+}
+
 // ─── Background ingestion job ─────────────────────────────────
 // Heavy LLM work that runs after the 202 response is returned, kept alive by
 // EdgeRuntime.waitUntil so the Supabase gateway's 150s idle timeout cannot
@@ -325,18 +432,24 @@ async function processSlice(
 
 // ─── Main handler ─────────────────────────────────────────────
 //
-// Two modes:
+// The optional `mode` body param selects the pass. It DEFAULTS to the full
+// behaviour so every existing caller (bulk seed, document list retry, the old
+// upload path) is unaffected:
 //
-//   Mode A — no chunk_index (whole-document, background)
-//     For UI uploads of typical-length documents. Returns 202 immediately and
-//     runs the full ingestion (download → extract → chunk → insert → mark)
-//     inside EdgeRuntime.waitUntil. UI polls st_documents.status.
+//   mode:'text' — fast pass. Download → extract raw text ONLY (no LLM
+//     chunking) → store on st_documents.raw_text → status 'text_ready'.
+//     Synchronous, seconds. Unblocks the setup wizard (pillars run from raw_text).
 //
-//   Mode B — chunk_index provided (per-slice, synchronous)
-//     For long PDFs and bulk-seed orchestration. Processes exactly ONE 8-page
-//     slice and returns 200 with chunks_inserted, page_range, total_chunks,
-//     is_last. Caller iterates chunk_index from 0 to total_chunks - 1. Each
-//     call is bounded ~60s. Matches ACRRM's convert-pdf-to-markdown contract.
+//   mode:'chunk' | no mode | unknown — full behaviour, unchanged:
+//
+//     Mode A — no chunk_index (whole-document, background)
+//       Returns 202 immediately and runs the full ingestion (download →
+//       extract → chunk → insert → mark) inside EdgeRuntime.waitUntil.
+//       UI polls st_documents.status until 'ingested'/'failed'.
+//
+//     Mode B — chunk_index provided (per-slice, synchronous)
+//       For long PDFs and bulk-seed orchestration. Processes exactly ONE slice
+//       and returns 200 with chunks_inserted, page_range, total_chunks, is_last.
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -347,6 +460,7 @@ Deno.serve(async (req: Request) => {
     await requireAuth(req);
     const body = await req.json();
     const document_id = body.document_id as string | undefined;
+    const mode = typeof body.mode === "string" ? body.mode.toLowerCase() : null;
     const chunkIndex = typeof body.chunk_index === "number" ? body.chunk_index : null;
 
     if (!document_id) {
@@ -363,6 +477,24 @@ Deno.serve(async (req: Request) => {
 
     if (docErr || !doc) {
       return jsonResponse({ error: "Document not found" }, 404);
+    }
+
+    // ── Fast text pass (mode:'text') ──
+    // Synchronous, additive, backward-compatible: only runs when explicitly
+    // requested. Everything below is the unchanged full behaviour.
+    if (mode === "text") {
+      try {
+        const result = await runTextPass(supabase, doc);
+        return jsonResponse({
+          document_id,
+          status: "text_ready",
+          ...result,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Text extraction failed";
+        await markFailed(supabase, document_id, msg);
+        return jsonResponse({ error: msg }, 500);
+      }
     }
 
     // Mark ingesting on first contact regardless of mode.

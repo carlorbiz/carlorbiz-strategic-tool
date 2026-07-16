@@ -28,6 +28,7 @@ import {
   type VocabularySuggestions,
 } from '@/lib/setupApi';
 import { fetchAiConfig, fetchOrganisationalPillars } from '@/lib/engagementApi';
+import { triggerIngestion } from '@/lib/documentApi';
 import { updateVocabularyMap } from '@/lib/commitmentApi';
 import { DEFAULT_VOCABULARY, type StOrganisationalPillar, type VocabularyMap } from '@/types/engagement';
 import { Button } from '@/components/ui/button';
@@ -245,8 +246,19 @@ export function SetupPillarsStep({
       onPillarProposalsChange(finalPayload);
       await updateSetupFields(engagementId, { pillar_proposals: finalPayload }).catch(() => undefined);
 
+      // (c) Now that the pillars are confirmed, build the deep knowledge base
+      // for the strategic plan in the background (fire-and-forget). The fast
+      // text pass already gave us pillars; this is the slow chunk pass, and the
+      // wizard must not wait on it — it proceeds straight to the next step.
+      if (sourceDocumentId) {
+        void triggerIngestion(sourceDocumentId, 'chunk').catch(err => {
+          // Non-blocking — the plan can be re-chunked from the document list.
+          console.warn('Background chunking failed to start:', err);
+        });
+      }
+
       toast.success(`${cleaned.length} pillar${cleaned.length === 1 ? '' : 's'} locked in.`);
-      // (c) Advance.
+      // (d) Advance.
       onNext();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save the pillars.');

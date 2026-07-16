@@ -6,8 +6,11 @@
 // st_engagement_setup.pillar_proposals.source_document_id (jsonb — no schema
 // change) so Step 3 knows which document to extract pillars from.
 //
-// Next unlocks once the strategic-plan document reaches status 'ingested'.
-// Other documents can keep uploading/chunking in the background meanwhile.
+// Next unlocks once the strategic-plan document reaches status 'text_ready'
+// (the fast raw-text pass — seconds), NOT the slow chunking. Pillars are
+// proposed from that raw text on the next step; the deep knowledge base is
+// built in the background when the pillars are confirmed. A non-blocking badge
+// shows chunking progress if the admin returns here while it runs.
 
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -66,7 +69,16 @@ export function SetupDocumentsStep({
 
   useEffect(() => {
     if (!planDocId) return;
-    if (planDoc && (planDoc.status === 'ingested' || planDoc.status === 'failed')) return;
+    // Stop polling once the plan is readable ('text_ready' unlocks Next) or in
+    // a terminal state. Chunking is triggered from the Pillars step, not here.
+    if (
+      planDoc &&
+      (planDoc.status === 'text_ready' ||
+        planDoc.status === 'ingested' ||
+        planDoc.status === 'failed')
+    ) {
+      return;
+    }
     const interval = setInterval(loadPlanDoc, POLL_MS);
     return () => clearInterval(interval);
   }, [planDocId, planDoc, loadPlanDoc]);
@@ -83,7 +95,13 @@ export function SetupDocumentsStep({
     });
   };
 
-  const planIngested = planDoc?.status === 'ingested';
+  // 'text_ready' (fast pass) OR 'ingested' (already fully chunked) both mean the
+  // plan is readable enough to move on and propose pillars.
+  const planReadable = planDoc?.status === 'text_ready' || planDoc?.status === 'ingested';
+  // The deep chunk pass building in the background — informational only.
+  const planChunking = planDoc?.status === 'ingesting';
+  // Still doing the fast read (uploaded, pre-text_ready).
+  const planReading = !!planDocId && !planReadable && !planChunking && planDoc?.status !== 'failed';
 
   return (
     <Card>
@@ -105,7 +123,7 @@ export function SetupDocumentsStep({
             </p>
           </div>
         )}
-        {planDocId && planDoc && !planIngested && planDoc.status !== 'failed' && (
+        {planReading && planDoc && (
           <div className="flex items-start gap-2 p-3 rounded border bg-muted/50">
             <Loader2 className="w-4 h-4 mt-0.5 shrink-0 animate-spin text-muted-foreground" />
             <div>
@@ -113,8 +131,8 @@ export function SetupDocumentsStep({
                 Nera is reading the plan: {planDoc.title}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                A long document can take 10-20 minutes — you can keep uploading other documents
-                meanwhile. This page checks progress automatically.
+                This is the quick read — usually a few seconds. You can keep uploading other
+                documents meanwhile. This page checks progress automatically.
               </p>
             </div>
           </div>
@@ -131,20 +149,28 @@ export function SetupDocumentsStep({
             </div>
           </div>
         )}
-        {planIngested && planDoc && (
+        {planReadable && planDoc && (
           <div className="flex items-start gap-2 p-3 rounded border bg-muted/50">
             <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-green-600" />
             <p className="text-sm">
-              The strategic plan is in — Nera has read <span className="font-medium">{planDoc.title}</span>
-              {typeof planDoc.chunk_count === 'number' && planDoc.chunk_count > 0
-                ? ` (${planDoc.chunk_count} knowledge chunks).`
-                : '.'}{' '}
-              Add anything else useful, then continue to pillars.
+              The strategic plan is in — Nera has read <span className="font-medium">{planDoc.title}</span>.
+              Continue to pillars now; the deeper knowledge base keeps building in the background.
+              Add anything else useful while you're here.
+            </p>
+          </div>
+        )}
+        {planChunking && planDoc && (
+          <div className="flex items-start gap-2 p-3 rounded border bg-muted/50">
+            <Loader2 className="w-4 h-4 mt-0.5 shrink-0 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Building the deeper knowledge base for <span className="font-medium">{planDoc.title}</span> in
+              the background — you don't need to wait for this.
             </p>
           </div>
         )}
 
         <DocumentUpload
+          ingestMode="text"
           onUploaded={handleUploaded}
           onUploadComplete={() => setListRefresh(n => n + 1)}
         />
@@ -155,14 +181,14 @@ export function SetupDocumentsStep({
           Back
         </Button>
         <div className="flex items-center gap-3">
-          {!planIngested && (
+          {!planReadable && (
             <span className="text-xs text-muted-foreground">
               {planDocId
-                ? 'Next unlocks once the plan is chunked.'
+                ? 'Next unlocks once Nera has read the plan.'
                 : 'Upload the strategic plan to continue.'}
             </span>
           )}
-          <Button onClick={onNext} disabled={!planIngested}>
+          <Button onClick={onNext} disabled={!planReadable}>
             Next
           </Button>
         </div>

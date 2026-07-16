@@ -15,6 +15,7 @@ const STATUS_CONFIG: Record<DocumentStatus, {
   icon: typeof FileText;
 }> = {
   uploaded: { label: 'Queued', variant: 'outline', icon: Clock },
+  text_ready: { label: 'Read', variant: 'secondary', icon: CheckCircle2 },
   ingesting: { label: 'Processing', variant: 'secondary', icon: Loader2 },
   ingested: { label: 'Chunked', variant: 'default', icon: CheckCircle2 },
   failed: { label: 'Failed', variant: 'destructive', icon: AlertTriangle },

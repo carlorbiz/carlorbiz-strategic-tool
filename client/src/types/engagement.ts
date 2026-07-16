@@ -14,7 +14,7 @@ export type ChangeType =
   | 'commitment_merged' | 'scope_extended' | 'scope_narrowed'
   | 'strictness_changed' | 'count_cap_overridden';
 export type RatificationStatus = 'draft' | 'pending_board' | 'ratified' | 'rejected';
-export type DocumentStatus = 'uploaded' | 'ingesting' | 'ingested' | 'failed';
+export type DocumentStatus = 'uploaded' | 'text_ready' | 'ingesting' | 'ingested' | 'failed';
 export type SurveyStatus = 'uploaded' | 'ingesting' | 'ingested' | 'failed';
 export type ReportStatus = 'draft' | 'review' | 'approved' | 'delivered';
 export type StageType =
@@ -170,6 +170,9 @@ export interface StDocument {
   chunk_count: number;
   contains_pii: boolean;
   summary: string | null;
+  // Raw text captured by the fast text pass (migration 0015). Present once the
+  // document reaches 'text_ready'; null on the legacy full path.
+  raw_text?: string | null;
   uploaded_by: string | null;
   created_at: string;
   processed_at: string | null;
