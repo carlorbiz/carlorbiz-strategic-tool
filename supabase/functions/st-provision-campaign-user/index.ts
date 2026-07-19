@@ -48,16 +48,18 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-function decodeUid(req: Request): string {
+// Verify the caller's JWT against the auth server (signature + expiry checked),
+// not just decode it. A forged/unsigned token naming a known admin UUID is
+// rejected here. Returns the verified auth.users.id.
+async function verifyUid(req: Request): Promise<string> {
   const token = (req.headers.get("authorization") || "")
     .replace(/^Bearer\s+/i, "")
     .trim();
   if (!token) throw new Error("Missing bearer token");
-  const parts = token.split(".");
-  if (parts.length !== 3) throw new Error("Invalid bearer token");
-  const payload = JSON.parse(atob(parts[1]));
-  if (!payload.sub) throw new Error("Invalid bearer token");
-  return payload.sub as string;
+  const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data?.user?.id) throw new Error("Invalid or expired token");
+  return data.user.id as string;
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -108,7 +110,7 @@ Deno.serve(async (req) => {
   // 1. Authn + admin authz.
   let callerUid: string;
   try {
-    callerUid = decodeUid(req);
+    callerUid = await verifyUid(req);
   } catch (e) {
     return jsonResponse({ error: e instanceof Error ? e.message : "Unauthorised" }, 401);
   }

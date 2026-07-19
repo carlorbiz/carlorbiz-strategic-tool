@@ -51,7 +51,10 @@ function sseEvent(event: string, data: unknown): string {
 }
 
 // ─── Auth ─────────────────────────────────────────────────────
-// Decode the JWT (signature verification handled at the gateway).
+// Verify the JWT against the auth server (signature + expiry), not just decode
+// it. resolveAccessTier() grants admin/member tiers off this uid, so a forged
+// token naming an internal_admin uid must not pass. getUser rejects unsigned/
+// expired tokens.
 async function decodeUser(
   req: Request,
 ): Promise<{ userId: string; isAnonymous: boolean }> {
@@ -59,13 +62,14 @@ async function decodeUser(
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) throw new Error("Missing bearer token");
 
-  const parts = token.split(".");
-  if (parts.length !== 3) throw new Error("Invalid bearer token");
-  const payload = JSON.parse(atob(parts[1]));
-  const sub = payload.sub;
-  if (!sub) throw new Error("Invalid bearer token");
+  const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data?.user?.id) throw new Error("Invalid bearer token");
   // Supabase stamps is_anonymous=true on anonymous (signInAnonymously) sessions.
-  return { userId: sub as string, isAnonymous: payload.is_anonymous === true };
+  return {
+    userId: data.user.id as string,
+    isAnonymous: data.user.is_anonymous === true,
+  };
 }
 
 // ─── Access tiers & turn caps ─────────────────────────────────

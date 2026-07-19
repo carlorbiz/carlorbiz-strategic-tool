@@ -57,17 +57,13 @@ async function requireAuth(req: Request): Promise<string> {
     return "service-role";
   }
 
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) throw new Error("malformed");
-    const payload = JSON.parse(atob(parts[1]));
-    if (payload.role === "service_role") return "service-role";
-    const userId = payload.sub;
-    if (!userId) throw new Error("no sub claim");
-    return userId;
-  } catch {
-    throw new Error("Invalid bearer token");
-  }
+  // Verify the JWT against the auth server (signature + expiry). The previous
+  // decode-only path accepted an unsigned token carrying {"role":"service_role"}
+  // as the god-mode service identity — a forgery hole with no leaked UUID needed.
+  const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data?.user?.id) throw new Error("Invalid bearer token");
+  return data.user.id as string;
 }
 
 // ─── Model configs ────────────────────────────────────────────
