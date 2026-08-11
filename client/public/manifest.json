@@ -1,11 +1,11 @@
 {
-  "name": "Carlorbiz — Strategic Consulting",
-  "short_name": "Carlorbiz",
-  "description": "Strategic consulting and AI-powered knowledge systems by Carla Taylor",
+  "name": "MTMOT Strategy Engine \u2014 Make The Most Of Today",
+  "short_name": "MTMOT Strategy",
+  "description": "The MTMOT Strategy Engine connects your organisation's own knowledge into one queryable, sovereignty-first strategic intelligence system.",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#2D7E32",
-  "background_color": "#ffffff",
+  "theme_color": "#0D0D1A",
+  "background_color": "#0D0D1A",
   "icons": [
     {
       "src": "/icon-192.png",
