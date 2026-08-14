@@ -29,10 +29,10 @@
 -- Helper used: st_is_admin()  (0001_init.sql:647) — SECURITY DEFINER STABLE,
 --   returns true when user_profiles.role = 'internal_admin' for auth.uid().
 --
--- NOT YET APPLIED. Apply with:
---   supabase db execute --file migrations/strategic-tool/0014_knowledge_chunks_rls.sql
---   (or paste into the SQL editor / `psql`). Run the regression checks in the
---   CC-104 report immediately after.
+-- APPLIED LIVE (verified against pg_policies 14 Aug 2026): all three policies
+-- exist on the shared project, plus a knowledge_chunks_no_anon guard added
+-- outside this file. This header previously said "NOT YET APPLIED" — that was
+-- stale; ground truth wins.
 -- =============================================================================
 
 BEGIN;

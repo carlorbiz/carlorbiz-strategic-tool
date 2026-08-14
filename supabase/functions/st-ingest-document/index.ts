@@ -184,6 +184,113 @@ async function runIngestion(
   }
 }
 
+// ─── Mode C: sovereign text-segment processor ─────────────────
+// The client extracts the document text in the browser (extractText.ts) and
+// POSTs one ≤10k-char segment per call — the source file never reaches this
+// platform. Each call is one bounded LLM call plus one batched insert.
+// segment_index 0 restarts the document idempotently (prior chunks purged).
+
+async function processTextSegment(
+  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  doc: any,
+  segmentText: string,
+  segmentIndex: number,
+  totalSegments: number,
+): Promise<{ chunks_inserted: number; is_last: boolean }> {
+  if (segmentText.length > 12000) {
+    throw new Error("segment_text exceeds the 12000-character bound — split client-side first");
+  }
+  const isLast = segmentIndex === totalSegments - 1;
+
+  const llmConfig: LLMConfig = {
+    provider: "anthropic",
+    model: "claude-sonnet-4-5",
+    apiKey: ANTHROPIC_API_KEY,
+  };
+
+  // Idempotent restart: the first segment clears any chunks from a previous
+  // (possibly partial) run of this document, so retries never duplicate.
+  if (segmentIndex === 0) {
+    await supabase
+      .from("knowledge_chunks")
+      .delete()
+      .eq("source_app", "strategic-tool")
+      .eq("source_type", "document")
+      .eq("source_id", doc.id);
+    await supabase
+      .from("st_documents")
+      .update({ chunk_count: 0, summary: null })
+      .eq("id", doc.id);
+  }
+
+  const result = await callLLM(
+    llmConfig,
+    CHUNK_EXTRACTION_PROMPT,
+    [{ role: "user", content: segmentText }],
+    8000,
+  );
+  const newChunks = parseChunksFromLLM(result);
+
+  let inserted = 0;
+  if (newChunks.length > 0) {
+    const rows = newChunks.map((chunk) => ({
+      source_app: "strategic-tool",
+      engagement_id: doc.engagement_id,
+      source_type: "document",
+      source_id: doc.id,
+      document_source: doc.title,
+      section_reference: null,
+      chunk_text: chunk.chunk_text,
+      chunk_summary: chunk.chunk_summary,
+      topic_tags: chunk.topic_tags,
+      content_type: "governance",
+      is_active: true,
+      extraction_version: "st-2.0-sovereign",
+    }));
+    const { error: chunkErr, count } = await supabase
+      .from("knowledge_chunks")
+      .insert(rows, { count: "exact" });
+    if (chunkErr) throw new Error(`Chunk insert failed: ${chunkErr.message}`);
+    inserted = count ?? rows.length;
+  }
+
+  // Additive count re-read to survive concurrent-free sequential calls.
+  const { data: fresh } = await supabase
+    .from("st_documents")
+    .select("chunk_count")
+    .eq("id", doc.id)
+    .single();
+  await supabase
+    .from("st_documents")
+    .update({ chunk_count: (fresh?.chunk_count ?? 0) + inserted })
+    .eq("id", doc.id);
+
+  if (segmentIndex === 0) {
+    try {
+      let summary = await callLLM(
+        llmConfig,
+        SUMMARY_PROMPT,
+        [{ role: "user", content: segmentText.slice(0, 4000) }],
+        200,
+      );
+      summary = summary.trim().replace(/^["']|["']$/g, "");
+      await supabase.from("st_documents").update({ summary }).eq("id", doc.id);
+    } catch {
+      // Non-fatal — summary stays NULL
+    }
+  }
+
+  if (isLast) {
+    await supabase
+      .from("st_documents")
+      .update({ status: "ingested", processed_at: new Date().toISOString() })
+      .eq("id", doc.id);
+  }
+
+  return { chunks_inserted: inserted, is_last: isLast };
+}
+
 // ─── Per-slice processor (chunk_index pattern) ────────────────
 // Processes ONE 8-page slice of a PDF in a single synchronous call. Bounded
 // ~60s. Caller orchestrates by iterating chunk_index from 0 to totalChunks-1.
@@ -340,10 +447,13 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    await requireAuth(req);
+    const callerId = await requireAuth(req);
     const body = await req.json();
     const document_id = body.document_id as string | undefined;
     const chunkIndex = typeof body.chunk_index === "number" ? body.chunk_index : null;
+    const segmentText = typeof body.segment_text === "string" ? body.segment_text : null;
+    const segmentIndex = typeof body.segment_index === "number" ? body.segment_index : null;
+    const totalSegments = typeof body.total_segments === "number" ? body.total_segments : null;
 
     if (!document_id) {
       return jsonResponse({ error: "document_id is required" }, 400);
@@ -361,12 +471,52 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Document not found" }, 404);
     }
 
+    // The caller must hold a live role on this document's engagement (or be an
+    // internal admin / the service role). Previously any authenticated user
+    // could trigger ingestion against any document id.
+    if (callerId !== "service-role") {
+      // This client runs as the service role, so RLS helpers keyed on
+      // auth.uid() don't apply — evaluate membership directly.
+      const { data: roleRow } = await supabase
+        .from("st_user_engagement_roles")
+        .select("id")
+        .eq("user_id", callerId)
+        .eq("engagement_id", doc.engagement_id)
+        .is("revoked_at", null)
+        .maybeSingle();
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", callerId)
+        .maybeSingle();
+      if (!roleRow && profile?.role !== "internal_admin") {
+        return jsonResponse({ error: "No access to this engagement" }, 403);
+      }
+    }
+
     // Mark ingesting on first contact regardless of mode.
     if (doc.status !== "ingesting") {
       await supabase
         .from("st_documents")
         .update({ status: "ingesting" })
         .eq("id", document_id);
+    }
+
+    // ── Mode C: sovereign client-extracted text segment ──
+    if (segmentText !== null && segmentIndex !== null && totalSegments !== null) {
+      try {
+        const result = await processTextSegment(
+          supabase,
+          doc,
+          segmentText,
+          segmentIndex,
+          totalSegments,
+        );
+        return jsonResponse({ document_id, segment_index: segmentIndex, ...result });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Segment processing failed";
+        return jsonResponse({ error: msg, segment_index: segmentIndex }, 500);
+      }
     }
 
     // ── Mode B: per-slice ──

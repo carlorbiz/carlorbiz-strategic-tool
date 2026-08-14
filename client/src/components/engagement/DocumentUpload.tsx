@@ -1,7 +1,15 @@
 import { useState, useRef } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
-import { uploadDocument, triggerIngestion, linkDocumentToCommitments } from '@/lib/documentApi';
+import {
+  uploadDocument,
+  triggerIngestion,
+  linkDocumentToCommitments,
+  createDocumentRecord,
+  ingestExtractedText,
+  type IngestProgress,
+} from '@/lib/documentApi';
+import { extractTextFromFile, isExtractable, splitIntoSegments } from '@/lib/extractText';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +50,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
   const [containsPii, setContainsPii] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [ingesting, setIngesting] = useState(false);
+  const [progress, setProgress] = useState<IngestProgress | null>(null);
 
   // Research metadata (optional — surfaced via collapsible section)
   const [showResearchMeta, setShowResearchMeta] = useState(false);
@@ -111,9 +120,8 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
 
     setUploading(true);
     try {
-      // 1. Upload file and create st_documents row
       const parsedYear = publicationYear.trim() ? Number(publicationYear) : undefined;
-      const doc = await uploadDocument(engagement.id, file, {
+      const metadata = {
         title: title.trim(),
         description: description.trim() || undefined,
         primaryCommitmentId: primaryCommitmentId || undefined,
@@ -124,31 +132,71 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         journal: journal.trim() || undefined,
         doi: doi.trim() || undefined,
         externalLink: externalLink.trim() || undefined,
-      });
+      };
 
-      // 2. Link to commitments — primary as 'primary', lenses/extras as 'tagged'
-      if (primaryCommitmentId) {
-        await linkDocumentToCommitments(doc.id, [primaryCommitmentId], 'primary');
-      }
-      const taggedLinks = Array.from(additionalCommitmentIds).filter(id => id !== primaryCommitmentId);
-      if (taggedLinks.length > 0) {
-        await linkDocumentToCommitments(doc.id, taggedLinks, 'tagged');
-      }
+      if (isExtractable(file.name)) {
+        // ── Sovereign path: the file never leaves this machine ──
+        // 1. Extract text in the browser
+        const extraction = await extractTextFromFile(file);
+        const thinText = !extraction.text || extraction.text.trim().length < 200;
+        const scannedPdf = extraction.warnings.some(w => w.includes('scanned'));
+        if (thinText || scannedPdf) {
+          toast.error(
+            extraction.warnings[0] ??
+            'No readable text found in this file. Please upload a text-based version.',
+          );
+          return;
+        }
+        for (const w of extraction.warnings) toast.warning(w);
 
-      toast.success('Document uploaded successfully');
+        // 2. Create the document record — no file upload, file_path stays NULL
+        const doc = await createDocumentRecord(engagement.id, file, metadata);
 
-      // 3. Trigger ingestion (async — don't block the UI)
-      setIngesting(true);
-      try {
-        await triggerIngestion(doc.id);
-        toast.success(`Document chunked: ${doc.title}`);
-      } catch (err) {
-        // Ingestion failure is non-blocking — the document is saved,
-        // ingestion can be retried from the document list
-        const msg = err instanceof Error ? err.message : 'Ingestion failed';
-        toast.error(`Upload succeeded but chunking failed: ${msg}. You can retry from the document list.`);
-      } finally {
-        setIngesting(false);
+        // 3. Link to commitments
+        if (primaryCommitmentId) {
+          await linkDocumentToCommitments(doc.id, [primaryCommitmentId], 'primary');
+        }
+        const taggedLinks = Array.from(additionalCommitmentIds).filter(id => id !== primaryCommitmentId);
+        if (taggedLinks.length > 0) {
+          await linkDocumentToCommitments(doc.id, taggedLinks, 'tagged');
+        }
+
+        // 4. Ingest segment by segment with live progress
+        setUploading(false);
+        setIngesting(true);
+        try {
+          const segments = splitIntoSegments(extraction.text, 10000);
+          const final = await ingestExtractedText(doc.id, segments, setProgress);
+          toast.success(`${doc.title}: ${final.chunksInserted} knowledge chunks indexed. The file itself never left your machine.`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Ingestion failed';
+          toast.error(`Indexing stopped: ${msg}. Upload the file again to retry — nothing is duplicated on retry.`);
+          return;
+        } finally {
+          setIngesting(false);
+          setProgress(null);
+        }
+      } else {
+        // ── Legacy path (images, spreadsheets): requires storing the file ──
+        const doc = await uploadDocument(engagement.id, file, metadata);
+        if (primaryCommitmentId) {
+          await linkDocumentToCommitments(doc.id, [primaryCommitmentId], 'primary');
+        }
+        const taggedLinks = Array.from(additionalCommitmentIds).filter(id => id !== primaryCommitmentId);
+        if (taggedLinks.length > 0) {
+          await linkDocumentToCommitments(doc.id, taggedLinks, 'tagged');
+        }
+        toast.success('Document uploaded');
+        setIngesting(true);
+        try {
+          await triggerIngestion(doc.id);
+          toast.success(`Document chunked: ${doc.title}`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Ingestion failed';
+          toast.error(`Upload succeeded but chunking failed: ${msg}. You can retry from the document list.`);
+        } finally {
+          setIngesting(false);
+        }
       }
 
       // 4. Reset form
@@ -395,6 +443,24 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
           </div>
         </div>
 
+        {/* Live ingest progress */}
+        {ingesting && progress && (
+          <div className="rounded border bg-muted/50 p-3 space-y-2">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>
+                Indexing segment {progress.segmentsDone} of {progress.segmentsTotal}
+              </span>
+              <span>{progress.chunksInserted} knowledge chunks</span>
+            </div>
+            <div className="h-1.5 w-full rounded bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${Math.round((progress.segmentsDone / Math.max(1, progress.segmentsTotal)) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Upload button */}
         <Button
           onClick={handleUpload}
@@ -402,13 +468,19 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
           className="w-full"
         >
           {uploading ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Reading file in your browser...</>
           ) : ingesting ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Chunking with Nera...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Indexing with Nera...</>
           ) : (
-            <><Upload className="w-4 h-4 mr-2" /> Upload and chunk</>
+            <><Upload className="w-4 h-4 mr-2" /> Index this document</>
           )}
         </Button>
+
+        <p className="text-xs text-muted-foreground text-center">
+          PDFs and documents are read in your browser — the file itself never leaves
+          your machine. Only the extracted knowledge is indexed, and it can be
+          deleted on request at any time.
+        </p>
       </CardContent>
     </Card>
   );
