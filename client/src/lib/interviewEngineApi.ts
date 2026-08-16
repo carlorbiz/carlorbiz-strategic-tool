@@ -210,29 +210,31 @@ export async function sendMessage(
 }
 
 // ── Evaluate user state ──────────────────────────────────────────────────────
+// Reads capacity / sentiment from the recent turns and upserts ie_user_state
+// for (user_id, product_id) — the SAME row select-prompt reads on the next
+// turn, so productId MUST match the conversation's product_id (e.g.
+// 'aventine-strategic'), not the strategic-tool default, or the two engines
+// silently talk past each other.
 
-export async function evaluateState(
-  conversationId: string,
-  userId: string
-): Promise<{
+export interface StateEvaluation {
   capacity_score: number;
   sentiment_trend: string;
   recommended_cadence: string;
   should_end_conversation: boolean;
   reasoning: string;
-}> {
+}
+
+export async function evaluateState(
+  conversationId: string,
+  userId: string,
+  productId: string = PRODUCT_ID
+): Promise<StateEvaluation> {
   const result = await callEngineFunction('interview-engine-evaluate-state', {
     user_id: userId,
-    product_id: PRODUCT_ID,
+    product_id: productId,
     conversation_id: conversationId,
   });
-  return result as {
-    capacity_score: number;
-    sentiment_trend: string;
-    recommended_cadence: string;
-    should_end_conversation: boolean;
-    reasoning: string;
-  };
+  return result as StateEvaluation;
 }
 
 // ── Summarise and close a session ────────────────────────────────────────────
