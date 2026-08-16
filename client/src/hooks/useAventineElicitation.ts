@@ -7,6 +7,8 @@ import {
   fetchConversationCoverage,
   selectPrompt,
   sendMessage,
+  evaluateState,
+  summariseSession,
 } from '@/lib/interviewEngineApi';
 import { supabase } from '@/lib/supabase';
 import type { IeConversation, IeMessage, ExtractedField } from '@/types/interview-engine';
@@ -25,6 +27,13 @@ import {
 // Nera-Aventine voice via `context`, and runs as an open multi-turn elicitation
 // that completes when all 20 coverage dimensions are met — not a single
 // commitment-update capture. No commitment/confirmation logic.
+//
+// Full engine loop per turn (CC-104): select-prompt → extract → evaluate-state,
+// then summarise-session once the conversation is judged complete. Before
+// CC-104 this hook only ran the first two, so ie_user_state was never scored
+// (select-prompt read a stale capacity every turn) and no session ever reached
+// summarise-session — conversations stayed status='active' with a NULL summary
+// forever. See CC Inbox CC-104.
 
 // A dimension counts as "covered" once an answer gives it at least moderate
 // confidence. Kept below select-prompt's own gap logic so the two agree.
@@ -32,6 +41,11 @@ const COVERAGE_CONFIDENCE = 0.5;
 // Wrap up once nearly everything is covered — the last dimension or two often
 // arrive implicitly, and chasing a literal 20/20 makes Nera feel like a form.
 const COMPLETION_THRESHOLD = Math.max(1, AVENTINE_REQUIRED_DIMENSIONS.length - 2);
+// evaluate-state can also end the conversation early (should_end_conversation:
+// the respondent is disengaged / overwhelmed — "do not push", per the Aventine
+// context). Guard it with a small floor of respondent turns so a single terse
+// opening answer can't close a live client conversation on a false positive.
+const MIN_USER_TURNS_FOR_ENGINE_END = 3;
 
 interface AventineState {
   conversationId: string | null;
@@ -39,6 +53,10 @@ interface AventineState {
   covered: string[];
   isLoading: boolean;
   isComplete: boolean;
+  // True once summarise-session has run for this conversation (summary written,
+  // status flipped to 'completed'). Distinct from isComplete so a failed
+  // summarise can be retried instead of silently leaving the row un-summarised.
+  isSummarised: boolean;
   // True while the mount-time resume probe is in flight — lets the surface hold
   // the "Begin" screen back so a returning respondent doesn't flash it before
   // their in-progress conversation rehydrates.
@@ -102,9 +120,26 @@ export function useAventineElicitation() {
     covered: [],
     isLoading: false,
     isComplete: false,
+    isSummarised: false,
     isResuming: true,
     error: null,
   });
+
+  // Close the session: summarise-session writes ie_conversations.summary, flips
+  // status → 'completed' + completed_at, and promotes entities into
+  // ie_entity_memory. Only after that succeeds does the surface show the
+  // completion screen — if it fails, the transcript stays open (with the error
+  // shown) so the next reply re-runs the completion path rather than stranding
+  // the row as 'active' with no summary.
+  const finalise = useCallback(async (conversationId: string) => {
+    try {
+      await summariseSession(conversationId);
+      setState(s => ({ ...s, isComplete: true, isSummarised: true, isLoading: false, error: null }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not close the conversation';
+      setState(s => ({ ...s, isComplete: false, isSummarised: false, isLoading: false, error: msg }));
+    }
+  }, []);
 
   // Rehydrate the hook from an existing in-progress conversation: prior turns
   // into `messages`, persisted coverage into `covered`. New turns proceed as
@@ -119,18 +154,27 @@ export function useAventineElicitation() {
       coverageRows.map(r => ({ field_name: r.field_name, confidence: r.last_confidence ?? 0 })),
     );
 
+    // A resumed conversation is by definition un-summarised (findResumable
+    // filters completed_at IS NULL). If its persisted coverage already meets the
+    // threshold — e.g. the summarise call failed last time — close it now
+    // rather than showing "complete" over a row that never got its summary.
+    const meetsThreshold = covered.size >= COMPLETION_THRESHOLD;
+
     setState(s => ({
       ...s,
       conversationId: conversation.id,
       // Synthesised welcome first, then the persisted transcript in order.
       messages: [makeWelcomeMessage(conversation.id), ...priorMessages],
       covered: Array.from(covered),
-      isComplete: covered.size >= COMPLETION_THRESHOLD,
-      isLoading: false,
+      isComplete: false,
+      isSummarised: false,
+      isLoading: meetsThreshold,
       isResuming: false,
       error: null,
     }));
-  }, []);
+
+    if (meetsThreshold) await finalise(conversation.id);
+  }, [finalise]);
 
   // On mount (once the engagement + auth are settled), probe for an existing
   // in-progress conversation and resume it. If there is none — a first-time
@@ -253,26 +297,47 @@ export function useAventineElicitation() {
         created_at: new Date().toISOString(),
       };
 
-      setState(s => {
-        const covered = new Set(s.covered);
-        for (const f of result.extracted_fields as ExtractedField[]) {
-          if (f.confidence >= COVERAGE_CONFIDENCE && AVENTINE_REQUIRED_DIMENSIONS.includes(f.field_name)) {
-            covered.add(f.field_name);
-          }
+      // Coverage after this turn — same rule as rehydrate (coveredFromConfidence).
+      const covered = new Set(state.covered);
+      for (const f of result.extracted_fields as ExtractedField[]) {
+        if (f.confidence >= COVERAGE_CONFIDENCE && AVENTINE_REQUIRED_DIMENSIONS.includes(f.field_name)) {
+          covered.add(f.field_name);
         }
-        return {
-          ...s,
-          messages: [...s.messages, assistantMsg],
-          covered: Array.from(covered),
-          isComplete: covered.size >= COMPLETION_THRESHOLD,
-          isLoading: false,
-        };
-      });
+      }
+
+      // Score the respondent's capacity / sentiment off the turn just taken.
+      // This upserts ie_user_state for (profile, 'aventine-strategic') — the row
+      // select-prompt reads next turn to pick an energy-appropriate prompt — and
+      // returns the engine's own end-of-conversation judgement. Non-fatal: if it
+      // errors we fall back to the coverage gate alone.
+      let engineSaysEnd = false;
+      try {
+        const evaluation = await evaluateState(conversationId, profileId, AVENTINE_PRODUCT_ID);
+        engineSaysEnd = evaluation.should_end_conversation === true;
+      } catch {
+        // Non-fatal — coverage alone decides completion this turn.
+      }
+
+      // Respondent turns so far, counting the one just sent.
+      const userTurns = state.messages.filter(m => m.role === 'user').length + 1;
+      const complete =
+        covered.size >= COMPLETION_THRESHOLD ||
+        (engineSaysEnd && userTurns >= MIN_USER_TURNS_FOR_ENGINE_END);
+
+      setState(s => ({
+        ...s,
+        messages: [...s.messages, assistantMsg],
+        covered: Array.from(covered),
+        // Keep the spinner up while summarise-session runs; finalise() clears it.
+        isLoading: complete,
+      }));
+
+      if (complete) await finalise(conversationId);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Message failed to send';
       setState(s => ({ ...s, isLoading: false, error: msg }));
     }
-  }, [state.conversationId, engagement]);
+  }, [state.conversationId, state.covered, state.messages, engagement, finalise]);
 
   const reset = useCallback(() => {
     resumeAttempted.current = false;
@@ -282,6 +347,7 @@ export function useAventineElicitation() {
       covered: [],
       isLoading: false,
       isComplete: false,
+      isSummarised: false,
       isResuming: false,
       error: null,
     });
