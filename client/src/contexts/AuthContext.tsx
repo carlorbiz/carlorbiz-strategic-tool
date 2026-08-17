@@ -112,9 +112,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
           const email = session.user.email || '';
-          setUser({ id: session.user.id, email });
-          const userProfile = await fetchProfile(session.user.id, email);
-          setProfile(userProfile);
+          const userId = session.user.id;
+          setUser({ id: userId, email });
+          // CC-104 (17 Aug 2026): NEVER await a Supabase call inside this
+          // callback. supabase-js notifies subscribers while still holding its
+          // internal auth queue (setSession → _acquireLock → _notifyAllSubscribers);
+          // a supabase.from() awaited here queues behind that same lock and the
+          // two wait on each other forever. Symptom on the live estate: every
+          // campaign respondent landing with ?access= hung on "Opening your
+          // conversation…" — setSession() never resolved. Password sign-in was
+          // unaffected (it does not take the lock), which is why admins never saw
+          // it. Deferring one macrotask lets setSession() release first.
+          setTimeout(() => {
+            fetchProfile(userId, email)
+              .then(setProfile)
+              .catch((err) => console.warn('Profile load after sign-in failed:', err?.message));
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
