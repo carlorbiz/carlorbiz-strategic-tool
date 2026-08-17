@@ -60,6 +60,8 @@ Return a JSON object:
   "reasoning": "one sentence explaining your assessment"
 }
 
+should_end_conversation is true when EITHER (a) the user has explicitly signalled they are finished — "that's everything", "nothing more to add", "I think that covers it", "we can leave it there", a goodbye — OR (b) their capacity has clearly collapsed (very short, disengaged or resigned replies across several turns) and pressing on would be unkind. A single brief answer, or a pause to think, is NOT a reason to end. Otherwise false.
+
 Return ONLY the JSON object.`;
 
 Deno.serve(async (req) => {
