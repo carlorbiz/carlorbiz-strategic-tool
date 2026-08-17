@@ -115,7 +115,8 @@ Deno.serve(async (req) => {
       llmConfig,
       SUMMARISE_PROMPT,
       [{ role: "user", content: conversationText }],
-      2000
+      // CC-104 (17 Aug 2026): was 2000 — thinking tokens share this budget.
+      4096
     );
 
     // 5. Parse response

@@ -128,7 +128,26 @@ ${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
       llmConfig,
       EVALUATION_PROMPT,
       [{ role: "user", content: evaluationInput }],
-      500
+      // CC-104 (17 Aug 2026): was 500. gemini-3.5-flash is a thinking model and
+      // its thoughts count against maxOutputTokens — with a 20-message history
+      // the 500 budget was spent before any JSON was emitted (finishReason
+      // MAX_TOKENS, prose fragment), JSON.parse threw, and every evaluation
+      // silently returned the defaults (capacity 0.5, should_end false). Native
+      // structured output makes the JSON contract explicit as well.
+      2048,
+      {
+        responseSchema: {
+          type: "object",
+          properties: {
+            capacity_score: { type: "number" },
+            sentiment_trend: { type: "string", enum: ["improving", "stable", "declining"] },
+            recommended_cadence: { type: "string", enum: ["active", "light", "weekly", "dormant"] },
+            should_end_conversation: { type: "boolean" },
+            reasoning: { type: "string" },
+          },
+          required: ["capacity_score", "sentiment_trend", "recommended_cadence", "should_end_conversation", "reasoning"],
+        },
+      }
     );
 
     // 5. Parse response

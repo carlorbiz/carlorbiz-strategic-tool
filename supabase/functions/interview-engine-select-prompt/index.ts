@@ -160,7 +160,10 @@ Deno.serve(async (req) => {
         llmConfig,
         SELECTION_PROMPT,
         [{ role: "user", content: selectionInput }],
-        300
+        // CC-104 (17 Aug 2026): was 300 — a thinking model's thoughts count
+        // against this budget, so selection was silently falling back to the
+        // top-scored candidate every turn.
+        1536
       );
 
       const parsed = JSON.parse(
