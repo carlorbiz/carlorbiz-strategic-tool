@@ -210,6 +210,7 @@ export async function updateEngagementSettings(
     top_count_warning?: number;
     top_count_hard_cap?: number;
     pulse_cadence_days?: number;
+    tools_in_play?: string[];
   }
 ): Promise<void> {
   if (!supabase) throw new Error('Supabase not configured');

@@ -43,6 +43,8 @@ export interface Engagement {
   top_count_hard_cap: number;
   pulse_cadence_days: number;
   branding_overrides: Record<string, unknown>;
+  // CC-231: Intelligence Engine tool_slugs in play (names only; engine read live).
+  tools_in_play: string[];
   created_by: string | null;
   handed_over_to: string | null;
   handed_over_at: string | null;

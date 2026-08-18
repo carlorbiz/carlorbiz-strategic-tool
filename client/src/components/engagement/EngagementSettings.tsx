@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Save } from 'lucide-react';
+import { ToolsInPlaySelector } from '@/components/engagement/ToolsInPlaySelector';
 
 export function EngagementSettings() {
   const { engagement, aiConfig, isEngagementAdmin, refresh } = useEngagement();
@@ -160,6 +161,9 @@ export function EngagementSettings() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Tools in play (CC-231 Intelligence Engine bolt-on) ── */}
+      <ToolsInPlaySelector />
 
       {/* ── Vocabulary ─────────────────────────────────────── */}
       <Card>

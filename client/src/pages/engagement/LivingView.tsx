@@ -24,6 +24,7 @@ import { SampleNeraQuestions } from '@/components/engagement/dashboard/SampleNer
 import { PillarsPanel } from '@/components/engagement/dashboard/PillarsPanel';
 import { ReportGenerator } from '@/components/engagement/ReportGenerator';
 import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEditor';
+import { ToolIntelligencePanel } from '@/components/engagement/ToolIntelligencePanel';
 
 /**
  * Living view — the engagement is handed over and the organisation
@@ -79,6 +80,7 @@ export function EngagementLivingView() {
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="tools">Tools</TabsTrigger>
           {isEngagementAdmin && (
             <>
               <TabsTrigger value="taxonomy">{v.commitment_top_plural}</TabsTrigger>
@@ -180,6 +182,11 @@ export function EngagementLivingView() {
         {/* ── Reports tab ───────────────────────────────────── */}
         <TabsContent value="reports" className="mt-4">
           <ReportGenerator />
+        </TabsContent>
+
+        {/* ── Tools tab (CC-231: Intelligence Engine, read live) ── */}
+        <TabsContent value="tools" className="mt-4">
+          <ToolIntelligencePanel />
         </TabsContent>
 
         {/* ── Admin tabs ────────────────────────────────────── */}
