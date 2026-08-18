@@ -219,7 +219,8 @@ Deno.serve(async (req) => {
     };
     const toolsInPlay: string[] = Array.isArray(engagement.tools_in_play) ? engagement.tools_in_play : [];
     let toolChunks: ToolChunk[] = [];
-    let toolCoverage: { covered: string[]; uncovered: string[] } = { covered: [], uncovered: toolsInPlay };
+    let toolCoverage: { covered: string[]; uncovered: string[] } = { covered: [], uncovered: [] };
+    let toolReadFailed = false;
     if (toolsInPlay.length > 0 && NERA_ENGINE_URL) {
       try {
         const ctrl = new AbortController();
@@ -247,9 +248,11 @@ Deno.serve(async (req) => {
             captured_at: (c.captured_at as string | null) ?? null,
           }));
         } else {
+          toolReadFailed = true;
           console.warn("[st-generate-report] engine context read failed:", res.status);
         }
       } catch (e) {
+        toolReadFailed = true;
         console.warn("[st-generate-report] engine context read error:", (e as Error)?.message);
       }
     }
@@ -364,6 +367,8 @@ ${
 ${
   toolsInPlay.length === 0
     ? "No tools in play set for this engagement."
+    : toolReadFailed
+    ? `⚠ The Intelligence Engine could not be read for this run (tools in play: ${toolsInPlay.join(", ")}). Do NOT claim the engine holds nothing on these tools; state that tool intelligence was unavailable for this report.`
     : [
         toolCoverage.uncovered.length
           ? `⚠ The engine holds NO captured knowledge for: ${toolCoverage.uncovered.join(", ")} — say so; do not guess about these tools.`
