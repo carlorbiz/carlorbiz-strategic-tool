@@ -6,6 +6,11 @@ import type { LLMConfig } from "../_shared/llm.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+// CC-231 — Intelligence Engine grounding. Optional: unset URL disables the read.
+// The read key is a server-side secret (never shipped to the browser).
+const NERA_ENGINE_URL = (Deno.env.get("NERA_ENGINE_URL") ??
+  "https://nera-api-284843592671.australia-southeast2.run.app").replace(/\/+$/, "");
+const NERA_ENGINE_READ_KEY = Deno.env.get("NERA_ENGINE_READ_KEY") ?? "";
 
 // ─── CORS ─────────────────────────────────────────────────────
 const corsHeaders = {
@@ -203,6 +208,52 @@ Deno.serve(async (req) => {
 
     const { data: chunks } = await chunksQuery;
 
+    // 6b. CC-231 — Intelligence Engine grounding for the engagement's tools in play.
+    //     Read at request time from the Nera catalogue; the engine receives tool
+    //     names only, and nothing is written back into an st_* table. Chunk ids
+    //     are prefixed "tool:" so they can never collide with knowledge_chunks
+    //     UUIDs and are handled by the citation post-processing below.
+    type ToolChunk = {
+      id: string; tool_slug: string; text: string; summary: string | null;
+      doc_title: string | null; source_url: string | null; captured_at: string | null;
+    };
+    const toolsInPlay: string[] = Array.isArray(engagement.tools_in_play) ? engagement.tools_in_play : [];
+    let toolChunks: ToolChunk[] = [];
+    let toolCoverage: { covered: string[]; uncovered: string[] } = { covered: [], uncovered: toolsInPlay };
+    if (toolsInPlay.length > 0 && NERA_ENGINE_URL) {
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 20_000);
+        const res = await fetch(`${NERA_ENGINE_URL}/api/catalogue/context`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(NERA_ENGINE_READ_KEY ? { "X-Engine-Key": NERA_ENGINE_READ_KEY } : {}),
+          },
+          body: JSON.stringify({ tools: toolsInPlay, limit_per_tool: 10, max_chars: 1200 }),
+          signal: ctrl.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          toolCoverage = { covered: data.covered ?? [], uncovered: data.uncovered ?? [] };
+          toolChunks = (data.chunks ?? []).map((c: Record<string, unknown>) => ({
+            id: `tool:${String(c.chunk_id)}`,
+            tool_slug: String(c.tool_slug),
+            text: String(c.text ?? ""),
+            summary: (c.summary as string | null) ?? null,
+            doc_title: (c.doc_title as string | null) ?? null,
+            source_url: (c.source_url as string | null) ?? null,
+            captured_at: (c.captured_at as string | null) ?? null,
+          }));
+        } else {
+          console.warn("[st-generate-report] engine context read failed:", res.status);
+        }
+      } catch (e) {
+        console.warn("[st-generate-report] engine context read error:", (e as Error)?.message);
+      }
+    }
+
     // 7. Fetch latest drift report for the engagement
     const { data: latestDrift } = await supabase
       .from("st_drift_reports")
@@ -307,6 +358,21 @@ ${
         `[${c.id}] (${c.source_type}/${c.document_source ?? "unknown"}) ${c.chunk_summary ?? c.chunk_text?.slice(0, 200) ?? "(empty)"}`
     )
     .join("\n") ?? "No evidence chunks."
+}
+
+## Vendor Tool Intelligence (${toolChunks.length} chunks from the Intelligence Engine, tools in play: ${toolsInPlay.join(", ") || "none"})
+${
+  toolsInPlay.length === 0
+    ? "No tools in play set for this engagement."
+    : [
+        toolCoverage.uncovered.length
+          ? `⚠ The engine holds NO captured knowledge for: ${toolCoverage.uncovered.join(", ")} — say so; do not guess about these tools.`
+          : "",
+        ...toolChunks.map(
+          (c) =>
+            `[${c.id}] (vendor-intelligence/${c.tool_slug}${c.doc_title ? ` — ${c.doc_title}` : ""}${c.captured_at ? `, captured ${c.captured_at.slice(0, 10)}` : ""}) ${c.summary ?? ""} ${c.text}`,
+        ),
+      ].filter(Boolean).join("\n")
 }`;
 
     // ── Generate the report section by section ──────────────────
@@ -346,7 +412,7 @@ Placeholders to fill: ${s.placeholders.join(", ") || "none"}`
     const generationPrompt = `Generate a complete report using this template structure. For each section, produce the content that fills the template placeholders.
 
 IMPORTANT RULES:
-1. Every factual claim MUST include a citation in the form [chunk_id] referencing a specific evidence chunk from the source documents list.
+1. Every factual claim MUST include a citation in the form [chunk_id] referencing a specific evidence chunk from the source documents list, or [tool:chunk_id] for a Vendor Tool Intelligence chunk. Claims about how a system/tool works must cite Vendor Tool Intelligence, and where the engine holds nothing for a tool, say so plainly.
 2. If insufficient evidence exists for a section, write: "⚠ Insufficient evidence for this section — [N] chunks available, none directly address [topic]."
 3. Do NOT fabricate data, statistics, or claims. Only report what the evidence supports.
 4. Use the organisation's vocabulary: "${vocab.commitment_top_singular ?? "Priority"}" not "priority", "${vocab.commitment_sub_singular ?? "Initiative"}" not "initiative".
@@ -380,10 +446,21 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
     //      sentence + source document) so the review dialog can still link
     //      a numbered marker back to its specific chunk for verification.
 
-    const citationMatches = [...reportContent.matchAll(/\[([0-9a-f-]{36})\]/g)];
-    const chunkMap = new Map(
+    const CITE_RE = /\[([0-9a-f-]{36}|tool:[A-Za-z0-9_\-:.]+)\]/g;
+    const citationMatches = [...reportContent.matchAll(CITE_RE)];
+    // deno-lint-ignore no-explicit-any
+    const chunkMap = new Map<string, any>(
       (chunks ?? []).map((c) => [c.id, c])
     );
+    // CC-231: Vendor Tool Intelligence chunks join the map with a synthetic shape
+    for (const t of toolChunks) {
+      chunkMap.set(t.id, {
+        id: t.id,
+        document_source: `${t.tool_slug}${t.doc_title ? ` — ${t.doc_title}` : ""} (Intelligence Engine)`,
+        source_type: "vendor-intelligence",
+        source_url: t.source_url,
+      });
+    }
 
     // Assign numbers in document order (first appearance wins)
     const chunkIdToNumber = new Map<string, number>();
@@ -399,8 +476,9 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
     for (const [chunkId, refNumber] of chunkIdToNumber) {
       const chunk = chunkMap.get(chunkId);
       if (!chunk) continue;
+      const escId = chunkId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const citationRegex = new RegExp(
-        `[^.]*\\[${chunkId}\\][^.]*\\.?`,
+        `[^.]*\\[${escId}\\][^.]*\\.?`,
         "g",
       );
       const claimMatch = reportContent.match(citationRegex);
@@ -417,11 +495,12 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
     // Replace [chunk_uuid] with [N] throughout the body
     let cleanedReport = reportContent;
     for (const [chunkId, refNumber] of chunkIdToNumber) {
-      const inlineRegex = new RegExp(`\\[${chunkId}\\]`, "g");
+      const escId = chunkId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const inlineRegex = new RegExp(`\\[${escId}\\]`, "g");
       cleanedReport = cleanedReport.replace(inlineRegex, `[${refNumber}]`);
     }
-    // Strip any unreferenced [uuid] markers that didn't map to a chunk
-    cleanedReport = cleanedReport.replace(/\[[0-9a-f-]{36}\]/g, "");
+    // Strip any unreferenced [uuid] / [tool:id] markers that didn't map to a chunk
+    cleanedReport = cleanedReport.replace(/\[(?:[0-9a-f-]{36}|tool:[A-Za-z0-9_\-:.]+)\]/g, "");
 
     // Append a clean References section
     if (chunkIdToNumber.size > 0) {
@@ -433,7 +512,8 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
         const chunk = chunkMap.get(chunkId);
         if (!chunk) continue;
         const docTitle = chunk.document_source ?? "Source document";
-        refLines.push(`${refNumber}. ${docTitle}`);
+        const link = chunk.source_url ? ` — ${chunk.source_url}` : "";
+        refLines.push(`${refNumber}. ${docTitle}${link}`);
       }
       cleanedReport = cleanedReport + refLines.join("\n");
     }
