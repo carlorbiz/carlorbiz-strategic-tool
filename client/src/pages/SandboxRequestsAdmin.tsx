@@ -20,6 +20,7 @@ const DEMOS: { id: string; label: string }[] = [
   { id: 'a1b2c3d4-0001-4000-8000-000000000001', label: 'Acme Catering Group' },
   { id: 'a1b2c3d4-0002-4000-8000-000000000001', label: 'National Allied Health Peak Council' },
   { id: 'a1b2c3d4-0003-4000-8000-000000000001', label: 'Rural Futures Australia' },
+  { id: 'a1b2c3d4-0004-4000-8000-000000000001', label: 'Kestrel Mutual (AI strategy)' },
 ];
 
 function demoLabel(id: string | null): string {

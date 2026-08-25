@@ -22,7 +22,7 @@ interface OnboardingWizardProps {
 }
 
 /** Profile keys that have an authored step set. Keep in sync with STEP_SETS. */
-const PROFILES_WITH_TOUR = ['research-intelligence', 'strategic-planning'] as const;
+const PROFILES_WITH_TOUR = ['research-intelligence', 'strategic-planning', 'ai-strategy'] as const;
 type TouredProfile = (typeof PROFILES_WITH_TOUR)[number];
 
 export function hasOnboardingTour(profileKey: string | null | undefined): boolean {
@@ -422,7 +422,139 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
   ];
 };
 
+// The AI-strategy demo tells a different story from the other two: the corpus is
+// what the organisation SAID (sixteen intake dimensions plus three stakeholder
+// voices), not what it filed, and the last beat is the one the older demos
+// cannot reach — a report where every claim is traceable to a source.
+const aiStrategySteps: StepBuilder = (engagement, v, brand) => {
+  const topPlural = v.commitment_top_plural.toLowerCase();
+  const topSingular = v.commitment_top_singular.toLowerCase();
+  const sourcePlural = v.evidence_plural.toLowerCase();
+
+  return [
+    {
+      target: 'body',
+      placement: 'center',
+      title: `Welcome to ${engagement.name}`,
+      content: (
+        <div className="space-y-2 text-sm">
+          <p>
+            This is an <strong>AI strategy engagement</strong> — a working installation of the{' '}
+            {brand.productName}. A member-owned insurer, two years and a lot of money into a
+            transformation, three AI proposals on the desk, complaints going the wrong way.
+          </p>
+          <p>
+            The story this tour tells: <strong>here is what we asked</strong> · here is what the
+            organisation told us, and where the accounts disagree · here is what the engine already
+            knows about the tools they have bought · here is the report, and every claim in it is
+            traceable to a source.
+          </p>
+        </div>
+      ),
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="pillars-panel"]',
+      title: 'Pillars — what the organisation decided it is for',
+      content: (
+        <p className="text-sm">
+          Six pillars, each with an <strong>observable success signal</strong> lifted straight from
+          the intake: the claims spreadsheet closed, the median claim under ten days, a
+          never-automate list the frontline can quote. Nothing here is aspiration; each one was
+          said out loud by someone who will be measured against it.
+        </p>
+      ),
+      placement: 'bottom',
+    },
+    {
+      target: '[data-tour="themes-grid"]',
+      title: `${v.commitment_top_plural} — what they will do first`,
+      content: (
+        <p className="text-sm">
+          The {topPlural} come from the intake's last dimension — <em>what would you commit to in
+          thirty, sixty, ninety days</em> — so the plan starts from the client's own words, not a
+          consultant's list. Each {topSingular} carries a live RAG status rolled up from its{' '}
+          {v.commitment_sub_plural.toLowerCase()}.
+        </p>
+      ),
+      placement: 'bottom',
+    },
+    {
+      target: '[data-tour="recent-documents"]',
+      title: `${v.evidence_plural} — what the organisation said`,
+      content: (
+        <p className="text-sm">
+          There are no board papers here. The {sourcePlural} are <strong>elicitation</strong>: the
+          chief executive's sixteen intake answers, then a Chief Operating Officer, a contact-centre
+          team leader and the Head of Data on the same questions. Every chunk is stamped
+          single-respondent, so the report can say <em>"the COO says one in ten; the team leader
+          counts sixty calls a day"</em> instead of pretending there is one truth.
+        </p>
+      ),
+      placement: 'top',
+    },
+    {
+      target: '[data-tour="tabs-list"]',
+      title: 'Tools in play — what the engine already knows',
+      content: (
+        <p className="text-sm">
+          The engagement lists the vendor tools the client actually runs on. The{' '}
+          <strong>Tool Intelligence</strong> tab reads the Intelligence Engine live for those
+          tools — release notes, pricing changes, deprecations — and the report cites them as{' '}
+          <code>[tool:…]</code> references. The engine only ever sees tool names, never the client.
+        </p>
+      ),
+      placement: 'bottom',
+    },
+    {
+      target: '[data-tour="drift-section"]',
+      title: 'Drift — a proposal moving outside the gate',
+      content: (
+        <p className="text-sm">
+          Drift-watch reads what has landed since the last run. In an AI engagement the drift that
+          matters is a vendor commitment made outside the single evidence gate, or a{' '}
+          {topSingular} that has gone quiet while a contract quietly progresses.
+        </p>
+      ),
+      placement: 'top',
+    },
+    {
+      target: '[data-tour="nera-bubble"]',
+      title: 'Ask Nera where the accounts disagree',
+      content: (
+        <p className="text-sm">
+          Nera answers strictly from this engagement's corpus. The questions worth asking here
+          are the ones a single interview cannot answer: <em>"Where do the COO and the team leader
+          describe the same handoff differently?"</em>, <em>"Which proposal survives the
+          never-automate test?"</em>, <em>"What has to be true before the second quarter?"</em>
+        </p>
+      ),
+      placement: 'top',
+    },
+    {
+      target: 'body',
+      placement: 'center',
+      title: 'The report — every claim traceable',
+      content: (
+        <div className="space-y-2 text-sm">
+          <p>
+            Open <strong>Reports</strong>, pick the AI Strategy Report, and Nera drafts it from the
+            corpus: five sections on the intake groups, the three proposals on one gate, vendor
+            tool intelligence, and a References list where every claim points at an intake
+            chunk, a stakeholder chunk, or a tool reference.
+          </p>
+          <p>
+            That last beat is the difference between a slide deck and a decision system. Questions:{' '}
+            <strong>carla@carlorbiz.com.au</strong>.
+          </p>
+        </div>
+      ),
+    },
+  ];
+};
+
 const STEP_SETS: Record<TouredProfile, StepBuilder> = {
   'research-intelligence': researchSteps,
   'strategic-planning': strategicPlanningSteps,
+  'ai-strategy': aiStrategySteps,
 };

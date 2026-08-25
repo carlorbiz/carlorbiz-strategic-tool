@@ -1,0 +1,78 @@
+{
+  "profile_key": "ai-strategy",
+  "display_name": "AI Strategy & Digital Reality Review",
+  "description": "For engagements that decide which AI and digital proposals an organisation should say yes to, and what has to be true first. Intake is the sixteen-dimension Digital Strategy pro forma (CC-231); stakeholder elicitation shows where accounts diverge; the corpus is elicitation chunks rather than documents; the deliverable is a cited AI Strategy Report with Intelligence Engine tool grounding.",
+
+  "vocabulary_map": {
+    "commitment_top_singular": "Strategic Move",
+    "commitment_top_plural": "Strategic Moves",
+    "commitment_sub_singular": "Action",
+    "commitment_sub_plural": "Actions",
+    "cross_cut_singular": "Lens",
+    "cross_cut_plural": "Lenses",
+    "commitment_add_verb": "add",
+    "commitment_archive_verb": "retire",
+    "evidence_singular": "source",
+    "evidence_plural": "sources",
+    "update_singular": "update",
+    "update_plural": "updates",
+    "drift_singular": "drift signal",
+    "drift_plural": "drift signals"
+  },
+
+  "defaults": {
+    "engagement_type": "strategic_planning",
+    "taxonomy_strictness": "soft",
+    "top_count_warning": 6,
+    "top_count_hard_cap": 7,
+    "pulse_cadence_days": 42,
+    "drift_watch_delivery": ["in_app", "email"]
+  },
+
+  "intake": {
+    "dimensions": [
+      "transformation_history", "service_reality", "theatre_vs_change", "values_behaviour_gap",
+      "ai_in_play", "ai_readiness", "never_automate", "vendor_exposure",
+      "hidden_costs", "investment_appetite", "board_argument",
+      "decision_rights", "capability_gaps", "change_capacity",
+      "success_signals", "commitments_30_60_90"
+    ],
+    "distillation_word_cap": 180,
+    "chunk_source_type": "elicitation",
+    "feeds": {
+      "ai_in_play": "st_engagements.tools_in_play",
+      "success_signals": "st_organisational_pillars.success_signal",
+      "commitments_30_60_90": "st_commitments"
+    },
+    "single_respondent_stamp": true
+  },
+
+  "nera_prompts": {
+    "interview": "You are Nera, running the Digital Strategy intake for {client_name}. Draw out concrete moments, not categories: the Tuesday afternoon, the workaround, the proposal on the desk. Never read the dimension names aloud and never ask for a score. One question at a time; follow the answer before moving on. Where this participant's account differs from what you have already heard, follow the difference without naming who said what.",
+    "workshop": "You are Nera, assisting the synthesis workshop for {client_name}'s AI strategy review. Surface themes, tensions and surprises across the intake and stakeholder chunks. Where two accounts contradict, say so and cite both. Land the synthesis as organisational pillars, each with an observable success signal.",
+    "report": "You are Nera, generating the {report_template_name} for {client_name}'s engagement '{engagement_name}'. The corpus holds elicitation chunks (each a single respondent's account, stamped as such) and vendor tool intelligence from the Intelligence Engine. Treat a single-respondent chunk as one account, not organisational truth; where accounts diverge, say so and cite both. Every claim cites a chunk id or a [tool:…] reference. Never invent a figure; where the corpus is silent, say so. The never-automate line is binding: never recommend automating a decision the corpus places on it.",
+    "drift_watch": "You are Nera, watching the evidence corpus for {client_name}'s AI strategy engagement. For each Strategic Move, assess mention frequency, scope drift, update recency and cross-lens tension (Member trust, Regulation and privacy, Cost to serve). Flag any proposal being progressed outside the single gate, and any move that has gone quiet.",
+    "update": "You are Nera, capturing a conversational update for {client_name}. Identify which Strategic Move or Action it relates to, extract a status snapshot, write a short narrative, and detect whether it describes a vendor commitment made outside the gate. Confirm before saving."
+  },
+
+  "dashboard_layout": [
+    { "widget": "priority_status_grid", "label": "Strategic Moves", "order": 1 },
+    { "widget": "tool_intelligence", "label": "Tools in play", "order": 2 },
+    { "widget": "drift_signals", "label": "Drift Signals", "order": 3 },
+    { "widget": "recent_documents", "label": "Sources", "order": 4 },
+    { "widget": "nera_questions", "label": "Open Questions from Nera", "order": 5 },
+    { "widget": "pre_read_generator", "label": "Brief Me", "order": 6 }
+  ],
+
+  "reporting_templates": [
+    { "name": "AI Strategy Report", "funder_type": null, "template_markdown": "See supabase/seed/demo/kestrel-mutual.sql for the seeded template; sections mirror the five intake groups plus Vendor Tool Intelligence and References." }
+  ],
+
+  "default_roles": [
+    { "role_key": "client_admin", "label": "Administrator", "permissions": { "read": true, "write": true, "admin": true } },
+    { "role_key": "ceo", "label": "Chief Executive", "permissions": { "read": true, "write": true, "admin": false } },
+    { "role_key": "board_chair", "label": "Board Chair", "permissions": { "read": true, "write": false, "admin": false } },
+    { "role_key": "steering_member", "label": "Steering Committee Member", "permissions": { "read": true, "write": true, "admin": false } },
+    { "role_key": "facilitator", "label": "Facilitator (Consultant)", "permissions": { "read": true, "write": true, "admin": true } }
+  ]
+}
