@@ -40,16 +40,14 @@ async function requireInternalAdmin(
 
   // Decode JWT payload to extract user ID (sub claim).
   // No signature verification — verify_jwt is disabled at the gateway.
-  let userId: string;
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) throw new Error("malformed");
-    const payload = JSON.parse(atob(parts[1]));
-    userId = payload.sub;
-    if (!userId) throw new Error("no sub claim");
-  } catch {
-    throw new Error("Invalid bearer token");
-  }
+  // Verify against the auth server (signature + expiry), not just decode. The
+  // uid below is trusted to grant internal_admin, so a forged token naming a
+  // known admin uuid must not pass. Deploys --no-verify-jwt, so this is the
+  // only verification layer.
+  const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data: authData, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !authData?.user?.id) throw new Error("Invalid bearer token");
+  const userId: string = authData.user.id;
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const { data: profile, error: profileError } = await supabase

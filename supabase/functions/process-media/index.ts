@@ -40,19 +40,14 @@ async function requireInternalAdmin(
     return { userId: "service-role", email: "system@pipeline" };
   }
 
-  // Decode JWT payload to extract user ID (sub claim).
-  // No signature verification needed — verify_jwt is disabled at the gateway,
-  // and these functions run within the same Supabase project.
-  let userId: string;
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) throw new Error("malformed");
-    const payload = JSON.parse(atob(parts[1]));
-    userId = payload.sub;
-    if (!userId) throw new Error("no sub claim");
-  } catch {
-    throw new Error("Invalid bearer token");
-  }
+  // Verify against the auth server (signature + expiry), not just decode. The
+  // uid below is trusted to grant internal_admin, so a forged token naming a
+  // known admin uuid must not pass. Deploys --no-verify-jwt, so this is the
+  // only verification layer.
+  const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data: authData, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !authData?.user?.id) throw new Error("Invalid bearer token");
+  const userId: string = authData.user.id;
 
   // Verify user is internal_admin via service role client
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

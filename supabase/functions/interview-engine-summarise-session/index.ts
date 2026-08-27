@@ -28,17 +28,15 @@ async function requireAuth(req: Request): Promise<string> {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) throw new Error("Missing bearer token");
+  // Real internal/cron callers present the service-role key itself. Exact match
+  // only — a JWT merely *claiming* {"role":"service_role"} is forgeable by
+  // anyone and must not pass (this fn deploys --no-verify-jwt, so the gateway
+  // does not check signatures either; in-code verification is the only layer).
   if (token === SUPABASE_SERVICE_ROLE_KEY) return "service-role";
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) throw new Error("malformed");
-    const payload = JSON.parse(atob(parts[1]));
-    if (payload.role === "service_role") return "service-role";
-    if (!payload.sub) throw new Error("no sub");
-    return payload.sub;
-  } catch {
-    throw new Error("Invalid bearer token");
-  }
+  const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data?.user?.id) throw new Error("Invalid bearer token");
+  return data.user.id as string;
 }
 
 const SUMMARISE_PROMPT = `Summarise this conversation concisely. Capture:
