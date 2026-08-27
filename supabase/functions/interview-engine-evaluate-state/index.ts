@@ -195,6 +195,11 @@ ${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Internal error";
+    // Auth failures are 401, not 500 — a rejected token is a client error, and
+    // a 500 here masks credential problems as server faults in monitoring.
+    if (msg === "Missing bearer token" || msg === "Invalid bearer token") {
+      return jsonResponse({ error: msg }, 401);
+    }
     console.error("interview-engine-evaluate-state error:", e);
     return jsonResponse({ error: msg }, 500);
   }
