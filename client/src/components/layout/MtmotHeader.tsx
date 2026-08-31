@@ -48,19 +48,42 @@ export function MtmotHeader() {
           />
         </a>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-sm transition-colors"
-              style={{ color: C.textSecondary }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = C.textPrimary)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = C.textSecondary)}
-            >
-              {link.label}
-            </a>
-          ))}
+        {/* Desktop nav — mirrors mtmot.com exactly (Carla, 31 Aug 2026): About as
+            text, then home / calendar (book) / envelope (contact) ICONS in gold. */}
+        <nav className="hidden items-center gap-5 md:flex">
+          <a href={`${MTMOT}/about`} className="text-sm transition-colors"
+            style={{ color: C.textSecondary }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.textPrimary)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.textSecondary)}>
+            About
+          </a>
+          <a href={`${MTMOT}/`} aria-label="Back to the home page" title="Home"
+            className="p-1 transition-colors" style={{ color: C.gold }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.textPrimary)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.gold)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round" width="21" height="21" aria-hidden="true">
+              <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" />
+            </svg>
+          </a>
+          <a href={`${MTMOT}/diagnostic`} aria-label="Book a session" title="Book a session"
+            className="p-1 transition-colors" style={{ color: C.gold }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.textPrimary)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.gold)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" width="21" height="21" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M8 3v4M16 3v4M3 10h18" />
+            </svg>
+          </a>
+          <a href={`${MTMOT}/contact`} aria-label="Contact Carla" title="Get in touch"
+            className="p-1 transition-colors" style={{ color: C.gold }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.textPrimary)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.gold)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round" width="21" height="21" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" />
+            </svg>
+          </a>
           <a
             href={`${MTMOT}/auth`}
             className="rounded-lg px-4 py-1.5 text-sm font-medium transition-colors"
