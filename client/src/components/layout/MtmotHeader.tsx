@@ -12,12 +12,13 @@ import { useState } from 'react'
 
 const MTMOT = 'https://mtmot.com'
 
+// Nav updated 31 Aug 2026 (Carla): mtmot.com retired the RECLAIM/EMPOWER/ELEVATE
+// pillar nav (CC-281); the header now carries Home / About / Book a session /
+// Contact — mirrored here per the CC-89 same-pass rule.
 const NAV_LINKS = [
-  { href: `${MTMOT}/#reclaim`, label: 'RECLAIM' },
-  { href: `${MTMOT}/#empower`, label: 'EMPOWER' },
-  { href: `${MTMOT}/#elevate`, label: 'ELEVATE' },
+  { href: `${MTMOT}/`, label: 'Home' },
   { href: `${MTMOT}/about`, label: 'About' },
-  { href: `${MTMOT}/community`, label: 'Community' },
+  { href: `${MTMOT}/diagnostic`, label: 'Book a session' },
   { href: `${MTMOT}/contact`, label: 'Contact' },
 ]
 
