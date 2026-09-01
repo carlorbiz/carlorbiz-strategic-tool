@@ -34,7 +34,7 @@ const MTMOT: Brand = {
   title: 'MTMOT Strategy Engine — board-grade strategy, self-serve',
   description:
     'A conversational evidence platform for board-level strategic engagements. See how a real consultancy runs its client engagements on the Engine — walk three live worked plans, no sign-up.',
-  logo: '/images/mtmot-logo.png',
+  logo: '/images/mtmot-ep1-hero-reverse.png',
   logoAlt: 'MTMOT',
   homeUrl: 'https://mtmot.com',
 };
