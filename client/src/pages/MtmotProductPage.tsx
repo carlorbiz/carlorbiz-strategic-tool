@@ -7,7 +7,10 @@ import { BrandLogo } from '@/components/layout/BrandLogo';
 // strategy.mtmot.com. Positions the Engine as the board-level (ELEVATE) tier of
 // Make The Most Of Today, and leads straight into the open demo. No sign-up.
 
-const GREEN = '#2D7E32';
+// One-accent ruling (Carla, CC-292 + her 2 Sep ask): EP3 green is retired on
+// MTMOT surfaces - the constant keeps its name for minimal diff, but resolves
+// to the estate gold.
+const GREEN = '#C9A96E';
 const GOLD = '#D5B13A';
 
 const FEATURES = [
@@ -55,7 +58,7 @@ export default function MtmotProductPage() {
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/demo">
-            <Button size="lg" className="rounded-full px-8 gap-2 text-white" style={{ backgroundColor: GREEN }}>
+            <Button size="lg" className="rounded-full px-8 gap-2 text-[#0D0D1A]" style={{ backgroundColor: GREEN }}>
               Walk a live demo <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -126,7 +129,7 @@ export default function MtmotProductPage() {
         </p>
         <div className="mt-8">
           <Link href="/demo">
-            <Button size="lg" className="rounded-full px-8 gap-2 text-white" style={{ backgroundColor: GREEN }}>
+            <Button size="lg" className="rounded-full px-8 gap-2 text-[#0D0D1A]" style={{ backgroundColor: GREEN }}>
               Explore the demo <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>

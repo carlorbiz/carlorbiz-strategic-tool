@@ -157,6 +157,43 @@
   /* Cleaner, more professional radius */
 }
 
+/* ── MTMOT skin (strategy.mtmot.com) — one-accent ruling, Carla 31 Aug 2026
+     (CC-292), applied 2 Sep on her ask. The green Carlorbiz palette is the
+     consulting skin's identity and stays; on the MTMOT host every green token
+     resolves to the estate system instead: gold #C9A96E the one accent,
+     bronze-gold #7E612F for headings on the light working surface, chrome
+     #0D0D1A for dark blocks. Class set by applyBrandDocument(). ── */
+.brand-mtmot {
+  --color-brand-dark: #0D0D1A;
+  --color-brand-primary: #7E612F;
+  --color-brand-accent: #C9A96E;
+  --color-brand-accent-hover: #B8955A;
+  --cb-green: #7E612F;
+  --cb-green-dark: #1A1A1A;
+  --cb-gold: #C9A96E;
+  --cb-gold-dark: #7E612F;
+  --gradient-heading: linear-gradient(90deg, #7E612F 0%, #C9A96E 100%);
+  --gradient-heading-soft: linear-gradient(90deg, #7E612F 0%, #C9A96E 60%, #BFC3CD 100%);
+  --gradient-accent: linear-gradient(90deg, #C9A96E 0%, #BFC3CD 100%);
+  --gradient-accent-vertical: linear-gradient(180deg, #C9A96E 0%, #BFC3CD 100%);
+  --gradient-divider: linear-gradient(90deg, transparent 0%, #C9A96E 50%, transparent 100%);
+  --gradient-card-top: linear-gradient(90deg, #C9A96E 0%, #7E612F 50%, #C9A96E 100%);
+  --background: #F7F5F0;
+  --card: #FFFFFF;
+  --popover: #FFFFFF;
+  --ring: #C9A96E;
+  --chart-1: #7E612F;
+  --chart-2: #C9A96E;
+  --chart-3: #BFC3CD;
+  --chart-4: #2E3A4A;
+  --chart-5: #AAAEB6;
+  --sidebar: #0D0D1A;
+  --sidebar-primary: #C9A96E;
+  --sidebar-accent: #C9A96E;
+  --sidebar-border: rgba(201, 169, 110, 0.25);
+  --sidebar-ring: #C9A96E;
+}
+
 .dark {
   --primary: var(--color-blue-700);
   --primary-foreground: var(--color-blue-50);

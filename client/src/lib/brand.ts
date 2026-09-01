@@ -87,6 +87,11 @@ export function applyBrandDocument(brand: Brand): void {
     document.title = brand.title;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', brand.description);
+    // One-accent ruling (Carla, 31 Aug 2026 / CC-292, applied here 2 Sep on her
+    // ask): the MTMOT skin drops the green palette for the estate gold. The
+    // Carlorbiz consulting skin keeps its own brand palette - the ruling
+    // covers MTMOT surfaces, and Carlorbiz green is Carlorbiz's identity.
+    document.documentElement.classList.toggle('brand-mtmot', brand.isMtmot);
   } catch {
     /* no document */
   }
