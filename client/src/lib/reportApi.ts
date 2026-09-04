@@ -116,6 +116,11 @@ export async function deleteReport(id: string): Promise<void> {
 }
 
 // ── Report generation (calls edge function) ────────────────────────────────
+//
+// CC-231: the function returns 202 at once with the new report row's id and
+// status 'generating', then finishes the row from a background task. Poll the
+// row (fetchReport / fetchReports) until status is 'draft' (ready) or 'failed'
+// (generation_error). Pass sync=true to run inline as before (short templates).
 
 export async function generateReport(params: {
   engagement_id: string;
@@ -123,11 +128,12 @@ export async function generateReport(params: {
   title?: string;
   period_start?: string;
   period_end?: string;
-}): Promise<{
+}, opts: { sync?: boolean } = {}): Promise<{
   report_id: string;
   title: string;
-  citation_count: number;
-  section_count: number;
+  status: 'generating' | 'draft';
+  citation_count?: number;
+  section_count?: number;
 }> {
   if (!supabase) throw new Error('Supabase not configured');
 
@@ -138,7 +144,8 @@ export async function generateReport(params: {
   const token = session?.access_token;
   if (!token) throw new Error('Not authenticated');
 
-  const resp = await fetch(`${neraApiBase}/functions/v1/st-generate-report`, {
+  const url = `${neraApiBase}/functions/v1/st-generate-report${opts.sync ? '?sync=1' : ''}`;
+  const resp = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

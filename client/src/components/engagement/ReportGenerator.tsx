@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import {
@@ -42,6 +42,8 @@ import {
 } from 'lucide-react';
 
 const STATUS_LABELS: Record<string, string> = {
+  generating: 'Generating',
+  failed: 'Failed',
   draft: 'Draft',
   review: 'In Review',
   approved: 'Approved',
@@ -49,6 +51,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+  generating: 'secondary',
+  failed: 'destructive',
   draft: 'outline',
   review: 'secondary',
   approved: 'default',
@@ -93,6 +97,32 @@ export function ReportGenerator() {
 
   useEffect(() => { load(); }, [engagement?.id]);
 
+  // CC-231: st-generate-report returns 202 and finishes the row in the
+  // background. Poll the list every 5 s while any report is 'generating';
+  // toast when one flips to 'draft' (ready) or 'failed'. Rows still
+  // 'generating' after 15 min are treated as stale and no longer polled.
+  const GENERATING_STALE_MS = 15 * 60 * 1000;
+  const isActivelyGenerating = (r: ComplianceReport) =>
+    r.status === 'generating' && Date.now() - new Date(r.created_at).getTime() < GENERATING_STALE_MS;
+  const pendingIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Settle any report we were waiting on that has now finished
+    for (const rpt of reports) {
+      if (!pendingIds.current.has(rpt.id)) continue;
+      if (rpt.status === 'draft') {
+        pendingIds.current.delete(rpt.id);
+        toast.success(`Report generated — ${rpt.citations.length} citations`);
+      } else if (rpt.status === 'failed') {
+        pendingIds.current.delete(rpt.id);
+        toast.error(`Report generation failed: ${rpt.generation_error ?? 'unknown error'}`);
+      }
+    }
+    if (!reports.some(isActivelyGenerating)) return;
+    const interval = setInterval(load, 5000);
+    return () => clearInterval(interval);
+  }, [reports]);
+
   const handleGenerate = async () => {
     if (!engagement || !selectedTemplateId) return;
     setGenerating(true);
@@ -104,7 +134,12 @@ export function ReportGenerator() {
         period_start: periodStart || undefined,
         period_end: periodEnd || undefined,
       });
-      toast.success(`Report generated — ${result.citation_count} citations`);
+      if (result.status === 'generating') {
+        pendingIds.current.add(result.report_id);
+        toast.info('Report generation started — it will appear below when ready');
+      } else {
+        toast.success(`Report generated — ${result.citation_count ?? 0} citations`);
+      }
       load();
       // Reset form
       setSelectedTemplateId('');
@@ -307,17 +342,17 @@ ${report.citations.map((c, i) => `<p>${i + 1}. ${c.claim} — <em>${c.source_typ
                     </Badge>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => openReview(rpt)}>
+                    <Button size="sm" variant="ghost" onClick={() => openReview(rpt)} disabled={rpt.status === 'generating'}>
                       {rpt.status === 'draft' ? (
                         <Pencil className="w-3 h-3" />
                       ) : (
                         <Eye className="w-3 h-3" />
                       )}
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleExportPdf(rpt)}>
+                    <Button size="sm" variant="ghost" onClick={() => handleExportPdf(rpt)} disabled={rpt.status === 'generating'}>
                       <Download className="w-3 h-3" />
                     </Button>
-                    {rpt.status === 'draft' && (
+                    {(rpt.status === 'draft' || rpt.status === 'failed') && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -334,6 +369,17 @@ ${report.citations.map((c, i) => `<p>${i + 1}. ${c.claim} — <em>${c.source_typ
                 <p className="text-xs text-muted-foreground">
                   {rpt.period_start ?? 'inception'} to {rpt.period_end ?? 'now'} — {rpt.citations.length} citations — {new Date(rpt.created_at).toLocaleDateString('en-AU')}
                 </p>
+                {rpt.status === 'generating' && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    {isActivelyGenerating(rpt)
+                      ? (rpt.generation_progress ?? 'queued')
+                      : 'Still marked generating after 15 minutes — the edge worker may have been shut down; retry generation.'}
+                  </p>
+                )}
+                {rpt.status === 'failed' && rpt.generation_error && (
+                  <p className="text-xs text-destructive mt-1">{rpt.generation_error}</p>
+                )}
               </CardContent>
             </Card>
           ))}

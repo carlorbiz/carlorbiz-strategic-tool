@@ -16,7 +16,8 @@ export type ChangeType =
 export type RatificationStatus = 'draft' | 'pending_board' | 'ratified' | 'rejected';
 export type DocumentStatus = 'uploaded' | 'ingesting' | 'ingested' | 'failed';
 export type SurveyStatus = 'uploaded' | 'ingesting' | 'ingested' | 'failed';
-export type ReportStatus = 'draft' | 'review' | 'approved' | 'delivered';
+// CC-231: 'generating' / 'failed' are st-generate-report job states; 'draft' = ready.
+export type ReportStatus = 'generating' | 'failed' | 'draft' | 'review' | 'approved' | 'delivered';
 export type StageType =
   | 'interview' | 'workshop' | 'report' | 'checkpoint' | 'board_review'
   | 'retrospective' | 'onboarding' | 'survey_run' | 'reporting_cycle';
@@ -294,6 +295,8 @@ export interface ComplianceReport {
   content_markdown: string | null;
   citations: ReportCitation[];
   status: ReportStatus;
+  generation_progress: string | null; // CC-231: phase label while 'generating'
+  generation_error: string | null;    // CC-231: reason when 'failed'
   delivered_at: string | null;
   delivery_metadata: Record<string, unknown>;
   created_by: string | null;

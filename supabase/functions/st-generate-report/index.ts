@@ -1,4 +1,29 @@
+// =============================================================================
+// Carlorbiz Strategic Tool — Template-constrained, cited report generation
+// supabase/functions/st-generate-report/index.ts
+//
+// CHANGE (2026-09-05, CC-231 — background generation):
+//   - The Kestrel Mutual AI Strategy Report (five intake groups + Vendor Tool
+//     Intelligence + References) outran the Supabase gateway's 150 s request
+//     idle timeout (504 IDLE_TIMEOUT, 3 Sep) and no row was ever written.
+//   - Now: the handler validates, inserts an st_compliance_reports row with
+//     status 'generating', returns 202 with the report id, and hands the real
+//     work to EdgeRuntime.waitUntil (same pattern as st-ingest-survey and
+//     st-ingest-document). Progress, the final content, or the error message
+//     are written onto that row; the client polls it through RLS.
+//   - Terminal states: 'draft' (ready, the pre-existing first state) or
+//     'failed' (generation_error carries the reason).
+//   - `?sync=1` keeps the old behaviour: run inline, return 200 with the
+//     finished report (short templates, scripts, tests).
+//   - Limit, per https://supabase.com/docs/guides/functions/limits: the worker
+//     wall-clock cap is 150 s (Free) / 400 s (Paid); background tasks are
+//     bounded by it too. A worker that dies mid-generation fires
+//     'beforeunload' — we mark the row 'failed' there so it can never sit at
+//     'generating' forever.
+// =============================================================================
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
 import type { LLMConfig } from "../_shared/llm.ts";
 
@@ -87,8 +112,12 @@ function parseTemplateSections(templateMarkdown: string): TemplateSection[] {
 // requireAuth() returns the JWT sub (auth.users.id), so we have to resolve it
 // to the matching user_profiles.id before any st_* insert that touches
 // created_by. Same bug pattern as migration 0007 (ie_* tables).
+// SupabaseClient (not ReturnType<typeof createClient>): the inferred return type
+// collapses row types to never under deno check; the exported class does not.
+type Db = SupabaseClient;
+
 async function resolveUserProfileId(
-  supabase: ReturnType<typeof createClient>,
+  supabase: Db,
   authUserId: string,
 ): Promise<string | null> {
   if (authUserId === "service-role") return null;
@@ -110,52 +139,66 @@ interface Citation {
   source_type: string | null;
 }
 
-// ─── Main handler ─────────────────────────────────────────────
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+// ─── Job state on the report row ──────────────────────────────
+
+async function setProgress(supabase: Db, reportId: string, progress: string) {
+  const { error } = await supabase
+    .from("st_compliance_reports")
+    .update({ generation_progress: progress })
+    .eq("id", reportId);
+  if (error) console.warn("[st-generate-report] progress write failed:", error.message);
+}
+
+async function markFailed(supabase: Db, reportId: string, message: string) {
+  const { error } = await supabase
+    .from("st_compliance_reports")
+    .update({
+      status: "failed",
+      generation_error: message.slice(0, 2000),
+      generation_progress: null,
+    })
+    .eq("id", reportId);
+  if (error) console.error("[st-generate-report] failed-state write failed:", error.message);
+}
+
+// Report ids whose generation is running in this worker. If the Edge Runtime
+// shuts the worker down (wall-clock limit) the 'beforeunload' handler below
+// marks them failed, best effort, so the client never polls a ghost.
+const inFlight = new Set<string>();
+const shutdownClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+globalThis.addEventListener("beforeunload", () => {
+  for (const id of inFlight) {
+    markFailed(
+      shutdownClient,
+      id,
+      "Edge worker shut down before generation finished (Edge Runtime wall-clock limit). Retry, or shorten the template.",
+    );
   }
+});
 
+// ─── Generation job ───────────────────────────────────────────
+// Everything from evidence gathering to the finished row lives here so it can
+// run either inline (?sync=1) or after the 202 inside EdgeRuntime.waitUntil.
+
+interface GenerationJob {
+  reportId: string;
+  engagement_id: string;
+  // deno-lint-ignore no-explicit-any
+  engagement: any;
+  // deno-lint-ignore no-explicit-any
+  template: any;
+  period_start?: string;
+  period_end?: string;
+}
+
+async function runGeneration(
+  supabase: Db,
+  job: GenerationJob,
+): Promise<{ citation_count: number; section_count: number }> {
+  const { reportId, engagement_id, engagement, template, period_start, period_end } = job;
+  inFlight.add(reportId);
   try {
-    const userId = await requireAuth(req);
-    const {
-      engagement_id,
-      template_id,
-      title,
-      period_start,
-      period_end,
-    } = await req.json();
-
-    if (!engagement_id || !template_id) {
-      return jsonResponse(
-        { error: "engagement_id and template_id are required" },
-        400
-      );
-    }
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // 1. Fetch engagement
-    const { data: engagement, error: engErr } = await supabase
-      .from("st_engagements")
-      .select("*")
-      .eq("id", engagement_id)
-      .single();
-
-    if (engErr || !engagement) {
-      return jsonResponse({ error: "Engagement not found" }, 404);
-    }
-
-    // 2. Fetch template
-    const { data: template, error: tplErr } = await supabase
-      .from("st_reporting_templates")
-      .select("*")
-      .eq("id", template_id)
-      .single();
-
-    if (tplErr || !template) {
-      return jsonResponse({ error: "Template not found" }, 404);
-    }
+    await setProgress(supabase, reportId, "gathering evidence");
 
     // 3. Fetch AI config for vocabulary + report prompt
     const { data: aiConfig } = await supabase
@@ -222,6 +265,7 @@ Deno.serve(async (req) => {
     let toolCoverage: { covered: string[]; uncovered: string[] } = { covered: [], uncovered: [] };
     let toolReadFailed = false;
     if (toolsInPlay.length > 0 && NERA_ENGINE_URL) {
+      await setProgress(supabase, reportId, "reading vendor tool intelligence");
       try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 20_000);
@@ -384,7 +428,6 @@ ${
 
     const sections = parseTemplateSections(template.template_markdown);
     const allCitations: Citation[] = [];
-    const generatedSections: string[] = [];
 
     // Build system prompt from config or default
     const reportPromptTemplate =
@@ -431,12 +474,16 @@ ${evidenceContext}
 
 Generate the complete report now. Output as clean markdown. Use ## for section headings matching the template.`;
 
+    await setProgress(supabase, reportId, `generating narrative (${sections.length} sections)`);
+
     const reportContent = await callLLM(
       llmConfig,
       systemPrompt,
       [{ role: "user", content: generationPrompt }],
       8000
     );
+
+    await setProgress(supabase, reportId, "resolving citations");
 
     // ── Extract citations from the generated content ────────────
     //
@@ -523,10 +570,85 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
       cleanedReport = cleanedReport + refLines.join("\n");
     }
 
-    // Hand the cleaned version forward to the DB insert
-    const finalReportContent = cleanedReport;
+    // ── Finish the row: content + citations, status back to 'draft' ──
 
-    // ── Write to st_compliance_reports ───────────────────────────
+    const { error: finishErr } = await supabase
+      .from("st_compliance_reports")
+      .update({
+        content_markdown: cleanedReport,
+        citations: allCitations,
+        status: "draft",
+        generation_progress: null,
+        generation_error: null,
+      })
+      .eq("id", reportId);
+
+    if (finishErr) {
+      throw new Error(`Failed to save report: ${finishErr.message}`);
+    }
+
+    return { citation_count: allCitations.length, section_count: sections.length };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Generation failed";
+    console.error("[st-generate-report] generation failed:", e);
+    await markFailed(supabase, reportId, msg);
+    throw e;
+  } finally {
+    inFlight.delete(reportId);
+  }
+}
+
+// ─── Main handler ─────────────────────────────────────────────
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const userId = await requireAuth(req);
+    const sync = new URL(req.url).searchParams.get("sync") === "1";
+    const {
+      engagement_id,
+      template_id,
+      title,
+      period_start,
+      period_end,
+    } = await req.json();
+
+    if (!engagement_id || !template_id) {
+      return jsonResponse(
+        { error: "engagement_id and template_id are required" },
+        400
+      );
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // 1. Fetch engagement
+    const { data: engagement, error: engErr } = await supabase
+      .from("st_engagements")
+      .select("*")
+      .eq("id", engagement_id)
+      .single();
+
+    if (engErr || !engagement) {
+      return jsonResponse({ error: "Engagement not found" }, 404);
+    }
+
+    // 2. Fetch template
+    const { data: template, error: tplErr } = await supabase
+      .from("st_reporting_templates")
+      .select("*")
+      .eq("id", template_id)
+      .single();
+
+    if (tplErr || !template) {
+      return jsonResponse({ error: "Template not found" }, 404);
+    }
+
+    // ── Create the report row first (status 'generating') ───────
+    // The row is the job record: the client gets its id back at once and
+    // polls it; the background job writes progress / content / error onto it.
 
     const reportTitle =
       title ??
@@ -546,29 +668,73 @@ Generate the complete report now. Output as clean markdown. Use ## for section h
         title: reportTitle,
         period_start: period_start ?? null,
         period_end: period_end ?? null,
-        content_markdown: finalReportContent,
-        citations: allCitations,
-        status: "draft",
+        content_markdown: null,
+        citations: [],
+        status: "generating",
+        generation_progress: "queued",
         created_by: createdByProfileId,
       })
-      .select("id, title, status")
+      .select("id, title")
       .single();
 
-    if (reportErr) {
+    if (reportErr || !report) {
       return jsonResponse(
-        { error: `Failed to save report: ${reportErr.message}` },
+        { error: `Failed to create report: ${reportErr?.message ?? "no row"}` },
         500
       );
     }
 
-    return jsonResponse({
-      success: true,
-      report_id: report.id,
-      title: report.title,
-      status: report.status,
-      citation_count: allCitations.length,
-      section_count: sections.length,
-    });
+    const job: GenerationJob = {
+      reportId: report.id,
+      engagement_id,
+      engagement,
+      template,
+      period_start,
+      period_end,
+    };
+
+    // ── ?sync=1: the pre-CC-231 behaviour — run inline, return the result ──
+    if (sync) {
+      try {
+        const counts = await runGeneration(supabase, job);
+        return jsonResponse({
+          success: true,
+          report_id: report.id,
+          title: report.title,
+          status: "draft",
+          ...counts,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Generation failed";
+        return jsonResponse({ error: msg, report_id: report.id, status: "failed" }, 500);
+      }
+    }
+
+    // ── Default: 202 now, generate in the background ────────────
+    // EdgeRuntime.waitUntil keeps the worker alive past the response (up to
+    // the Edge Runtime wall-clock limit). markFailed already recorded any
+    // error on the row, so the rejected promise is swallowed here on purpose.
+    const work = runGeneration(supabase, job).catch(() => {});
+    // deno-lint-ignore no-explicit-any
+    const er = (globalThis as any).EdgeRuntime;
+    if (er && typeof er.waitUntil === "function") {
+      er.waitUntil(work);
+    } else {
+      // Local-dev fallback (no EdgeRuntime global): keep the promise alive.
+      work.catch((e) => console.error("Background generation failed:", e));
+    }
+
+    return jsonResponse(
+      {
+        accepted: true,
+        report_id: report.id,
+        title: report.title,
+        status: "generating",
+        message:
+          "Report row created; generation running in background. Poll st_compliance_reports by id until status is 'draft' (ready) or 'failed' (see generation_error).",
+      },
+      202,
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Internal error";
     console.error("st-generate-report error:", e);
