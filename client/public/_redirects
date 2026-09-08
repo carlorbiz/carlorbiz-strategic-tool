@@ -5,3 +5,4 @@
 /admin  /index 200
 /login  /index 200
 /reset-password  /index 200
+/demo  /index 200
