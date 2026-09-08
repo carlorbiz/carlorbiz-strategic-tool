@@ -1,7 +1,5 @@
-# SPA fallback for client-side routing
-# Cloudflare Pages rejects /* /index.html 200 as an infinite loop,
-# but accepts /index 200 rewrites for specific path patterns.
-/e/*  /index 200
-/admin  /index 200
-/login  /index 200
-/reset-password  /index 200
+# SPA fallback for client-side routing.
+# Cloudflare Pages serves dist/404.html (a copy of index.html, see the build script)
+# for any unknown path, so every client-side route renders. A "/index 200" rewrite
+# does NOT work: Pages answers /index with a 308 to /, which loses the route
+# (verified live 8 Sep 2026 on /demo, /login, /admin, /reset-password).
