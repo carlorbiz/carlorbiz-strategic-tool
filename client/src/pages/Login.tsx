@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { getBrand } from "@/lib/brand";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -257,6 +258,12 @@ export default function Login() {
           </div>
         </CardContent>
       </Card>
+      {/* CC-327 (Carla, 8 Sep 2026): the business-account disclaimer, MTMOT host only, approved verbatim. */}
+      {getBrand().isMtmot && (
+        <p className="mt-6 max-w-md mx-auto text-center text-xs text-gray-500 leading-relaxed">
+          The Strategy Engine is a business subscription. Take it out under your business name and a business email, not a personal MTMOT account. CJ works inside each account separately: what you share with her as an individual stays in your individual account, and a business account never sees it.
+        </p>
+      )}
     </div>
   );
 }

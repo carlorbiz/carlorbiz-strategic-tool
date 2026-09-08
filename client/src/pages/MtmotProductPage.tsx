@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: MessagesSquare,
     title: 'Interviews, not surveys',
-    body: 'Stakeholders talk to Nera in a natural conversation. She elicits what matters, cites her sources, and never makes them fill in a form.',
+    body: 'Stakeholders talk to CJ in a natural conversation. She elicits what matters, cites her sources, and never makes them fill in a form.',
   },
   {
     icon: Layers,
@@ -76,6 +76,10 @@ export default function MtmotProductPage() {
             The demo plans are live engagements run by Carlorbiz Consulting — the proof that a
             consultant can subscribe to the Engine and deliver their own clients on it.
           </p>
+          {/* CC-327 (Carla, 8 Sep 2026): the short-form business-account line, approved verbatim. */}
+          <p className="mt-4 text-sm text-gray-500 max-w-2xl mx-auto">
+            Business subscriptions run under a business account. CJ keeps individual and business accounts separate.
+          </p>
         </div>
       </section>
 
@@ -104,7 +108,7 @@ export default function MtmotProductPage() {
           </h2>
           <ol className="grid sm:grid-cols-4 gap-6 text-center">
             {[
-              ['1', 'Interview', 'Stakeholders talk to Nera; every transcript joins the corpus.'],
+              ['1', 'Interview', 'Stakeholders talk to CJ; every transcript joins the corpus.'],
               ['2', 'Synthesise', 'Each stage distils into themes, tensions and emerging commitments.'],
               ['3', 'Deliver', 'A cited, board-ready plan — with the commitments as the living taxonomy.'],
               ['4', 'Keep living', 'Updates, surveys and drift watch keep the plan honest between board cycles.'],
