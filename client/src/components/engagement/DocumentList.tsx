@@ -14,9 +14,9 @@ const STATUS_CONFIG: Record<DocumentStatus, {
   variant: 'default' | 'secondary' | 'outline' | 'destructive';
   icon: typeof FileText;
 }> = {
-  uploaded: { label: 'Queued', variant: 'outline', icon: Clock },
-  ingesting: { label: 'Processing', variant: 'secondary', icon: Loader2 },
-  ingested: { label: 'Chunked', variant: 'default', icon: CheckCircle2 },
+  uploaded: { label: 'Received', variant: 'outline', icon: Clock },
+  ingesting: { label: 'Reading (minutes, longer for long documents)', variant: 'secondary', icon: Loader2 },
+  ingested: { label: 'Captured', variant: 'default', icon: CheckCircle2 },
   failed: { label: 'Failed', variant: 'destructive', icon: AlertTriangle },
 };
 

@@ -186,11 +186,17 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         if (taggedLinks.length > 0) {
           await linkDocumentToCommitments(doc.id, taggedLinks, 'tagged');
         }
-        toast.success('Document uploaded');
+        // The edge function answers 202 as soon as the job is QUEUED; the real
+        // work (extract, chunk, insert) runs for minutes in the background.
+        // Say so - a "chunked" toast here promised completion that had only
+        // just started (CC-348, 9 Sep 2026). The list polls and shows the truth.
+        toast.success('Received. Reading it now.');
         setIngesting(true);
         try {
           await triggerIngestion(doc.id);
-          toast.success(`Document chunked: ${doc.title}`);
+          toast.message(`${doc.title} is being read`, {
+            description: 'Usually a few minutes; a long document can take ten or more. The list below updates as it goes.',
+          });
         } catch (err) {
           const msg = err instanceof Error ? err.message : 'Ingestion failed';
           toast.error(`Upload succeeded but chunking failed: ${msg}. You can retry from the document list.`);
