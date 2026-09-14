@@ -21,6 +21,7 @@ import { DriftSignals } from '@/components/engagement/dashboard/DriftSignals';
 import { RecentUpdates } from '@/components/engagement/dashboard/RecentUpdates';
 import { NeraQuestions } from '@/components/engagement/dashboard/NeraQuestions';
 import { SampleNeraQuestions } from '@/components/engagement/dashboard/SampleNeraQuestions';
+import { GenericDriftSampleNeraQuestions } from '@/components/engagement/dashboard/GenericDriftSampleNeraQuestions';
 import { PillarsPanel } from '@/components/engagement/dashboard/PillarsPanel';
 import { ReportGenerator } from '@/components/engagement/ReportGenerator';
 import { ReportTemplateEditor } from '@/components/engagement/ReportTemplateEditor';
@@ -142,6 +143,9 @@ export function EngagementLivingView() {
 
           {/* Sample questions a prospect can click to demo Nera (research profile only) */}
           <SampleNeraQuestions />
+
+          {/* The eight Generic Drift signals, put to the corpus (generic-drift profile only) */}
+          <GenericDriftSampleNeraQuestions />
 
           {/* Conversational update — hidden on research-vertical engagements until
               the semantic equivalent ("capture how the corpus shifted a pillar")
