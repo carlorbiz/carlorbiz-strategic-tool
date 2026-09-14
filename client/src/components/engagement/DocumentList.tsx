@@ -3,6 +3,7 @@ import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { fetchDocuments, triggerIngestion } from '@/lib/documentApi';
 import type { StDocument, DocumentStatus } from '@/types/engagement';
+import { PRIMARY_DOCUMENT_TYPE_LABELS } from '@/types/engagement';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -132,6 +133,12 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
                       </a>
                     )}
                   </div>
+                  {doc.primary_document_type && (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {PRIMARY_DOCUMENT_TYPE_LABELS[doc.primary_document_type]}
+                      {doc.document_period ? ` · ${doc.document_period}` : ''}
+                    </p>
+                  )}
                   {(doc.authors || doc.journal || doc.publication_year) && (
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
                       {[doc.authors, doc.journal, doc.publication_year].filter(Boolean).join(' · ')}

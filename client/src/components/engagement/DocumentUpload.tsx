@@ -10,6 +10,10 @@ import {
   type IngestProgress,
 } from '@/lib/documentApi';
 import { extractTextFromFile, isExtractable, splitIntoSegments } from '@/lib/extractText';
+import {
+  PRIMARY_DOCUMENT_TYPE_LABELS,
+  type PrimaryDocumentType,
+} from '@/types/engagement';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +55,12 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [ingesting, setIngesting] = useState(false);
   const [progress, setProgress] = useState<IngestProgress | null>(null);
+
+  // Primary-document classification (migration 0020). Not collapsed: this is
+  // the field the drift lenses read, so burying it guarantees an empty corpus
+  // column. Both parts stay optional — most evidence is not a board document.
+  const [primaryDocumentType, setPrimaryDocumentType] = useState<string>('');
+  const [documentPeriod, setDocumentPeriod] = useState('');
 
   // Research metadata (optional — surfaced via collapsible section)
   const [showResearchMeta, setShowResearchMeta] = useState(false);
@@ -132,6 +142,10 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         journal: journal.trim() || undefined,
         doi: doi.trim() || undefined,
         externalLink: externalLink.trim() || undefined,
+        primaryDocumentType: primaryDocumentType
+          ? (primaryDocumentType as PrimaryDocumentType)
+          : undefined,
+        documentPeriod: documentPeriod.trim() || undefined,
       };
 
       if (isExtractable(file.name)) {
@@ -212,6 +226,8 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
       setPrimaryCommitmentId('');
       setAdditionalCommitmentIds(new Set());
       setContainsPii(false);
+      setPrimaryDocumentType('');
+      setDocumentPeriod('');
       setAuthors('');
       setInstitution('');
       setPublicationYear('');
@@ -347,6 +363,52 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         )}
 
         {/* Research metadata (optional) */}
+        {/* Primary-document classification — what the drift lenses read.
+            A strategic plan and a board paper are different evidence; so is
+            the 2019 plan and the 2024 one. Without both halves the
+            verbal-actual lag cannot be asked of the corpus at all. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <Label>Primary document type (optional)</Label>
+            <Select
+              value={primaryDocumentType || NONE_VALUE}
+              onValueChange={val => setPrimaryDocumentType(val === NONE_VALUE ? '' : val)}
+              disabled={isWorking}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Not a primary document" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE_VALUE}>Not a primary document</SelectItem>
+                {(Object.keys(PRIMARY_DOCUMENT_TYPE_LABELS) as PrimaryDocumentType[]).map(k => (
+                  <SelectItem key={k} value={k}>
+                    {PRIMARY_DOCUMENT_TYPE_LABELS[k]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Strategic plans, annual reports, chair and CEO statements, board papers and
+              governance instruments are what a drift read compares across years. Leave this
+              unset for everything else — it still chunks and retrieves normally.
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="document_period">Period it speaks for (optional)</Label>
+            <Input
+              id="document_period"
+              value={documentPeriod}
+              onChange={e => setDocumentPeriod(e.target.value)}
+              placeholder="2024, FY2024-25, or 2025-2030"
+              disabled={isWorking}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              The period the document speaks for, not the day you uploaded it. A plan adopted
+              in 2024 can speak for 2025-2030 — name it the way your board names it.
+            </p>
+          </div>
+        </div>
+
         <Collapsible open={showResearchMeta} onOpenChange={setShowResearchMeta}>
           <CollapsibleTrigger asChild>
             <button

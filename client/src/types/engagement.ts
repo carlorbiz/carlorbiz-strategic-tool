@@ -183,7 +183,35 @@ export interface StDocument {
   journal: string | null;
   doi: string | null;
   external_link: string | null;
+  // Primary-document metadata (migration 0020) — the ingestion format expansion
+  // the drift lenses read. NULL for evidence that is not a primary
+  // organisational document; those still chunk and retrieve normally.
+  primary_document_type: PrimaryDocumentType | null;
+  document_period: string | null;
 }
+
+// The board-document classes a drift diagnostic reads (migration 0020). Mirrors
+// the primary documents named in the Generic Drift board workbook.
+export type PrimaryDocumentType =
+  | 'strategic_plan'
+  | 'annual_report'
+  | 'chair_or_ceo_statement'
+  | 'board_paper'
+  | 'governance_instrument'
+  | 'public_communication'
+  | 'operational_report';
+
+// Display labels + the one-line reason each class matters to a drift read.
+// Ordered as a board would list them, not alphabetically.
+export const PRIMARY_DOCUMENT_TYPE_LABELS: Record<PrimaryDocumentType, string> = {
+  strategic_plan: 'Strategic plan',
+  annual_report: 'Annual report',
+  chair_or_ceo_statement: 'Chair or CEO statement',
+  board_paper: 'Board paper',
+  governance_instrument: 'Governance instrument',
+  public_communication: 'Public communication',
+  operational_report: 'Operational report',
+};
 
 // ── Organisational Pillars (migration 0008) ─────────────────────────────────
 // Strategic intent the corpus is harvested in service of. Sits above themes.

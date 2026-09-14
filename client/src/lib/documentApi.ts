@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { StDocument } from '@/types/engagement';
+import type { PrimaryDocumentType, StDocument } from '@/types/engagement';
 
 // ── Upload a document to st-documents bucket + create st_documents row ──────
 
@@ -15,6 +15,10 @@ export interface UploadDocumentMetadata {
   journal?: string;
   doi?: string;
   externalLink?: string;
+  // Primary-document metadata (migration 0020) — what kind of organisational
+  // document this is and what period it speaks for. Read by the drift lenses.
+  primaryDocumentType?: PrimaryDocumentType;
+  documentPeriod?: string;
 }
 
 export async function uploadDocument(
@@ -59,6 +63,8 @@ export async function uploadDocument(
       journal: metadata.journal ?? null,
       doi: metadata.doi ?? null,
       external_link: metadata.externalLink ?? null,
+      primary_document_type: metadata.primaryDocumentType ?? null,
+      document_period: metadata.documentPeriod ?? null,
     })
     .select()
     .single();
@@ -98,6 +104,8 @@ export async function createDocumentRecord(
       journal: metadata.journal ?? null,
       doi: metadata.doi ?? null,
       external_link: metadata.externalLink ?? null,
+      primary_document_type: metadata.primaryDocumentType ?? null,
+      document_period: metadata.documentPeriod ?? null,
     })
     .select()
     .single();
