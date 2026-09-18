@@ -53,20 +53,26 @@ Deno.serve(async (req: Request) => {
     if (!engagement_id) return jsonResponse({ error: "engagement_id is required" }, 400);
 
     if (callerId) {
+      // callerId is the auth uid, which lives in user_profiles.user_id (the id
+      // column is a separate PK). The engagement role key lives on
+      // st_engagement_roles.role_key, reached through role_id.
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role")
-        .eq("id", callerId)
+        .eq("user_id", callerId)
         .maybeSingle();
-      const { data: roleRow } = await supabase
+      const { data: roleRows } = await supabase
         .from("st_user_engagement_roles")
-        .select("role")
+        .select("role:st_engagement_roles!role_id(role_key)")
         .eq("user_id", callerId)
         .eq("engagement_id", engagement_id)
-        .is("revoked_at", null)
-        .maybeSingle();
+        .is("revoked_at", null);
       const isInternalAdmin = profile?.role === "internal_admin";
-      const isClientAdmin = roleRow?.role === "client_admin";
+      const isClientAdmin = (roleRows ?? []).some((r) => {
+        const role = (r as { role: { role_key?: string } | { role_key?: string }[] | null }).role;
+        const keys = Array.isArray(role) ? role.map((x) => x.role_key) : [role?.role_key];
+        return keys.includes("client_admin");
+      });
       if (!isInternalAdmin && !isClientAdmin) {
         return jsonResponse({ error: "Only an admin can purge an engagement corpus" }, 403);
       }

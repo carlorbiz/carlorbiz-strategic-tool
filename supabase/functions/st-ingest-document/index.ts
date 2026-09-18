@@ -477,10 +477,12 @@ Deno.serve(async (req: Request) => {
         .eq("engagement_id", doc.engagement_id)
         .is("revoked_at", null)
         .maybeSingle();
+      // callerId is the auth uid, which lives in user_profiles.user_id (the
+      // id column is a separate PK; see scripts/bootstrap-admin.sql).
       const { data: profile } = await supabase
         .from("user_profiles")
         .select("role")
-        .eq("id", callerId)
+        .eq("user_id", callerId)
         .maybeSingle();
       if (!roleRow && profile?.role !== "internal_admin") {
         return jsonResponse({ error: "No access to this engagement" }, 403);
