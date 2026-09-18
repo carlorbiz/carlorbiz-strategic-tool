@@ -117,3 +117,6 @@ extract_chunks.py
 
 # Demo seed material - PDFs live locally, never in git
 docs/demo-3-abstracts/
+
+# Supabase CLI link state (project-ref, pooler-url) — per machine, never shared
+supabase/.temp/

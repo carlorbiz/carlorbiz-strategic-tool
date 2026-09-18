@@ -1,0 +1,91 @@
+# Supabase CLI configuration for the Strategy Engine.
+# Reference: https://supabase.com/docs/guides/local-development/cli/config
+#
+# Kept deliberately small. Only the sections the CLI needs for
+#   supabase link / supabase db push / supabase functions deploy
+# are declared, so `supabase config push` has nothing project-specific
+# (auth providers, SMTP, rate limits) to overwrite on the remote project.
+# Configure those in the Supabase dashboard; see CLIENT_RUNBOOK.md.
+
+project_id = "strategy-engine"
+
+[db]
+port = 54322
+shadow_port = 54320
+# Must match the remote project (Supabase provisions Postgres 17 for new projects).
+major_version = 17
+
+[db.migrations]
+# supabase/migrations/*.sql is the only schema source of truth (see its README).
+enabled = true
+schema_paths = []
+
+[db.seed]
+# Never seed a client project. Carla's demo corpora live in supabase/seed/demo
+# and are applied by hand, only on her own project, after enabling
+# st_deployment_settings.demo_tiers_enabled.
+enabled = false
+sql_paths = []
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+deno_version = 2
+
+# ─── Edge functions ──────────────────────────────────────────────────────────
+# verify_jwt = false for every engine function because each one authenticates
+# in code (createClient(...).auth.getUser(token) or the service-role key), and
+# several must accept callers the gateway would reject:
+#   * st-nera-query / st-catalogue accept anonymous demo sessions (still real
+#     JWTs, verified in-function) and rate-limit by tier;
+#   * st-campaign-exchange takes an opaque access token in the body and has no
+#     JWT at all; it mints the session.
+# The gateway check is therefore redundant at best and a lock-out at worst.
+# Verified against each function's requireAuth()/decodeUser() on 18 Sep 2026.
+
+# Core engine (always deployed by deploy/deploy-functions.*)
+[functions.st-nera-query]
+verify_jwt = false
+
+[functions.st-ingest-document]
+verify_jwt = false
+
+[functions.st-ingest-survey]
+verify_jwt = false
+
+[functions.st-generate-report]
+verify_jwt = false
+
+[functions.st-drift-watch]
+verify_jwt = false
+
+[functions.st-synthesise-stage]
+verify_jwt = false
+
+[functions.st-purge-engagement]
+verify_jwt = false
+
+[functions.st-catalogue]
+verify_jwt = false
+
+[functions.interview-engine-select-prompt]
+verify_jwt = false
+
+[functions.interview-engine-extract]
+verify_jwt = false
+
+[functions.interview-engine-evaluate-state]
+verify_jwt = false
+
+[functions.interview-engine-summarise-session]
+verify_jwt = false
+
+# Demo / sandbox / campaign tier (deployed only with --with-demo-tier)
+[functions.st-provision-sandbox]
+verify_jwt = false
+
+[functions.st-provision-campaign-user]
+verify_jwt = false
+
+[functions.st-campaign-exchange]
+verify_jwt = false
