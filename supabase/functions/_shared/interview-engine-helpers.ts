@@ -11,37 +11,106 @@ import type { LLMConfig } from "./llm.ts";
 // per-function default. This is what lets a single DB row flip the interview
 // engine from metered Claude to cheap/fast Gemini without a redeploy.
 
-type LLMProvider = "anthropic" | "google" | "openai";
+export type LLMProvider = "anthropic" | "google" | "openai";
 
-const LLM_API_KEYS: Record<string, string> = {
+const LLM_PROVIDERS: LLMProvider[] = ["anthropic", "google", "openai"];
+
+const LLM_API_KEYS: Record<LLMProvider, string> = {
   anthropic: Deno.env.get("ANTHROPIC_API_KEY") || "",
   google: Deno.env.get("GOOGLE_API_KEY") || "",
   openai: Deno.env.get("OPENAI_API_KEY") || "",
 };
 
+// Deployment-wide defaults (Supabase secrets). Optional. They sit between the
+// engagement's st_ai_config row and each function's own defaults, so a client
+// that only holds one provider's key sets LLM_PROVIDER once instead of editing
+// every engagement. See .env.example.
+const ENV_PROVIDER = (Deno.env.get("LLM_PROVIDER") || "").trim().toLowerCase();
+const ENV_MODEL = (Deno.env.get("LLM_MODEL") || "").trim();
+
+// Used only when the resolved provider differs from the function's default
+// provider and nothing named a model for it. Same trio st-nera-query has used.
+const PROVIDER_DEFAULT_MODELS: Record<LLMProvider, string> = {
+  anthropic: "claude-sonnet-4-5",
+  google: "gemini-2.5-flash",
+  openai: "gpt-4o-mini",
+};
+
+function isProvider(v: string | null | undefined): v is LLMProvider {
+  return v === "anthropic" || v === "google" || v === "openai";
+}
+
 /**
- * Resolve the LLM provider + model for an interview-engine call.
+ * Resolve provider + model + key from an already-fetched st_ai_config row.
  *
- * Precedence:
- *   1. st_ai_config.llm_provider / llm_model for this engagement (if a row and
- *      the column is non-null) — the operator override.
- *   2. The per-function `defaults` passed in — the intended model tier.
+ * Precedence for the provider:
+ *   1. row.llm_provider                       — the engagement's operator override
+ *   2. LLM_PROVIDER secret                    — the deployment-wide default
+ *   3. defaults.provider                      — the function's intended provider
+ *   4. any provider that has a key            — only when 1-2 are unset AND the
+ *      function's default provider has no key (single-provider deployments)
  *
- * Provider and model resolve independently, exactly like st-nera-query: a config
- * row that sets llm_provider='google' but leaves llm_model NULL keeps each
- * function on its own default model tier (e.g. flash for structured tasks, pro
- * for richness-critical extraction).
+ * Precedence for the model:
+ *   1. row.llm_model
+ *   2. LLM_MODEL secret, if LLM_PROVIDER is the resolved provider
+ *   3. defaults.model, if the resolved provider is the function's default one
+ *   4. PROVIDER_DEFAULT_MODELS[provider]
  *
- * Pass engagementId = null/undefined (e.g. a product-only call with no
- * engagement) to use the defaults directly.
+ * Provider and model resolve independently: a row with llm_provider='google'
+ * and llm_model NULL keeps each function on its own model tier when the
+ * function already defaults to google, and on the provider default otherwise.
+ * An explicit provider (row or secret) whose key is missing is an error; the
+ * silent fallback in step 4 only applies when nobody chose.
+ */
+export function resolveLLMConfigFromRow(
+  row: { llm_provider?: string | null; llm_model?: string | null } | null | undefined,
+  defaults: { provider: LLMProvider; model: string },
+): LLMConfig {
+  const rowProvider = isProvider(row?.llm_provider) ? row!.llm_provider as LLMProvider : null;
+  const envProvider = isProvider(ENV_PROVIDER) ? ENV_PROVIDER : null;
+
+  let provider: LLMProvider = rowProvider ?? envProvider ?? defaults.provider;
+  const explicit = rowProvider !== null || envProvider !== null;
+
+  if (!LLM_API_KEYS[provider]) {
+    if (explicit) {
+      throw new Error(`No API key configured for LLM provider: ${provider}`);
+    }
+    const available = LLM_PROVIDERS.find((p) => LLM_API_KEYS[p]);
+    if (!available) {
+      throw new Error(
+        "No LLM API key configured (set ANTHROPIC_API_KEY, GOOGLE_API_KEY or OPENAI_API_KEY)",
+      );
+    }
+    provider = available;
+  }
+
+  let model: string;
+  if (row?.llm_model) {
+    model = row.llm_model;
+  } else if (ENV_MODEL && envProvider === provider) {
+    model = ENV_MODEL;
+  } else if (provider === defaults.provider) {
+    model = defaults.model;
+  } else {
+    model = PROVIDER_DEFAULT_MODELS[provider];
+  }
+
+  return { provider, model, apiKey: LLM_API_KEYS[provider] };
+}
+
+/**
+ * Resolve the LLM provider + model for an engagement-scoped call by reading the
+ * engagement's st_ai_config row (if any) and delegating to
+ * resolveLLMConfigFromRow(). Pass engagementId = null/undefined (e.g. a
+ * product-only call with no engagement) to skip the lookup.
  */
 export async function resolveLLMConfig(
   supabase: SupabaseClient,
   engagementId: string | null | undefined,
   defaults: { provider: LLMProvider; model: string },
 ): Promise<LLMConfig> {
-  let provider: LLMProvider = defaults.provider;
-  let model: string = defaults.model;
+  let row: { llm_provider?: string | null; llm_model?: string | null } | null = null;
 
   if (engagementId) {
     const { data } = await supabase
@@ -49,18 +118,10 @@ export async function resolveLLMConfig(
       .select("llm_provider, llm_model")
       .eq("engagement_id", engagementId)
       .maybeSingle();
-    if (data) {
-      const row = data as { llm_provider?: string | null; llm_model?: string | null };
-      if (row.llm_provider) provider = row.llm_provider as LLMProvider;
-      if (row.llm_model) model = row.llm_model;
-    }
+    if (data) row = data as { llm_provider?: string | null; llm_model?: string | null };
   }
 
-  const apiKey = LLM_API_KEYS[provider];
-  if (!apiKey) {
-    throw new Error(`No API key configured for LLM provider: ${provider}`);
-  }
-  return { provider, model, apiKey };
+  return resolveLLMConfigFromRow(row, defaults);
 }
 
 export interface MessageRecord {

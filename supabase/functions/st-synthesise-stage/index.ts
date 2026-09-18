@@ -1,11 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
-import type { LLMConfig } from "../_shared/llm.ts";
+import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 
 // ─── CORS ─────────────────────────────────────────────────────
 const corsHeaders = {
@@ -174,12 +173,11 @@ ${
     .join("\n") ?? "None."
 }`;
 
-    // 9. LLM synthesis
-    const llmConfig: LLMConfig = {
+    // 9. LLM synthesis — provider/model per st_ai_config → LLM_PROVIDER/LLM_MODEL → default
+    const llmConfig = await resolveLLMConfig(supabase, engagementId, {
       provider: "anthropic",
       model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
+    });
 
     const systemPrompt = `You are Nera, synthesising the outputs of a completed engagement stage. Analyse all stakeholder inputs, workshop decisions, and evidence to produce structured insights for the next stage.
 

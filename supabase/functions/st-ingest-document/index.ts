@@ -2,11 +2,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
 import { callLLM } from "../_shared/llm.ts";
 import type { LLMConfig } from "../_shared/llm.ts";
+import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+
+// Provider/model come from st_ai_config (per engagement) → LLM_PROVIDER /
+// LLM_MODEL secrets → this default, via resolveLLMConfig. No key is required
+// at module load; a missing key surfaces per request as a clear error.
+const DEFAULT_LLM = { provider: "anthropic" as const, model: "claude-sonnet-4-5" };
 
 // ─── CORS ─────────────────────────────────────────────────────
 const corsHeaders = {
@@ -88,10 +93,12 @@ async function runIngestion(
       return;
     }
 
+    const llmConfig = await resolveLLMConfig(supabase, doc.engagement_id, DEFAULT_LLM);
+
     // 2. Extract text content based on file type
     let textContent: string;
     try {
-      textContent = await extractText(fileData, doc.file_type, doc.file_path);
+      textContent = await extractText(fileData, doc.file_type, doc.file_path, llmConfig);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Unknown extraction error";
       await markFailed(supabase, documentId, msg);
@@ -102,12 +109,6 @@ async function runIngestion(
       await markFailed(supabase, documentId, "Extracted text too short or empty");
       return;
     }
-
-    const llmConfig: LLMConfig = {
-      provider: "anthropic",
-      model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
 
     // 3. Generate document summary
     let summary: string;
@@ -203,11 +204,7 @@ async function processTextSegment(
   }
   const isLast = segmentIndex === totalSegments - 1;
 
-  const llmConfig: LLMConfig = {
-    provider: "anthropic",
-    model: "claude-sonnet-4-5",
-    apiKey: ANTHROPIC_API_KEY,
-  };
+  const llmConfig = await resolveLLMConfig(supabase, doc.engagement_id, DEFAULT_LLM);
 
   // Idempotent restart: the first segment clears any chunks from a previous
   // (possibly partial) run of this document, so retries never duplicate.
@@ -325,8 +322,10 @@ async function processSlice(
   }
   const pdfBytes = new Uint8Array(await fileData.arrayBuffer());
 
+  const llmConfig = await resolveLLMConfig(supabase, doc.engagement_id, DEFAULT_LLM);
+
   // 2. Convert just this slice to Markdown
-  const slice = await convertPdfSliceToMarkdown(pdfBytes, chunkIndex);
+  const slice = await convertPdfSliceToMarkdown(pdfBytes, chunkIndex, llmConfig);
   const totalChunks = Math.max(1, Math.ceil(slice.totalPages / PAGES_PER_CHUNK));
   const isLast = chunkIndex === totalChunks - 1;
 
@@ -339,12 +338,6 @@ async function processSlice(
       is_last: isLast,
     };
   }
-
-  const llmConfig: LLMConfig = {
-    provider: "anthropic",
-    model: "claude-sonnet-4-5",
-    apiKey: ANTHROPIC_API_KEY,
-  };
 
   // 3. Run semantic chunker on this slice's markdown. Typically 1-2 LLM calls
   //    since 8 pages produce ~10-20k chars of markdown.
@@ -565,7 +558,8 @@ Deno.serve(async (req: Request) => {
 async function extractText(
   blob: Blob,
   fileType: string,
-  filePath: string
+  filePath: string,
+  llmConfig: LLMConfig,
 ): Promise<string> {
   switch (fileType) {
     case "md":
@@ -589,7 +583,7 @@ async function extractText(
       // Each chunk returns Markdown which is concatenated and fed downstream
       // to the same semantic chunker used for plaintext.
       const pdfBytes = new Uint8Array(await blob.arrayBuffer());
-      return await convertPdfToMarkdown(pdfBytes);
+      return await convertPdfToMarkdown(pdfBytes, llmConfig);
     }
 
     case "docx": {
@@ -651,16 +645,31 @@ function toBase64(bytes: Uint8Array): string {
 // max_tokens lowered to 8000: 3-page slices produce at most ~4-6k tokens of
 // Markdown output, and capping output length is the most direct way to keep
 // generation latency predictable.
-async function callDocumentApi(base64Pdf: string, promptText: string): Promise<string> {
+//
+// This path sends the PDF bytes themselves to the model, which only the
+// Anthropic Document API supports here. Under any other resolved provider it
+// fails fast with a message pointing at the in-browser extraction path
+// (Mode C), which is provider-agnostic and the UI default for PDFs anyway.
+async function callDocumentApi(
+  base64Pdf: string,
+  promptText: string,
+  llmConfig: LLMConfig,
+): Promise<string> {
+  if (llmConfig.provider !== "anthropic") {
+    throw new Error(
+      `Server-side PDF conversion requires the anthropic provider (resolved: ${llmConfig.provider}). ` +
+        "Upload PDFs through the app so the text is extracted in the browser instead.",
+    );
+  }
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
+      "x-api-key": llmConfig.apiKey,
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-5-20250929",
+      model: llmConfig.model,
       max_tokens: 8000,
       messages: [
         {
@@ -723,6 +732,7 @@ async function getPdfChunkInfo(pdfBytes: Uint8Array): Promise<PdfChunkInfo> {
 async function convertPdfSliceToMarkdown(
   pdfBytes: Uint8Array,
   chunkIndex: number,
+  llmConfig: LLMConfig,
 ): Promise<{ markdown: string; startPage: number; endPage: number; totalPages: number }> {
   const srcDoc = await PDFDocument.load(pdfBytes);
   const totalPages = srcDoc.getPageCount();
@@ -740,7 +750,7 @@ async function convertPdfSliceToMarkdown(
 
   const base64 = toBase64(sliceBytes);
   const promptSuffix = `\n\nNote: This is pages ${start + 1}–${end + 1} of a ${totalPages}-page document. Convert all content on these pages. Do not add any preamble about the page range.`;
-  const markdown = await callDocumentApi(base64, PDF_CONVERT_PROMPT + promptSuffix);
+  const markdown = await callDocumentApi(base64, PDF_CONVERT_PROMPT + promptSuffix, llmConfig);
 
   return {
     markdown: markdown.trim(),
@@ -753,11 +763,11 @@ async function convertPdfSliceToMarkdown(
 // Legacy whole-PDF conversion — kept for the UI's no-chunk-index path which
 // runs inside EdgeRuntime.waitUntil. New callers should use the chunk_index
 // orchestration via convertPdfSliceToMarkdown.
-async function convertPdfToMarkdown(pdfBytes: Uint8Array): Promise<string> {
+async function convertPdfToMarkdown(pdfBytes: Uint8Array, llmConfig: LLMConfig): Promise<string> {
   const { totalChunks } = await getPdfChunkInfo(pdfBytes);
   const parts: string[] = [];
   for (let i = 0; i < totalChunks; i++) {
-    const { markdown } = await convertPdfSliceToMarkdown(pdfBytes, i);
+    const { markdown } = await convertPdfSliceToMarkdown(pdfBytes, i, llmConfig);
     parts.push(markdown);
   }
   return parts.join("\n\n");

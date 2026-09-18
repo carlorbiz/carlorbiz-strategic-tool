@@ -20,16 +20,11 @@ import {
   parseStreamDeltas,
 } from "../_shared/llm.ts";
 import type { LLMConfig, LLMMessage } from "../_shared/llm.ts";
+import { resolveLLMConfigFromRow } from "../_shared/interview-engine-helpers.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const LLM_API_KEYS: Record<string, string> = {
-  anthropic: Deno.env.get("ANTHROPIC_API_KEY") || "",
-  google: Deno.env.get("GOOGLE_API_KEY") || "",
-  openai: Deno.env.get("OPENAI_API_KEY") || "",
-};
 
 // ─── CORS ─────────────────────────────────────────────────────
 const corsHeaders = {
@@ -288,20 +283,17 @@ async function loadEngagementContext(
   const cfg = (cfgRes.data ?? {}) as any;
   const vocab = { ...DEFAULT_VOCAB, ...(cfg.vocabulary_map ?? {}) };
 
-  const provider = (cfg.llm_provider as "anthropic" | "google" | "openai") || "anthropic";
-  const model = (cfg.llm_model as string) ||
-    (provider === "google" ? "gemini-2.5-flash"
-      : provider === "openai" ? "gpt-4o-mini"
-        : "claude-sonnet-4-5");
-  const apiKey = LLM_API_KEYS[provider];
-  if (!apiKey) {
-    throw new Error(`No API key configured for LLM provider: ${provider}`);
-  }
+  // Shared resolution: st_ai_config row → LLM_PROVIDER/LLM_MODEL secrets →
+  // this default → whichever provider has a key.
+  const llmConfig: LLMConfig = resolveLLMConfigFromRow(cfg, {
+    provider: "anthropic",
+    model: "claude-sonnet-4-5",
+  });
 
   return {
     engagement: engRes.data,
     vocabulary: vocab,
-    llmConfig: { provider, model, apiKey },
+    llmConfig,
     systemPromptOverride: cfg.system_prompt_update ?? null,
     commitments: cmtRes.data ?? [],
     pillars: pillarRes.data ?? [],

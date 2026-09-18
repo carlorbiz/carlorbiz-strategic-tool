@@ -24,13 +24,11 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
-import type { LLMConfig } from "../_shared/llm.ts";
+import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
-const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY") || "";
 
 // ─── CORS ─────────────────────────────────────────────────────
 const corsHeaders = {
@@ -67,23 +65,17 @@ async function requireAuth(req: Request): Promise<string> {
 }
 
 // ─── Model configs ────────────────────────────────────────────
-// Per-question analysis + chunk extraction: Gemini 2.5 Flash. Cheap, fast,
-// reliable JSON output for structured extraction. ~40 calls per survey, so
-// latency dominates total time.
-// Overall summary: Claude Sonnet 4. Single call, prose quality matters for
-// the board-readable summary.
+// Two model tiers, both resolved per survey through resolveLLMConfig
+// (st_ai_config row → LLM_PROVIDER/LLM_MODEL secrets → these defaults, then
+// whichever provider actually has a key). The defaults keep the historical
+// split when both keys exist:
+//   analysis + chunk extraction: Gemini 2.5 Flash — cheap, fast, reliable
+//     JSON for structured extraction; ~40 calls per survey.
+//   overall summary: Claude Sonnet 4.5 — single call, prose quality matters.
+// A single-provider deployment runs everything on that provider.
 
-const FLASH_CONFIG: LLMConfig = {
-  provider: "google",
-  model: "gemini-2.5-flash",
-  apiKey: GOOGLE_API_KEY,
-};
-
-const SONNET_CONFIG: LLMConfig = {
-  provider: "anthropic",
-  model: "claude-sonnet-4-5",
-  apiKey: ANTHROPIC_API_KEY,
-};
+const ANALYSIS_DEFAULT = { provider: "google" as const, model: "gemini-2.5-flash" };
+const SUMMARY_DEFAULT = { provider: "anthropic" as const, model: "claude-sonnet-4-5" };
 
 // ─── LLM prompts ──────────────────────────────────────────────
 
@@ -385,13 +377,10 @@ async function runBackgroundAnalysis(
       `[bg] Survey ${survey.id}: analysing ${eligible.length} questions of ${questionList.length} total (skipped questions with <3 responses)`,
     );
 
-    if (!GOOGLE_API_KEY) {
-      throw new Error(
-        "GOOGLE_API_KEY not configured — per-question analysis requires Gemini Flash",
-      );
-    }
+    const analysisConfig = await resolveLLMConfig(supabase, survey.engagement_id, ANALYSIS_DEFAULT);
+    const summaryConfig = await resolveLLMConfig(supabase, survey.engagement_id, SUMMARY_DEFAULT);
 
-    // 7. Per-question Gemini Flash analysis, concurrency 5
+    // 7. Per-question analysis, concurrency 5
     const analysisResults = await runParallel(
       eligible,
       5,
@@ -404,7 +393,7 @@ async function runBackgroundAnalysis(
               .join("\n")
           }`;
           const result = await callLLM(
-            FLASH_CONFIG,
+            analysisConfig,
             QUESTION_ANALYSIS_PROMPT,
             [{ role: "user", content: input }],
             4000,
@@ -457,7 +446,7 @@ async function runBackgroundAnalysis(
           )
           .join("\n\n");
         overallSummary = await callLLM(
-          SONNET_CONFIG,
+          summaryConfig,
           SURVEY_SUMMARY_PROMPT,
           [{ role: "user", content: summaryInput }],
           500,
@@ -487,7 +476,7 @@ async function runBackgroundAnalysis(
               JSON.stringify(qs.themes)
             }\nNotable quotes: ${JSON.stringify(qs.notable_quotes)}`;
           const result = await callLLM(
-            FLASH_CONFIG,
+            analysisConfig,
             SURVEY_CHUNK_PROMPT,
             [{ role: "user", content: chunkInput }],
             3000,

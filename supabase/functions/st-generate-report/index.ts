@@ -25,12 +25,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
-import type { LLMConfig } from "../_shared/llm.ts";
+import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 // CC-231 — Intelligence Engine grounding. Optional, env only: an unset URL
 // disables the read (the `toolsInPlay.length > 0 && NERA_ENGINE_URL` guard
 // below). The read key is a server-side secret (never shipped to the browser).
@@ -441,11 +440,11 @@ ${
       .replace(/\{period_start\}/g, period_start ?? "inception")
       .replace(/\{period_end\}/g, period_end ?? "now");
 
-    const llmConfig: LLMConfig = {
+    // Provider/model per st_ai_config → LLM_PROVIDER/LLM_MODEL → default.
+    const llmConfig = await resolveLLMConfig(supabase, engagement_id, {
       provider: "anthropic",
       model: "claude-sonnet-4-5",
-      apiKey: ANTHROPIC_API_KEY,
-    };
+    });
 
     // Generate all sections in one pass for coherence (sections are short enough)
     const sectionInstructions = sections
