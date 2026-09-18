@@ -23,12 +23,14 @@ import { createClient } from '@supabase/supabase-js';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const SUPABASE_URL = 'https://lgcmjneodjrtjtwbomsj.supabase.co';
+// Env only: the target project is never hard-coded. This is a demo-corpus
+// seeder for Carla's own project; a client project has no reason to run it.
+const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!SERVICE_KEY) {
-  console.error('Missing SUPABASE_SERVICE_ROLE_KEY env var.');
-  console.error('Set it in your shell before running:');
-  console.error('  $env:SUPABASE_SERVICE_ROLE_KEY="..." ; npx tsx scripts/seed-rural-futures-australia.ts');
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error('Missing SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY env vars.');
+  console.error('Set them in your shell before running:');
+  console.error('  $env:SUPABASE_URL="https://<ref>.supabase.co"; $env:SUPABASE_SERVICE_ROLE_KEY="..." ; npx tsx scripts/seed-rural-futures-australia.ts');
   process.exit(1);
 }
 

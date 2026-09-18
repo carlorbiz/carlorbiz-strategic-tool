@@ -27,7 +27,7 @@
 // convention; the token is verified in-function via auth.getUser().
 //
 // Secrets: NERA_ENGINE_READ_KEY is read from env, sent as X-Engine-Key, and
-// never logged or echoed. NERA_ENGINE_URL is optional (defaults to prod).
+// never logged or echoed. NERA_ENGINE_URL is optional; unset disables the proxy.
 // =============================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -35,8 +35,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const NERA_ENGINE_URL = (Deno.env.get("NERA_ENGINE_URL") ??
-  "https://nera-api-284843592671.australia-southeast2.run.app").replace(/\/+$/, "");
+// Env only, no default engine. Unset = the Intelligence Engine bolt-on is off
+// and every route answers 503 so the UI shows a clear "not configured".
+const NERA_ENGINE_URL = (Deno.env.get("NERA_ENGINE_URL") ?? "").replace(/\/+$/, "");
 const NERA_ENGINE_READ_KEY = Deno.env.get("NERA_ENGINE_READ_KEY") ?? "";
 
 const UPSTREAM_TIMEOUT_MS = 30_000;
@@ -135,6 +136,10 @@ Deno.serve(async (req) => {
     await requireAuth(req);
   } catch (e) {
     return jsonResponse({ error: (e as Error).message }, 401);
+  }
+
+  if (!NERA_ENGINE_URL) {
+    return jsonResponse({ detail: "Intelligence Engine not configured (NERA_ENGINE_URL unset)" }, 503);
   }
 
   const url = new URL(req.url);

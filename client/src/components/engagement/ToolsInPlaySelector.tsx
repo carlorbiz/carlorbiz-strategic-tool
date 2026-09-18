@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { updateEngagementSettings } from '@/lib/commitmentApi';
-import { fetchCatalogueVendors, freshnessLabel, type CatalogueVendor } from '@/lib/toolCatalogueApi';
+import { fetchCatalogueVendors, freshnessLabel, ENGINE_CONFIGURED, type CatalogueVendor } from '@/lib/toolCatalogueApi';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,7 @@ export function ToolsInPlaySelector() {
   }, [vendors, query]);
 
   if (!engagement) return null;
+  if (!ENGINE_CONFIGURED) return null; // optional bolt-on; no engine URL in this deployment
 
   const dirty = JSON.stringify([...selected].sort()) !== JSON.stringify([...(engagement.tools_in_play ?? [])].sort());
 

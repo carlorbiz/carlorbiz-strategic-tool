@@ -8,7 +8,13 @@ import remarkGfm from "remark-gfm";
 import { ArrowLeft, RotateCcw, ChevronRight, CheckCircle2, HelpCircle, ExternalLink, ImageIcon } from "lucide-react";
 import type { DecisionTree, DecisionTreeNode, DecisionTreeResultNode } from "@/types/cms";
 
-const STORAGE_BASE = "https://ksfdabyledggbeweeqta.supabase.co/storage/v1/object/public/content-images";
+// Env only: VITE_CONTENT_IMAGES_BASE, else the public content-images bucket on
+// the configured project. No hard-coded fallback project.
+const STORAGE_BASE: string =
+  (import.meta.env.VITE_CONTENT_IMAGES_BASE as string | undefined)?.replace(/\/+$/, "") ||
+  (import.meta.env.VITE_SUPABASE_URL
+    ? `${(import.meta.env.VITE_SUPABASE_URL as string).replace(/\/+$/, "")}/storage/v1/object/public/content-images`
+    : "");
 
 /** Render a screenshot with lightbox-style click-to-expand */
 function NodeImage({ url, alt }: { url: string; alt?: string }) {

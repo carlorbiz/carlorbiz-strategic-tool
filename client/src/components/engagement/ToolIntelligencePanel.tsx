@@ -9,6 +9,7 @@ import {
   fetchCatalogueVendors,
   fetchCatalogueVendorDetail,
   freshnessLabel,
+  ENGINE_CONFIGURED,
   type CatalogueVendor,
   type CatalogueVendorDetail,
 } from '@/lib/toolCatalogueApi';
@@ -55,6 +56,7 @@ export function ToolIntelligencePanel() {
   };
 
   if (!engagement) return null;
+  if (!ENGINE_CONFIGURED) return null; // optional bolt-on; no engine URL in this deployment
 
   if (tools.length === 0) {
     return (

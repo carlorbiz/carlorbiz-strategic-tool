@@ -18,11 +18,14 @@
 
 import { supabase } from '@/lib/supabase';
 
-const DEFAULT_ENGINE_URL = 'https://nera-api-284843592671.australia-southeast2.run.app';
+// Env only. The Intelligence Engine is an optional bolt-on: with neither
+// VITE_NERA_ENGINE_URL nor VITE_CATALOGUE_VIA_PROXY set, ENGINE_CONFIGURED is
+// false and the Tools UI does not render. No hard-coded default engine.
 export const ENGINE_URL: string =
-  (import.meta.env.VITE_NERA_ENGINE_URL as string | undefined)?.replace(/\/+$/, '') || DEFAULT_ENGINE_URL;
+  (import.meta.env.VITE_NERA_ENGINE_URL as string | undefined)?.replace(/\/+$/, '') || '';
 
 export const CATALOGUE_VIA_PROXY: boolean = import.meta.env.VITE_CATALOGUE_VIA_PROXY === 'true';
+export const ENGINE_CONFIGURED: boolean = CATALOGUE_VIA_PROXY || ENGINE_URL !== '';
 const CATALOGUE_PREFIX = '/api/catalogue/';
 
 export interface CatalogueVendor {
@@ -107,6 +110,9 @@ async function proxyRequest(path: string, init?: RequestInit): Promise<Response>
 }
 
 async function engineFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!ENGINE_CONFIGURED) {
+    throw new Error('Intelligence Engine not configured (set VITE_NERA_ENGINE_URL or VITE_CATALOGUE_VIA_PROXY)');
+  }
   const res = CATALOGUE_VIA_PROXY
     ? await proxyRequest(path, init)
     : await fetch(`${ENGINE_URL}${path}`, {

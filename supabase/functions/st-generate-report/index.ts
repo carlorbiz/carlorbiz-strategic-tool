@@ -31,10 +31,10 @@ import type { LLMConfig } from "../_shared/llm.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
-// CC-231 — Intelligence Engine grounding. Optional: unset URL disables the read.
-// The read key is a server-side secret (never shipped to the browser).
-const NERA_ENGINE_URL = (Deno.env.get("NERA_ENGINE_URL") ??
-  "https://nera-api-284843592671.australia-southeast2.run.app").replace(/\/+$/, "");
+// CC-231 — Intelligence Engine grounding. Optional, env only: an unset URL
+// disables the read (the `toolsInPlay.length > 0 && NERA_ENGINE_URL` guard
+// below). The read key is a server-side secret (never shipped to the browser).
+const NERA_ENGINE_URL = (Deno.env.get("NERA_ENGINE_URL") ?? "").replace(/\/+$/, "");
 const NERA_ENGINE_READ_KEY = Deno.env.get("NERA_ENGINE_READ_KEY") ?? "";
 
 // ─── CORS ─────────────────────────────────────────────────────

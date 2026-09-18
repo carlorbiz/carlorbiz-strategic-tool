@@ -30,9 +30,11 @@ const SUGGESTED_PROMPTS = [
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Env only: explicit VITE_NERA_API_URL, else the nera-query function on the
+// configured project. No hard-coded fallback project.
 const NERA_API_URL =
   import.meta.env.VITE_NERA_API_URL ||
-  `${SUPABASE_URL || 'https://ksfdabyledggbeweeqta.supabase.co'}/functions/v1/nera-query`;
+  (SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/nera-query` : '');
 
 // Client-side rate limit: max 3 queries per browser session, resets after 10 minutes.
 // Protects against casual abuse of the public demo. Real protection happens
@@ -194,6 +196,7 @@ export function NeraInlineViewer({ intro, interviewMode }: NeraInlineViewerProps
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
     try {
+      if (!NERA_API_URL) throw new Error('Nera is not configured (VITE_SUPABASE_URL or VITE_NERA_API_URL is unset)');
       const res = await fetch(NERA_API_URL, {
         method: 'POST',
         headers: {
