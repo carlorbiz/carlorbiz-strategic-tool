@@ -198,6 +198,50 @@ async function runParallel<T, R>(
   return results;
 }
 
+// ─── Payload limits (browser-parsed path) ──────────────────────
+// parsed_sheets arrives as plain JSON in the request body rather than a
+// stored file, so there is no storage-bucket size limit backing it — these
+// caps keep one call bounded. They are generous for any real survey export
+// (thousands of respondents, dozens of questions) while refusing anything
+// that looks like an accidental raw-data dump rather than a survey.
+const MAX_PARSED_SHEETS = 20;
+const MAX_PARSED_ROWS_PER_SHEET = 20000;
+const MAX_PARSED_HEADERS_PER_SHEET = 500;
+
+function validateParsedSheets(sheets: unknown): ParsedSheet[] {
+  if (!Array.isArray(sheets) || sheets.length === 0) {
+    throw new Error("parsed_sheets must be a non-empty array");
+  }
+  if (sheets.length > MAX_PARSED_SHEETS) {
+    throw new Error(`parsed_sheets exceeds the ${MAX_PARSED_SHEETS}-sheet bound`);
+  }
+  return sheets.map((s, i) => {
+    if (typeof s !== "object" || s === null) {
+      throw new Error(`parsed_sheets[${i}] is not an object`);
+    }
+    const sheet = s as Record<string, unknown>;
+    const sheetName = typeof sheet.sheet_name === "string" ? sheet.sheet_name : `Sheet${i + 1}`;
+    const headers = Array.isArray(sheet.headers) ? sheet.headers.map(String) : [];
+    if (headers.length > MAX_PARSED_HEADERS_PER_SHEET) {
+      throw new Error(`parsed_sheets[${i}] exceeds the ${MAX_PARSED_HEADERS_PER_SHEET}-column bound`);
+    }
+    const rows = Array.isArray(sheet.rows) ? sheet.rows : [];
+    if (rows.length > MAX_PARSED_ROWS_PER_SHEET) {
+      throw new Error(`parsed_sheets[${i}] exceeds the ${MAX_PARSED_ROWS_PER_SHEET}-row bound`);
+    }
+    const cleanRows = rows.map((r) => {
+      if (typeof r !== "object" || r === null) return {};
+      const row: Record<string, string> = {};
+      for (const h of headers) {
+        const v = (r as Record<string, unknown>)[h];
+        row[h] = v != null ? String(v) : "";
+      }
+      return row;
+    });
+    return { sheet_name: sheetName, headers, rows: cleanRows };
+  });
+}
+
 // ─── Main handler ─────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -206,7 +250,9 @@ Deno.serve(async (req) => {
 
   try {
     const _userId = await requireAuth(req);
-    const { survey_id } = await req.json();
+    const body = await req.json();
+    const survey_id = body.survey_id as string | undefined;
+    const rawParsedSheets = body.parsed_sheets;
 
     if (!survey_id) {
       return jsonResponse({ error: "survey_id is required" }, 400);
@@ -231,24 +277,43 @@ Deno.serve(async (req) => {
       .update({ status: "ingesting" })
       .eq("id", survey_id);
 
-    // 3. Download file from storage
-    const { data: fileData, error: fileErr } = await supabase.storage
-      .from("st-surveys")
-      .download(survey.file_path);
-
-    if (fileErr || !fileData) {
-      await markFailed(supabase, survey_id, "Failed to download file from storage");
-      return jsonResponse({ error: "Failed to download file" }, 500);
-    }
-
-    // 4. Parse the file into normalised sheets
+    // 3. Get the parsed sheets — either the caller already parsed the file in
+    //    the browser and sent the structure (the sovereign path: the raw
+    //    respondent-level file never reaches this platform), or this
+    //    function downloads and parses a stored file itself (the legacy
+    //    path — kept working for any caller that still uploads the raw
+    //    file, e.g. direct API use or a future non-browser client).
     let sheets: ParsedSheet[];
-    try {
-      sheets = await parseFile(fileData, survey.file_type);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Parse error";
-      await markFailed(supabase, survey_id, msg);
-      return jsonResponse({ error: `File parsing failed: ${msg}` }, 500);
+    if (rawParsedSheets !== undefined) {
+      try {
+        sheets = validateParsedSheets(rawParsedSheets);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Invalid parsed_sheets";
+        await markFailed(supabase, survey_id, msg);
+        return jsonResponse({ error: msg }, 400);
+      }
+    } else {
+      if (!survey.file_path) {
+        const msg = "No parsed_sheets provided and this survey has no stored file to parse";
+        await markFailed(supabase, survey_id, msg);
+        return jsonResponse({ error: msg }, 400);
+      }
+      const { data: fileData, error: fileErr } = await supabase.storage
+        .from("st-surveys")
+        .download(survey.file_path);
+
+      if (fileErr || !fileData) {
+        await markFailed(supabase, survey_id, "Failed to download file from storage");
+        return jsonResponse({ error: "Failed to download file" }, 500);
+      }
+
+      try {
+        sheets = await parseFile(fileData, survey.file_type);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Parse error";
+        await markFailed(supabase, survey_id, msg);
+        return jsonResponse({ error: `File parsing failed: ${msg}` }, 500);
+      }
     }
 
     if (sheets.length === 0 || sheets.every((s) => s.rows.length === 0)) {

@@ -62,10 +62,19 @@ export function SurveyList({ refreshTrigger }: SurveyListProps) {
     return () => clearInterval(interval);
   }, [surveys]);
 
-  const handleRetry = async (surveyId: string) => {
-    setRetrying(surveyId);
+  // Server-side retry only works when the raw file is stored (file_path
+  // set) — that legacy path re-downloads and re-parses it. A sovereign-path
+  // survey (file_path NULL, the default since browser-side parsing shipped)
+  // was never stored here, so a server-side retry would just fail again on
+  // the storage download. Same reasoning as DocumentList.tsx's handleRetry.
+  const handleRetry = async (survey: StSurvey) => {
+    if (!survey.file_path) {
+      toast.error('This file was processed without being stored — upload it again to retry.');
+      return;
+    }
+    setRetrying(survey.id);
     try {
-      await triggerSurveyIngestion(surveyId);
+      await triggerSurveyIngestion(survey.id);
       toast.success('Retry triggered — survey re-queued for analysis');
       await loadSurveys();
     } catch (err) {
@@ -155,12 +164,13 @@ export function SurveyList({ refreshTrigger }: SurveyListProps) {
                     })}
                   </TableCell>
                   <TableCell>
-                    {survey.status === 'failed' && (
+                    {survey.status === 'failed' && survey.file_path && (
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleRetry(survey.id)}
+                        onClick={() => handleRetry(survey)}
                         disabled={retrying === survey.id}
+                        title="Retry ingestion"
                       >
                         {retrying === survey.id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -168,6 +178,11 @@ export function SurveyList({ refreshTrigger }: SurveyListProps) {
                           <RefreshCw className="w-3 h-3" />
                         )}
                       </Button>
+                    )}
+                    {survey.status === 'failed' && !survey.file_path && (
+                      <span className="text-xs text-muted-foreground" title={survey.overall_summary ?? undefined}>
+                        Re-upload to retry
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
