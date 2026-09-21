@@ -479,13 +479,28 @@ async function retrieveScopedChunks(
       supabase.from("knowledge_chunks").select(selectCols),
     )
       .textSearch("fts", fts, { type: "websearch" })
-      .limit(limit);
+      .limit(limit * 4);
 
+    // The OR search is unranked, so a plain limit lets one long document fill
+    // every slot (acceptance run, 21 Sep 2026: the risk register never reached
+    // the model). Take a wider candidate set and deal it out one document at a
+    // time, so every document that matched is represented before any repeats.
     if (!error && data) {
+      const byDoc = new Map<string, ScopedChunk[]>();
       for (const row of data as ScopedChunk[]) {
-        if (!seen.has(row.id)) {
-          seen.add(row.id);
-          out.push(row);
+        const key = row.document_source ?? "";
+        if (!byDoc.has(key)) byDoc.set(key, []);
+        byDoc.get(key)!.push(row);
+      }
+      const queues = [...byDoc.values()];
+      while (out.length < limit && queues.some((q) => q.length > 0)) {
+        for (const q of queues) {
+          const row = q.shift();
+          if (row && !seen.has(row.id)) {
+            seen.add(row.id);
+            out.push(row);
+            if (out.length >= limit) break;
+          }
         }
       }
     }
@@ -517,9 +532,11 @@ async function retrieveScopedChunks(
 
 function formatChunksForContext(chunks: ScopedChunk[]): string {
   return chunks
-    .map((c, i) => {
+    .map((c) => {
       const sect = c.section_reference ? ` — ${c.section_reference}` : "";
-      return `[Source ${i + 1}] ${c.document_source}${sect}\n${c.chunk_text}`;
+      // Labelled by title, never by index: an index ("Source 10") is a citation
+      // the reader cannot resolve, and the model will happily repeat it.
+      return `[Document: ${c.document_source}${sect}]\n${c.chunk_text}`;
     })
     .join("\n\n---\n\n");
 }

@@ -63,7 +63,7 @@ later command runs against this project only.
 npx supabase db push
 ```
 
-Applies the 23 files in `supabase/migrations/` in order (see its README).
+Applies every file in `supabase/migrations/` in order (see its README).
 Expect `WARNING: there is already a transaction in progress` a few times; that
 is not an error. Confirm in the dashboard → Table Editor: `st_engagements`,
 `knowledge_chunks`, `user_profiles` exist, and Storage shows four `st-*`
@@ -102,7 +102,23 @@ Deploys the 12 engine functions with the JWT settings from
 ## 7. Build and host the app (10 min)
 
 Set the build-time values as **environment variables** (the Vite config reads
-the first two from the shell, not from a file), then build.
+them from the shell, not from a file), then build. **Build in a clean shell.**
+Any `VITE_*` variable already set on the machine is baked into the bundle: on
+the 21 Sep 2026 acceptance run a stray `VITE_NERA_API_URL` from another
+project ended up inside the client's JavaScript. Check first and clear
+anything that is not listed below:
+
+```powershell
+Get-ChildItem Env:VITE_*            # PowerShell: should list nothing
+```
+
+```bash
+env | grep '^VITE_'                 # Bash: should print nothing
+```
+
+After the build, confirm the bundle names only this project:
+`grep -rhoE "https://[a-z0-9]{20}\.supabase\.co" dist/assets/*.js | sort -u`
+must print exactly one line, `<project-url>`.
 
 PowerShell:
 
@@ -213,8 +229,18 @@ They now see exactly that engagement and nothing else.
 
 ## Handover or teardown
 
-* **Hand over**: Supabase → Organization settings → transfer the project to
-  the client's organisation (or invite them as Owner and remove yourself).
+* **Hand over**: Project Settings → General → Transfer project, into the
+  client's organisation. Supabase's conditions (checked against its Project
+  Transfers guide, 21 Sep 2026): you must be the **Owner** of the organisation
+  the project is in now and at least a **member** of the client's organisation
+  (they invite you first; they can remove you afterwards); the project must
+  have no active GitHub integration and no log drains; and if the client's
+  organisation is on the Free Plan it must have room under the two-active-
+  project limit, and the project loses paid-plan features (no pausing
+  protection, no daily backups) on arrival, with a minute or two of downtime.
+  The simpler path, and the one to prefer: the client creates the project in
+  their own organisation at step 1 and invites you as a member for the build,
+  so nothing ever has to move.
   Give them the repo copy and this file. Rotate the LLM key if it was yours.
 * **Tear down**: Project Settings → General → Delete project. Everything
   (database, storage, functions, secrets) goes with it; the static host is
