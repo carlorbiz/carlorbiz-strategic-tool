@@ -622,10 +622,21 @@ async function extractText(
     }
 
     case "image": {
-      // Images would go through Vision AI OCR.
-      // For v1, throw — the workshop-ocr pipeline handles images.
+      // CC-347 Slice 0b, item 5: images are rejected, not silently accepted
+      // and then failed. The shared LLM helper (_shared/llm.ts) has no
+      // image-input plumbing for any configured provider — callLLM only
+      // takes a plain string message, none of the three provider functions
+      // build a base64/inline-data content block. The client (DocumentUpload)
+      // already refuses image files before any upload happens; this is the
+      // defence-in-depth path for a caller that reaches this function
+      // directly. There used to be a reference here to a "workshop photo
+      // pipeline" — st_workshop_photos exists as a table (with ocr_text /
+      // ocr_processed columns anticipating this) but has no upload UI, no
+      // API, and no edge function reading it. That pipeline does not exist;
+      // the message no longer claims it does.
       throw new Error(
-        "Image files should be uploaded via the workshop photo pipeline, not the document pipeline."
+        "Images are not supported — there is no image-reading path in this build yet. " +
+        "Upload a text-based document (PDF, Word, Markdown, text, Excel, CSV, or JSON) instead."
       );
     }
 
