@@ -1,14 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ─── st-purge-engagement ──────────────────────────────────────
-// The enforcement half of the sovereignty claim: every derived artefact the
-// platform holds for an engagement can be deleted on demand, in one call.
-// Removes: knowledge_chunks rows, stored files under the engagement prefix in
-// every st-* bucket (legacy uploads — the sovereign path stores no files),
-// and derived fields on st_documents / st_surveys (rows are kept as an audit
-// record of WHAT was purged, with all content-derived fields cleared).
+// The enforcement half of the sovereignty claim: every derived or uploaded
+// artefact the platform holds for an engagement can be deleted on demand, in
+// one call, with an auditable receipt.
 //
-// Caller must be an internal admin, or the engagement's client admin.
+// Row deletion across every table that has an engagement_id column is done
+// by the st_purge_engagement() Postgres function (migration 20260921000025),
+// which discovers those tables from information_schema rather than a
+// hand-list — a table added by a future migration is covered automatically.
+// This function's own job is: authenticate/authorise the caller, require the
+// typed engagement-name confirmation, remove the storage objects (which the
+// database function cannot reach), and fold the storage counts into the same
+// receipt.
+//
+// Admin-only: internal_admin. A client's own client_admin cannot call this —
+// the product rule is Carla purges (or transfers) at end of engagement, not
+// a client accidentally wiping their own working evidence mid-engagement.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -42,50 +50,63 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     let callerId: string | null = null;
+    let callerEmail: string | null = null;
     if (token !== SUPABASE_SERVICE_ROLE_KEY) {
       const { data, error } = await supabase.auth.getUser(token);
       if (error || !data?.user?.id) return jsonResponse({ error: "Invalid bearer token" }, 401);
       callerId = data.user.id;
+      callerEmail = data.user.email ?? null;
     }
 
     const body = await req.json();
     const engagement_id = body.engagement_id as string | undefined;
+    const confirmation_text = body.confirmation_text as string | undefined;
     if (!engagement_id) return jsonResponse({ error: "engagement_id is required" }, 400);
-
-    if (callerId) {
-      // callerId is the auth uid, which lives in user_profiles.user_id (the id
-      // column is a separate PK). The engagement role key lives on
-      // st_engagement_roles.role_key, reached through role_id.
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("user_id", callerId)
-        .maybeSingle();
-      const { data: roleRows } = await supabase
-        .from("st_user_engagement_roles")
-        .select("role:st_engagement_roles!role_id(role_key)")
-        .eq("user_id", callerId)
-        .eq("engagement_id", engagement_id)
-        .is("revoked_at", null);
-      const isInternalAdmin = profile?.role === "internal_admin";
-      const isClientAdmin = (roleRows ?? []).some((r) => {
-        const role = (r as { role: { role_key?: string } | { role_key?: string }[] | null }).role;
-        const keys = Array.isArray(role) ? role.map((x) => x.role_key) : [role?.role_key];
-        return keys.includes("client_admin");
-      });
-      if (!isInternalAdmin && !isClientAdmin) {
-        return jsonResponse({ error: "Only an admin can purge an engagement corpus" }, 403);
-      }
+    if (!confirmation_text || !confirmation_text.trim()) {
+      return jsonResponse(
+        { error: "confirmation_text is required — type the engagement's exact name to confirm" },
+        400,
+      );
     }
 
-    // 1. Delete all derived knowledge for the engagement.
-    const { count: chunksDeleted } = await supabase
-      .from("knowledge_chunks")
-      .delete({ count: "exact" })
-      .eq("engagement_id", engagement_id);
+    // Admin-only. callerId is the auth uid, which lives in
+    // user_profiles.user_id (id is a separate PK — see scripts/bootstrap-admin.sql).
+    // The service role (used by internal tooling / this function's own tests)
+    // skips this check by design, same as every other st-* function.
+    let purgedByProfileId: string | null = null;
+    if (callerId) {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("id, role")
+        .eq("user_id", callerId)
+        .maybeSingle();
+      if (profile?.role !== "internal_admin") {
+        return jsonResponse({ error: "Only an internal admin can purge an engagement" }, 403);
+      }
+      purgedByProfileId = profile.id;
+    }
 
-    // 2. Remove any stored files under the engagement prefix (legacy uploads).
-    const filesDeleted: Record<string, number> = {};
+    // 1. Delete every row keyed to this engagement, across every table
+    //    discovered from information_schema, inside one transaction. Throws
+    //    (and this whole call fails with no partial purge) if
+    //    confirmation_text doesn't match the engagement's current name.
+    const { data: receipt, error: purgeErr } = await supabase.rpc("st_purge_engagement", {
+      p_engagement_id: engagement_id,
+      p_confirmation_text: confirmation_text,
+      p_purged_by: purgedByProfileId,
+      p_purged_by_email: callerEmail,
+    });
+
+    if (purgeErr) {
+      const msg = purgeErr.message || "Purge failed";
+      const status = msg.includes("confirmation text does not match") ? 400 : 500;
+      return jsonResponse({ error: msg }, status);
+    }
+
+    // 2. Remove stored files under the engagement prefix in every bucket
+    //    (legacy uploads — the sovereign ingestion path stores no files).
+    const storageCounts: Record<string, number> = {};
+    let totalObjects = 0;
     for (const bucket of BUCKETS) {
       const { data: objects } = await supabase.storage
         .from(bucket)
@@ -94,61 +115,43 @@ Deno.serve(async (req: Request) => {
       if (names.length > 0) {
         const { error: rmErr } = await supabase.storage.from(bucket).remove(names);
         if (rmErr) {
+          // The row-level purge already committed; a storage failure here
+          // must not be silently dropped from the receipt, so surface it
+          // clearly with what row-level purge already succeeded.
           return jsonResponse(
-            { error: `Failed to remove files from ${bucket}: ${rmErr.message}` },
+            {
+              error: `Row-level purge complete, but failed to remove files from ${bucket}: ${rmErr.message}`,
+              receipt,
+            },
             500,
           );
         }
       }
-      filesDeleted[bucket] = names.length;
+      storageCounts[bucket] = names.length;
+      totalObjects += names.length;
     }
 
-    // 3. Clear content-derived fields; keep rows as the audit record.
-    const { count: docsPurged } = await supabase
-      .from("st_documents")
-      .update(
-        { status: "purged", summary: null, chunk_count: 0, file_path: null },
-        { count: "exact" },
-      )
-      .eq("engagement_id", engagement_id);
-
-    // Survey verbatims and derived summaries are content — they go too.
-    // (Responses/summaries key by survey_id, so collect the surveys first.)
-    const { data: surveys } = await supabase
-      .from("st_surveys")
-      .select("id")
-      .eq("engagement_id", engagement_id);
-    const surveyIds = (surveys ?? []).map((s) => s.id);
-
-    let responsesDeleted = 0;
-    if (surveyIds.length > 0) {
-      const { count: respCount } = await supabase
-        .from("st_survey_responses")
-        .delete({ count: "exact" })
-        .in("survey_id", surveyIds);
-      responsesDeleted = respCount ?? 0;
-      await supabase
-        .from("st_survey_question_summaries")
-        .delete()
-        .in("survey_id", surveyIds);
-    }
-
-    const { count: surveysPurged } = await supabase
-      .from("st_surveys")
-      .update({ overall_summary: null, file_path: null }, { count: "exact" })
-      .eq("engagement_id", engagement_id);
+    // 3. Fold the storage counts into the same receipt row.
+    await supabase.rpc("st_record_purge_storage", {
+      p_receipt_id: receipt.id,
+      p_storage_counts: storageCounts,
+      p_total_objects: totalObjects,
+    });
 
     console.log(
-      `[st-purge-engagement] ${engagement_id}: chunks=${chunksDeleted} docs=${docsPurged} surveys=${surveysPurged} responses=${responsesDeleted}`,
+      `[st-purge-engagement] ${engagement_id}: ${receipt.total_rows_deleted} rows across ${
+        Object.keys(receipt.table_counts ?? {}).length
+      } tables, ${totalObjects} storage objects`,
     );
 
     return jsonResponse({
       engagement_id,
-      chunks_deleted: chunksDeleted ?? 0,
-      files_deleted: filesDeleted,
-      documents_purged: docsPurged ?? 0,
-      surveys_purged: surveysPurged ?? 0,
-      survey_responses_deleted: responsesDeleted ?? 0,
+      receipt_id: receipt.id,
+      table_counts: receipt.table_counts,
+      total_rows_deleted: receipt.total_rows_deleted,
+      storage_counts: storageCounts,
+      total_objects_deleted: totalObjects,
+      purged_at: receipt.purged_at,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Internal error";
