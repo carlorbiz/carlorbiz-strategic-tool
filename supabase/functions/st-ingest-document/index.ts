@@ -439,10 +439,18 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Hoisted so the outer catch can still mark a document terminal-failed if
+  // something throws after 'ingesting' was set but before either mode's own
+  // try/catch takes over (e.g. an unexpected error in the auth/lookup path
+  // between there and the mode dispatch below).
+  let document_id: string | undefined;
+  let markedIngesting = false;
+  let supabaseForCatch: ReturnType<typeof createClient> | undefined;
+
   try {
     const callerId = await requireAuth(req);
     const body = await req.json();
-    const document_id = body.document_id as string | undefined;
+    document_id = body.document_id as string | undefined;
     const chunkIndex = typeof body.chunk_index === "number" ? body.chunk_index : null;
     const segmentText = typeof body.segment_text === "string" ? body.segment_text : null;
     const segmentIndex = typeof body.segment_index === "number" ? body.segment_index : null;
@@ -453,6 +461,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    supabaseForCatch = supabase;
 
     const { data: doc, error: docErr } = await supabase
       .from("st_documents")
@@ -496,6 +505,7 @@ Deno.serve(async (req: Request) => {
         .update({ status: "ingesting" })
         .eq("id", document_id);
     }
+    markedIngesting = true;
 
     // ── Mode C: sovereign client-extracted text segment ──
     if (segmentText !== null && segmentIndex !== null && totalSegments !== null) {
@@ -510,6 +520,11 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ document_id, segment_index: segmentIndex, ...result });
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Segment processing failed";
+        // A failed segment must not leave the document stuck at 'ingesting'
+        // forever — mark it terminal here so the row is truthful even if the
+        // browser tab closes mid-retry and the client-side compensation in
+        // documentApi.ts never runs.
+        await markFailed(supabase, document_id, `Segment ${segmentIndex + 1}/${totalSegments}: ${msg}`);
         return jsonResponse({ error: msg, segment_index: segmentIndex }, 500);
       }
     }
@@ -525,9 +540,11 @@ Deno.serve(async (req: Request) => {
         });
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Slice processing failed";
-        // Don't mark the whole doc failed on a single slice error — the caller
-        // can decide to retry that slice or move on. But surface the error
-        // clearly in the response.
+        // Same terminal-status guarantee as Mode C. The bulk-seed orchestrator
+        // can still choose to re-ingest from slice 0 (idempotent restart,
+        // same as Mode C) rather than resuming — a 'failed' row is a clearer
+        // signal than one stuck at 'ingesting' if the caller never comes back.
+        await markFailed(supabase, document_id, `Slice ${chunkIndex}: ${msg}`);
         return jsonResponse({ error: msg, chunk_index: chunkIndex }, 500);
       }
     }
@@ -551,6 +568,13 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Internal error";
     console.error("st-ingest-document error:", e);
+    // Last-resort terminal status: if the row was ever flipped to 'ingesting'
+    // in this call and something threw before either mode's own catch could
+    // run, don't leave it stuck. Best-effort — a missing document_id or a
+    // client that failed to construct at all means there is nothing to mark.
+    if (markedIngesting && document_id && supabaseForCatch) {
+      await markFailed(supabaseForCatch, document_id, msg);
+    }
     return jsonResponse({ error: msg }, 500);
   }
 });
