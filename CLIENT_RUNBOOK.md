@@ -127,6 +127,12 @@ PowerShell:
 ```powershell
 $env:VITE_SUPABASE_URL      = "<project-url>"
 $env:VITE_SUPABASE_ANON_KEY = "<anon-key>"
+# brand this build for the client (all optional; MTMOT Strategy Engine
+# defaults apply to anything left unset — see .env.production.example):
+# $env:VITE_BRAND_PRODUCT_NAME  = "Client Co Strategy Engine"
+# $env:VITE_BRAND_SUPPORT_EMAIL = "consulting@yourfirm.example"
+# $env:VITE_BRAND_ACCENT_COLOR  = "#C9A96E"
+# $env:VITE_BRAND_LOGO          = "/images/client-logo.png"
 # optional, only with the Intelligence Engine bolt-on:
 # $env:VITE_NERA_ENGINE_URL = "https://engine.example"
 # $env:VITE_CATALOGUE_VIA_PROXY = "true"
@@ -138,6 +144,8 @@ Bash:
 
 ```bash
 export VITE_SUPABASE_URL="<project-url>" VITE_SUPABASE_ANON_KEY="<anon-key>"
+# brand this build for the client (all optional — see above / .env.production.example):
+# export VITE_BRAND_PRODUCT_NAME="Client Co Strategy Engine" VITE_BRAND_SUPPORT_EMAIL="consulting@yourfirm.example"
 npx vite build --mode production && cp dist/index.html dist/404.html
 ```
 
@@ -150,8 +158,10 @@ Vercel static, S3 + CloudFront, an nginx box). Two requirements:
 * serve it at `<host>` over HTTPS, the same value used in step 2.
 
 The anon key is public by design; the service-role key never leaves Supabase.
-Note: on a host that is not `strategy.mtmot.com` the app currently shows the
-Carlorbiz skin; per-client branding is a later slice.
+Branding comes from the `VITE_BRAND_*` variables set at build time above, not
+from the hostname — every client build carries its own identity regardless of
+what domain it's served on. Unset `VITE_BRAND_*` variables fall back to the
+MTMOT Strategy Engine defaults (product name, MTMOT logo, gold accent).
 
 ## 8. Bootstrap the admin (5 min)
 
@@ -221,13 +231,45 @@ They now see exactly that engagement and nothing else.
 
 ## 11. Smoke test (5 min)
 
-* Upload a small PDF under Documents → status goes `ingesting` → `ingested`
-  and a chunk count appears. If it fails with a provider or key message,
-  re-check step 5 (`npx supabase secrets list`).
+* Upload a small PDF, or a CSV/XLSX/JSON survey, under Documents/Surveys →
+  status goes `ingesting` → `ingested` and a chunk count appears. Both are
+  parsed in the browser — the source file never reaches Supabase storage; if
+  you check Storage → `st-documents` / `st-surveys` for a text-based upload,
+  it will be empty. (Images are not accepted — the uploader rejects them with
+  an explanation before anything is sent, since there is no image-reading
+  path yet.) If ingestion fails with a provider or key message, re-check
+  step 5 (`npx supabase secrets list`).
 * Ask Nera one question in the engagement; an answer streams back.
 * The Tools tab is absent (expected unless the bolt-on is configured).
 
 ---
+
+## Purging an engagement
+
+Every derived or uploaded artefact for one engagement — documents, chunks,
+survey responses, interview transcripts, reports, drift analyses, and any
+stored files — can be removed in one action, either at handover (once the
+client has their own copy) or at end-of-engagement teardown, in front of the
+client if they want to watch it happen.
+
+1. Sign in as an `internal_admin` and open the engagement's Settings tab.
+2. Scroll to "Purge this engagement" (only visible to `internal_admin` — a
+   client's own `client_admin` cannot trigger this). Click **Purge engagement
+   data**.
+3. Type the engagement's exact name into the confirmation field — it must
+   match exactly, character for character, or the button stays disabled.
+4. Confirm. The page shows a receipt: total rows deleted, tables touched,
+   stored files removed, and a timestamp. The receipt itself never contains
+   client content (no chunk text, no summaries, no verbatims) — it is safe to
+   show or forward to the client as proof of deletion.
+5. To verify independently: `scripts/check-purge-complete.sql` in the SQL
+   Editor, with the engagement's id set at the top, enumerates every table
+   from `information_schema` (not a hand list) and confirms zero rows remain
+   for that engagement anywhere. Expect `PASS` in the output.
+
+The purge removes rows; it does not delete the engagement record itself (so
+the receipt has something to point at) or the Supabase project. For a full
+teardown, follow it with **Tear down** below.
 
 ## Handover or teardown
 
@@ -244,14 +286,19 @@ They now see exactly that engagement and nothing else.
   their own organisation at step 1 and invites you as a member for the build,
   so nothing ever has to move.
   Give them the repo copy and this file. Rotate the LLM key if it was yours.
-* **Tear down**: Project Settings → General → Delete project. Everything
-  (database, storage, functions, secrets) goes with it; the static host is
-  deleted separately.
+  If you (not the client) held the working copy of the engagement's evidence
+  in your own account at any point, purge it first (see "Purging an
+  engagement" above) once the client confirms they have what they need.
+* **Tear down**: purge the engagement first (see above) if you want a receipt
+  of what was removed before the project itself goes; then Project Settings
+  → General → Delete project. Everything (database, storage, functions,
+  secrets) goes with it; the static host is deleted separately.
 
 ## Things this build does not do yet
 
 * No engagement-creation or user-invite screens (steps 9-10 are SQL).
-* Survey uploads and image/xlsx documents send the raw file to the project's
-  private bucket; PDF/DOCX/text are extracted in the browser.
-* Purge-on-demand has no button yet.
-* Branding follows the hostname (Carlorbiz skin on client hosts).
+* Image files are not accepted anywhere (documents or surveys) — there is no
+  image-reading path in the shared LLM helper for any provider yet. The
+  uploader rejects them with an explanation before any upload happens.
+* No scheduled/automatic re-ingestion — everything is uploaded and triggered
+  by hand.
