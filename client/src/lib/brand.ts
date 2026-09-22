@@ -53,6 +53,25 @@ function readEnv(key: string): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
 
+// MTMOT's own deployment serves two hosts from ONE build: the public front
+// door (marketing chrome, product page at the root) and the operator console
+// named by VITE_BRAND_ADMIN_REDIRECT_URL (engagement list at the root, admin
+// routes rendered in place). When the page is being served FROM that console
+// origin, the build renders as the console. Without this, one MTMOT build
+// would show the marketing chrome on the console host too, and the admin
+// guard would redirect the console to itself in a loop. Nothing here names a
+// domain: the origin comes from the same env variable the guard already
+// reads, and a client build (VITE_BRAND_IS_MTMOT unset) never enters this.
+function onConsoleOrigin(): boolean {
+  const consoleUrl = readEnv('VITE_BRAND_ADMIN_REDIRECT_URL');
+  if (!consoleUrl) return false;
+  try {
+    return new URL(consoleUrl).origin === window.location.origin;
+  } catch {
+    return false; // malformed URL or no window (SSR / prerender)
+  }
+}
+
 let cached: Brand | null = null;
 
 export function getBrand(): Brand {
@@ -67,7 +86,7 @@ export function getBrand(): Brand {
     homeUrl: readEnv('VITE_BRAND_HOME_URL') ?? DEFAULTS.homeUrl,
     accentColor: readEnv('VITE_BRAND_ACCENT_COLOR') ?? DEFAULTS.accentColor,
     supportEmail: readEnv('VITE_BRAND_SUPPORT_EMAIL') ?? DEFAULTS.supportEmail,
-    isMtmot: readEnv('VITE_BRAND_IS_MTMOT') === 'true',
+    isMtmot: readEnv('VITE_BRAND_IS_MTMOT') === 'true' && !onConsoleOrigin(),
   };
   return cached;
 }
@@ -83,6 +102,13 @@ export function applyBrandDocument(brand: Brand): void {
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', brand.description);
     document.documentElement.style.setProperty('--color-brand-accent', brand.accentColor);
+    // The MTMOT palette (bronze headings, chrome dark blocks, gold gradients,
+    // the warm working surface) lives in the .brand-mtmot rules in index.css;
+    // the accent variable above is one value inside it, not the whole skin.
+    // Toggling the class keeps strategy.mtmot.com rendering exactly as it
+    // does today (one-accent ruling, 31 Aug 2026) and leaves the console and
+    // client builds on the base palette plus their own accent.
+    document.documentElement.classList.toggle('brand-mtmot', brand.isMtmot);
   } catch {
     /* no document (SSR / prerender) */
   }

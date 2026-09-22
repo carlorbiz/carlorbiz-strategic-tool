@@ -154,7 +154,17 @@ $$;
 COMMENT ON FUNCTION st_purge_engagement(UUID, TEXT, UUID, TEXT) IS
   'Deletes every row in every public-schema table with an engagement_id column, for one engagement, discovered from information_schema (not hand-listed). Storage objects are removed by the calling edge function (st-purge-engagement) before/after this call and folded into the same receipt row via st_record_purge_storage(). Requires the caller to pass the engagement''s exact current name as p_confirmation_text.';
 
+-- Supabase grants EXECUTE on every new public-schema function to anon,
+-- authenticated and service_role through default privileges (pg_default_acl
+-- for the postgres and supabase_admin roles), so REVOKE ... FROM PUBLIC on its
+-- own leaves both API roles able to call this directly through PostgREST rpc
+-- with nothing but the engagement's name as the gate. Verified on the live
+-- project on 22 Sep 2026: st_clone_engagement_for_user (0013, same pattern)
+-- was executable by anon and authenticated. Only the service role (the edge
+-- functions, which do the internal_admin check) may call these.
 REVOKE ALL ON FUNCTION st_purge_engagement(UUID, TEXT, UUID, TEXT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION st_purge_engagement(UUID, TEXT, UUID, TEXT) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION st_purge_engagement(UUID, TEXT, UUID, TEXT) TO service_role;
 
 -- ─── st_record_purge_storage: attach storage-object counts to a receipt ────
 -- Storage removal happens in the edge function (it has access to the storage
@@ -175,5 +185,30 @@ SET search_path = public AS $$
 $$;
 
 REVOKE ALL ON FUNCTION st_record_purge_storage(UUID, JSONB, INT) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION st_record_purge_storage(UUID, JSONB, INT) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION st_record_purge_storage(UUID, JSONB, INT) TO service_role;
+
+-- Same hole, same fix, for the 0013 clone function: its only caller is the
+-- st-provision-sandbox edge function (service role), and on the live project
+-- anon could call it directly.
+REVOKE EXECUTE ON FUNCTION st_clone_engagement_for_user(UUID, UUID, TEXT) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION st_clone_engagement_for_user(UUID, UUID, TEXT) TO service_role;
+
+-- ─── Sweep order ────────────────────────────────────────────────────────────
+-- The sweep deletes tables in information_schema order, which is not
+-- guaranteed. st_scope_extensions has no engagement_id (it is reached from
+-- st_commitments by CASCADE) but references st_commitment_change_log through
+-- a NO ACTION foreign key, so if the change log is swept before the
+-- commitments the whole purge fails with a foreign-key error and rolls back.
+-- Verified on the live project on 22 Sep 2026 (constraint
+-- st_scope_extensions_change_log_id_fkey, ON DELETE NO ACTION). SET NULL
+-- matches the other change-log reference (st_commitments.justification_log_id)
+-- and makes the sweep order-independent.
+ALTER TABLE st_scope_extensions
+  DROP CONSTRAINT IF EXISTS st_scope_extensions_change_log_id_fkey;
+ALTER TABLE st_scope_extensions
+  ADD CONSTRAINT st_scope_extensions_change_log_id_fkey
+  FOREIGN KEY (change_log_id) REFERENCES st_commitment_change_log(id)
+  ON DELETE SET NULL;
 
 COMMIT;

@@ -120,3 +120,4 @@ docs/demo-3-abstracts/
 
 # Supabase CLI link state (project-ref, pooler-url) — per machine, never shared
 supabase/.temp/
+supabase/.branches/
