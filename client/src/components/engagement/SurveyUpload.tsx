@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
-import { uploadSurvey, triggerSurveyIngestion } from '@/lib/surveyApi';
+import { createSurveyRecord, ingestParsedSurvey } from '@/lib/surveyApi';
+import { extractSurveyFromFile, isSurveyExtractable } from '@/lib/extractSurvey';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,30 +58,44 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
 
     setUploading(true);
     try {
-      const survey = await uploadSurvey(engagement.id, file, {
+      if (!isSurveyExtractable(file.name)) {
+        toast.error('Unsupported file type. Please upload Excel (.xlsx, .xls), CSV, or JSON.');
+        return;
+      }
+
+      // ── Sovereign path: the raw, respondent-level file never leaves this
+      // machine. It is parsed here in the browser; only the parsed sheet
+      // structure (headers + rows — an aggregated shape, not the source
+      // file bytes) is sent for ingestion.
+      const extraction = await extractSurveyFromFile(file);
+      for (const w of extraction.warnings) toast.warning(w);
+
+      const survey = await createSurveyRecord(engagement.id, file, {
         name: name.trim(),
         period: period.trim() || undefined,
         containsPii,
       });
 
-      // Kick off ingestion. Since 2026-05-19 this returns the moment the file
-      // is parsed and responses are saved — analysis continues in background
-      // under EdgeRuntime.waitUntil. The toast tells the user honestly that
-      // the slow part is happening server-side; they can leave the page.
+      // Kick off ingestion. Since 2026-05-19 this returns the moment the
+      // responses are saved — analysis continues in background under
+      // EdgeRuntime.waitUntil. The toast tells the user honestly that the
+      // slow part is happening server-side; they can leave the page.
+      setUploading(false);
       setIngesting(true);
       try {
-        const result = await triggerSurveyIngestion(survey.id);
+        const result = await ingestParsedSurvey(survey.id, extraction.sheets);
         toast.success(
           `Parsed ${result.response_count} responses across ${result.questions_total} questions. ` +
-          `Nera is analysing them in the background — check the Surveys tab in a few minutes for the full breakdown.`,
+          `Nera is analysing them in the background — check the Surveys tab in a few minutes for the full breakdown. ` +
+          `The file itself never left your machine.`,
           { duration: 8000 },
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Ingestion failed';
         toast.error(
-          `Upload succeeded but Nera could not start the analysis: ${msg}. ` +
-          `You can retry from the survey list.`,
+          `Indexing failed: ${msg}. Upload the file again to retry.`,
         );
+        return;
       } finally {
         setIngesting(false);
       }
@@ -117,6 +132,7 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
         <CardDescription>
           Upload a survey export (Excel, CSV, or JSON) and Nera will analyse responses,
           extract themes, and add findings to the knowledge base linked to your {v.commitment_top_plural.toLowerCase()}.
+          The file is read in your browser — only the parsed responses are sent for analysis.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

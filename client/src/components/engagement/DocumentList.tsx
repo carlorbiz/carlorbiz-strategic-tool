@@ -57,10 +57,21 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
     return () => clearInterval(interval);
   }, [documents]);
 
-  const handleRetry = async (docId: string) => {
-    setRetrying(docId);
+  // Server-side retry only works for the storage-backed path (file_path set):
+  // st-ingest-document re-downloads the file from st-documents and re-extracts
+  // it. A sovereign-path document (file_path NULL) was never stored here in
+  // the first place — the platform has nothing left to re-read — so retrying
+  // it server-side would just fail again with "Failed to download file from
+  // storage". Those need a fresh upload, same as the in-flight failure
+  // message in DocumentUpload.tsx already tells the user.
+  const handleRetry = async (doc: StDocument) => {
+    if (!doc.file_path) {
+      toast.error('This file was processed without being stored — upload it again to retry.');
+      return;
+    }
+    setRetrying(doc.id);
     try {
-      await triggerIngestion(docId);
+      await triggerIngestion(doc.id);
       toast.success('Retry triggered — document re-queued for chunking');
       await loadDocuments();
     } catch (err) {
@@ -169,12 +180,13 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
                 <span className="text-xs text-muted-foreground shrink-0">
                   {new Date(doc.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
                 </span>
-                {doc.status === 'failed' && (
+                {doc.status === 'failed' && doc.file_path && (
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleRetry(doc.id)}
+                    onClick={() => handleRetry(doc)}
                     disabled={retrying === doc.id}
+                    title="Retry ingestion"
                   >
                     {retrying === doc.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -182,6 +194,11 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
                       <RefreshCw className="w-3 h-3" />
                     )}
                   </Button>
+                )}
+                {doc.status === 'failed' && !doc.file_path && (
+                  <span className="text-xs text-muted-foreground shrink-0" title={doc.summary ?? undefined}>
+                    Re-upload to retry
+                  </span>
                 )}
               </CardContent>
             </Card>

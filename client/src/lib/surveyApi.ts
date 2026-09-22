@@ -1,7 +1,85 @@
 import { supabase } from '@/lib/supabase';
 import type { StSurvey } from '@/types/engagement';
+import type { ParsedSheet } from '@/lib/extractSurvey';
 
-// ── Upload a survey to st-surveys bucket + create st_surveys row ─────────────
+// ── Sovereign path: create a survey record WITHOUT uploading the raw file ───
+// The file is parsed client-side (extractSurvey.ts); only the parsed sheet
+// structure (headers + rows — no different from what st-ingest-survey used
+// to produce itself by downloading and parsing the stored file) ever
+// travels. file_path stays NULL — the platform never holds the raw,
+// respondent-level file. Mirrors documentApi.ts's createDocumentRecord.
+
+export async function createSurveyRecord(
+  engagementId: string,
+  file: File,
+  metadata: {
+    name: string;
+    period?: string;
+    containsPii?: boolean;
+  }
+): Promise<StSurvey> {
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+
+  const { data: survey, error: insertError } = await supabase
+    .from('st_surveys')
+    .insert({
+      engagement_id: engagementId,
+      name: metadata.name,
+      period: metadata.period ?? null,
+      file_path: null,
+      file_type: categoriseSurveyFileType(ext),
+      status: 'uploaded',
+      contains_pii: metadata.containsPii ?? false,
+    })
+    .select()
+    .single();
+  if (insertError) throw insertError;
+
+  return survey as StSurvey;
+}
+
+// ── Sovereign path: send the already-parsed sheet structure for ingestion ───
+// One call, since a parsed survey (headers + rows for a handful of sheets)
+// is nowhere near the segment-size problem long documents have — no
+// per-segment retry loop needed here, just a single bounded request.
+
+export async function ingestParsedSurvey(
+  surveyId: string,
+  sheets: ParsedSheet[],
+): Promise<SurveyIngestionStarted> {
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const neraApiBase = import.meta.env.VITE_SUPABASE_URL;
+  if (!neraApiBase) throw new Error('VITE_SUPABASE_URL not set');
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+
+  const resp = await fetch(`${neraApiBase}/functions/v1/st-ingest-survey`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ survey_id: surveyId, parsed_sheets: sheets }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Survey ingestion failed (${resp.status}): ${body}`);
+  }
+  return (await resp.json()) as SurveyIngestionStarted;
+}
+
+// ── Legacy path: upload a survey to st-surveys bucket + create st_surveys row ──
+// Kept for any caller that still needs the raw file stored server-side
+// (image/xlsx documents on the document side have an equivalent legacy
+// path). The browser upload flow (SurveyUpload.tsx) no longer uses this for
+// the formats extractSurvey.ts can parse (csv/json/xlsx/xls) — every survey
+// format the uploader accepts is now sovereign-path.
 
 export async function uploadSurvey(
   engagementId: string,

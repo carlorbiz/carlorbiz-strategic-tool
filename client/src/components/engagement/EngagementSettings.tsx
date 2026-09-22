@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useEngagement } from '@/contexts/EngagementContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useVocabulary } from '@/hooks/useVocabulary';
 import { updateEngagementSettings, updateVocabularyMap } from '@/lib/commitmentApi';
+import { purgeEngagement, type PurgeReceipt } from '@/lib/engagementApi';
 import type { TaxonomyStrictness, VocabularyMap } from '@/types/engagement';
 import { DEFAULT_VOCABULARY } from '@/types/engagement';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,13 +17,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Save } from 'lucide-react';
+import { Save, Trash2, Loader2 } from 'lucide-react';
 import { ToolsInPlaySelector } from '@/components/engagement/ToolsInPlaySelector';
 
 export function EngagementSettings() {
   const { engagement, aiConfig, isEngagementAdmin, refresh } = useEngagement();
+  const { profile } = useAuth();
   const v = useVocabulary();
+  const isInternalAdmin = profile?.role === 'internal_admin';
 
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
@@ -32,6 +47,12 @@ export function EngagementSettings() {
   const [pulseCadenceDays, setPulseCadenceDays] = useState(42);
   const [vocabMap, setVocabMap] = useState<VocabularyMap>(DEFAULT_VOCABULARY);
   const [saving, setSaving] = useState(false);
+
+  // ── Purge (CC-347 Slice 0b) ────────────────────────────────────────────
+  const [purgeConfirmText, setPurgeConfirmText] = useState('');
+  const [purging, setPurging] = useState(false);
+  const [purgeReceipt, setPurgeReceipt] = useState<PurgeReceipt | null>(null);
+  const [purgeDialogOpen, setPurgeDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!engagement) return;
@@ -88,6 +109,23 @@ export function EngagementSettings() {
 
   const updateVocab = (key: keyof VocabularyMap, value: string) => {
     setVocabMap(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handlePurge = async () => {
+    if (!engagement) return;
+    setPurging(true);
+    try {
+      const receipt = await purgeEngagement(engagement.id, purgeConfirmText);
+      setPurgeReceipt(receipt);
+      setPurgeDialogOpen(false);
+      setPurgeConfirmText('');
+      toast.success(`Purge complete: ${receipt.total_rows_deleted} rows and ${receipt.total_objects_deleted} files removed.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Purge failed';
+      toast.error(msg);
+    } finally {
+      setPurging(false);
+    }
   };
 
   return (
@@ -210,6 +248,74 @@ export function EngagementSettings() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Purge (CC-347 Slice 0b) — internal admin only ──────── */}
+      {isInternalAdmin && (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive">Purge this engagement</CardTitle>
+            <CardDescription>
+              Permanently removes every document, chunk, survey response, interview transcript,
+              report, drift analysis and uploaded file held for this engagement — everything the
+              platform derived or was given. This is the enforcement side of "we process but do
+              not retain": at handover or teardown, run this in front of the client or after they
+              have their own copy. It cannot be undone. The engagement record itself is kept so
+              the purge receipt has something to point at.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <AlertDialog open={purgeDialogOpen} onOpenChange={(open) => { setPurgeDialogOpen(open); if (!open) setPurgeConfirmText(''); }}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="w-3 h-3 mr-1" /> Purge engagement data
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Purge "{engagement.name}"?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This deletes every document, knowledge chunk, survey response, interview
+                    transcript, report, drift report and uploaded file for this engagement, across
+                    every table that holds it. There is no undo. Type the engagement's exact name
+                    below to confirm.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div>
+                  <Label htmlFor="purge-confirm">Engagement name</Label>
+                  <Input
+                    id="purge-confirm"
+                    value={purgeConfirmText}
+                    onChange={e => setPurgeConfirmText(e.target.value)}
+                    placeholder={engagement.name}
+                    autoComplete="off"
+                  />
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={purging}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => { e.preventDefault(); handlePurge(); }}
+                    disabled={purging || purgeConfirmText !== engagement.name}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {purging ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Trash2 className="w-3 h-3 mr-1" />}
+                    Purge permanently
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {purgeReceipt && (
+              <div className="text-xs text-muted-foreground border rounded p-3 space-y-1">
+                <p className="font-medium text-foreground">
+                  Purge receipt — {new Date(purgeReceipt.purged_at).toLocaleString('en-AU')}
+                </p>
+                <p>{purgeReceipt.total_rows_deleted} rows across {Object.keys(purgeReceipt.table_counts).length} tables, {purgeReceipt.total_objects_deleted} stored files removed.</p>
+                <p>Receipt id: {purgeReceipt.receipt_id}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

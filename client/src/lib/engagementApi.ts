@@ -230,3 +230,47 @@ export async function triggerDriftWatch(engagementId: string): Promise<void> {
     throw new Error(`Drift watch failed (${resp.status}): ${body}`);
   }
 }
+
+// ── Purge (CC-347 Slice 0b): permanently remove every derived/uploaded ──────
+// artefact for an engagement. Admin-only server-side; the caller must supply
+// the engagement's exact current name as confirmation_text. Returns the
+// content-free receipt (counts only) for display.
+
+export interface PurgeReceipt {
+  engagement_id: string;
+  receipt_id: string;
+  table_counts: Record<string, number>;
+  total_rows_deleted: number;
+  storage_counts: Record<string, number>;
+  total_objects_deleted: number;
+  purged_at: string;
+}
+
+export async function purgeEngagement(
+  engagementId: string,
+  confirmationText: string,
+): Promise<PurgeReceipt> {
+  if (!supabase) throw new Error('Supabase not configured');
+
+  const neraApiBase = import.meta.env.VITE_SUPABASE_URL;
+  if (!neraApiBase) throw new Error('VITE_SUPABASE_URL not set');
+
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('Not authenticated');
+
+  const resp = await fetch(`${neraApiBase}/functions/v1/st-purge-engagement`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ engagement_id: engagementId, confirmation_text: confirmationText }),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Purge failed (${resp.status}): ${body}`);
+  }
+  return resp.json();
+}

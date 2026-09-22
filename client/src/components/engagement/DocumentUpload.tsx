@@ -32,7 +32,32 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from 'sonner';
 import { Upload, FileUp, Loader2, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
-const ACCEPTED_TYPES = '.pdf,.doc,.docx,.md,.txt,.xlsx,.xls,.csv,.json,.png,.jpg,.jpeg,.webp';
+const ACCEPTED_TYPES = '.pdf,.doc,.docx,.md,.txt,.xlsx,.xls,.csv,.json';
+
+// Images are not accepted (CC-347 Slice 0b, item 5). The shared LLM helper
+// (_shared/llm.ts) has no image-input plumbing for any of the three
+// providers today — no base64/inline-data content blocks, nothing beyond a
+// plain string message — so there is no honest way to "process" an image
+// yet. Before this fix the picker silently accepted them, uploaded the raw
+// file to storage, and only then failed server-side with a message
+// pointing at a "workshop photo pipeline" that was never implemented
+// (st_workshop_photos exists as a table with no upload UI, no API, and no
+// edge function reading it). Rejecting up front, before any upload, is the
+// smallest correct fix until image-input support exists in the shared
+// helper for whichever provider is configured.
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'tif', 'heic', 'heif'];
+
+function rejectIfImage(file: File): boolean {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (IMAGE_EXTENSIONS.includes(ext)) {
+    toast.error(
+      'Images are not supported yet — this build has no way to read an image\'s content into the ' +
+      'knowledge base. Please upload a text-based document (PDF, Word, Markdown, text, Excel, CSV, or JSON).',
+    );
+    return true;
+  }
+  return false;
+}
 
 // Radix Select disallows empty-string item values, so use a sentinel for "no primary"
 const NONE_VALUE = '__none__';
@@ -97,6 +122,10 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
+    if (rejectIfImage(selected)) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     setFile(selected);
     if (!title) {
       // Auto-fill title from filename (without extension)
@@ -108,6 +137,9 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
     e.preventDefault();
     const dropped = e.dataTransfer.files[0];
     if (!dropped) return;
+    // Drag-and-drop bypasses the <input accept> filter, so images can still
+    // arrive here even with the picker restricted to non-image extensions.
+    if (rejectIfImage(dropped)) return;
     setFile(dropped);
     if (!title) {
       setTitle(dropped.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '));
@@ -289,7 +321,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
                 Drag and drop a file, or click to browse
               </p>
               <p className="text-xs text-muted-foreground">
-                PDF, Word, Markdown, text, Excel, CSV, JSON, images
+                PDF, Word, Markdown, text, Excel, CSV, JSON
               </p>
             </div>
           )}

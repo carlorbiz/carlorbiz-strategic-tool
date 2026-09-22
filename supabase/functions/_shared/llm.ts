@@ -245,6 +245,50 @@ async function streamAnthropic(
   return response;
 }
 
+// Gemini 2.5/3 "thinking" models spend part of maxOutputTokens on an internal
+// reasoning pass before any visible text is emitted — that reasoning draws
+// from the SAME token budget as the answer (see extractGeminiText below).
+// Nothing in this codebase asks for visible or budgeted reasoning, so every
+// caller is better off with it switched off. thinkingBudget: 0 disables it
+// on Flash-tier models; Pro-tier models enforce a small non-zero minimum
+// instead of rejecting the field, so this is safe to send unconditionally.
+// (Root cause of DEFECT 4 — short document summaries under the Google
+// provider — could not be confirmed with a live call in this session; see
+// the maxOutputTokens headroom and finishReason check below for the
+// defensible fix that holds even if the true cause is something else, e.g.
+// a stop sequence match.)
+const GEMINI_THINKING_CONFIG = { thinkingBudget: 0 };
+
+// Thinking tokens, when a model can't fully disable them, are still drawn
+// from maxOutputTokens. A caller that asks for a short answer (e.g. a
+// 200-token document summary) can have its entire budget consumed by
+// reasoning before the model gets to the visible answer, which is returned
+// truncated with no error — exactly the "two or three words" symptom.
+// Padding the wire-level budget gives reasoning room without changing what
+// callers ask for, and the finishReason check below surfaces the case
+// loudly instead of silently handing back a truncated string.
+const GEMINI_THINKING_HEADROOM_TOKENS = 1024;
+
+function extractGeminiText(data: Record<string, unknown>, requestedMaxTokens: number): string {
+  // deno-lint-ignore no-explicit-any
+  const candidate = (data.candidates as any[])?.[0];
+  const parts = candidate?.content?.parts as Array<{ text?: string }> | undefined;
+  const text = (parts ?? [])
+    .map((p) => p.text)
+    .filter((t): t is string => typeof t === "string" && t.length > 0)
+    .join("");
+
+  if (candidate?.finishReason === "MAX_TOKENS" && text.trim().length < 20) {
+    console.error(
+      `[callGemini] finishReason=MAX_TOKENS with only ${text.length} chars of visible text ` +
+        `(requested maxOutputTokens=${requestedMaxTokens}). Likely cause: thinking/reasoning ` +
+        "tokens consumed the output budget before the model reached the answer.",
+    );
+  }
+
+  return text;
+}
+
 async function callGemini(
   config: LLMConfig,
   systemPrompt: string,
@@ -258,7 +302,10 @@ async function callGemini(
   }));
 
   // deno-lint-ignore no-explicit-any
-  const generationConfig: Record<string, any> = { maxOutputTokens: maxTokens };
+  const generationConfig: Record<string, any> = {
+    maxOutputTokens: maxTokens + GEMINI_THINKING_HEADROOM_TOKENS,
+    thinkingConfig: GEMINI_THINKING_CONFIG,
+  };
   // Native structured output: far more reliable than a "return ONLY JSON" prompt.
   if (options.responseSchema) {
     generationConfig.responseMimeType = "application/json";
@@ -286,7 +333,7 @@ async function callGemini(
   }
 
   const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return extractGeminiText(data, maxTokens);
 }
 
 async function streamGemini(
