@@ -35,21 +35,17 @@ async function requireNeraUser(req: Request): Promise<{ userId: string; role: st
     throw new Error("Missing bearer token");
   }
 
-  // Decode JWT payload to extract user ID (sub claim).
-  // No signature verification — verify_jwt is disabled at the gateway,
-  // and these functions run within the same Supabase project.
-  let userId: string;
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) throw new Error("malformed");
-    const payload = JSON.parse(atob(parts[1]));
-    userId = payload.sub;
-    if (!userId) throw new Error("no sub claim");
-  } catch {
+  // Verify the token with Supabase Auth (REF-075, 22 Sep 2026). This used to
+  // decode the JWT payload without checking its signature, because verify_jwt
+  // is off at the gateway; that let any caller forge a token naming an allowed
+  // user's id and spend model tokens without limit. getUser rejects unsigned,
+  // forged and expired tokens, as st-nera-query and ingest-url already do.
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data: verified, error: verifyError } = await supabase.auth.getUser(token);
+  if (verifyError || !verified?.user?.id) {
     throw new Error("Invalid bearer token");
   }
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const userId: string = verified.user.id;
   const { data: profile, error: profileError } = await supabase
     .from("user_profiles")
     .select("role")
