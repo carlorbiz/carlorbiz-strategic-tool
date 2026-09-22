@@ -205,9 +205,9 @@ All evidence - documents, surveys, interview transcripts, workshop outputs, the 
 | Styling / UI | Tailwind CSS 4, shadcn/ui on Radix primitives, lucide icons | |
 | Routing | wouter | lightweight client-side router |
 | Forms / validation | react-hook-form + zod | |
-| Content rendering | react-markdown (GFM), react-pdf | PDF viewing in-app |
+| Content rendering | react-markdown (GFM) | |
 | Charts | recharts (installed; quantitative dashboards are v1.5+) | |
-| Hosting (frontend) | Cloudflare Pages | plus a Cloudflare Worker for bot prerendering (`worker/`) |
+| Hosting (frontend) | any static host (Cloudflare Pages, Netlify, Vercel static, S3+CloudFront, nginx) | website-era `worker/` (bot-prerendering Cloudflare Worker), `scripts/prerender.mjs` and `react-pdf` removed in Slice 0b (CC-347) — they served carlorbiz.com.au marketing pages, not the engine |
 | Backend | Supabase: PostgreSQL, Auth (magic link + anonymous), Storage, Edge Functions (Deno) | single project; currently shared with carlorbiz-website (see §8) |
 | Retrieval | PostgreSQL weighted full-text search over `knowledge_chunks`; pgvector extension installed for future semantic search | no embeddings generated today |
 | AI - primary | Anthropic Claude (Sonnet family) via REST | conversation, synthesis, reports, drift |

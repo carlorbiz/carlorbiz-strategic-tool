@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
-import { CMSProvider } from "@/contexts/CMSContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -16,7 +15,6 @@ import Login from "@/pages/Login";
 const EngagementShell = lazy(() => import("@/pages/EngagementShell"));
 const DemoEntry = lazy(() => import("@/pages/DemoEntry"));
 const AventineElicitationPage = lazy(() => import("@/pages/AventineElicitationPage"));
-const Admin = lazy(() => import("@/pages/Admin"));
 const SandboxRequestsAdmin = lazy(() => import("@/pages/SandboxRequestsAdmin"));
 const CampaignProvisionAdmin = lazy(() => import("@/pages/CampaignProvisionAdmin"));
 const MtmotProductPage = lazy(() => import("@/pages/MtmotProductPage"));
@@ -56,96 +54,85 @@ function App() {
   return (
     <AuthProvider>
       <ChatProvider>
-        <CMSProvider>
-          {/* CC-89: the mtmot.com menu header, replicated verbatim on the MTMOT
-              host only — the Carlorbiz skin is untouched. */}
-          {brand.isMtmot && <MtmotHeader />}
-          <Switch>
-            {/* ── Public routes ──────────────────────────────── */}
-            <Route path="/login" component={Login} />
-            <Route path="/reset-password">
+        {/* CC-89: the mtmot.com menu header, replicated verbatim on the MTMOT
+            host only — the Carlorbiz skin is untouched. */}
+        {brand.isMtmot && <MtmotHeader />}
+        <Switch>
+          {/* ── Public routes ──────────────────────────────── */}
+          <Route path="/login" component={Login} />
+          <Route path="/reset-password">
+            <Suspense fallback={<Loading />}>
+              <ResetPasswordPage />
+            </Suspense>
+          </Route>
+
+          {/* ── Public read-only demo (anonymous session, 3 seeded plans) ─ */}
+          <Route path="/demo">
+            <ErrorBoundary>
               <Suspense fallback={<Loading />}>
-                <ResetPasswordPage />
+                <DemoEntry />
               </Suspense>
-            </Route>
+            </ErrorBoundary>
+          </Route>
 
-            {/* ── Public read-only demo (anonymous session, 3 seeded plans) ─ */}
-            <Route path="/demo">
+          {/* ── Root: MTMOT product page (public) on the mtmot host;
+                 the auth-gated engagement list on the carlorbiz host ─ */}
+          <Route path="/">
+            {brand.isMtmot ? (
               <ErrorBoundary>
                 <Suspense fallback={<Loading />}>
-                  <DemoEntry />
+                  <MtmotProductPage />
                 </Suspense>
               </ErrorBoundary>
-            </Route>
+            ) : (
+              <EngagementList />
+            )}
+          </Route>
 
-            {/* ── Root: MTMOT product page (public) on the mtmot host;
-                   the auth-gated engagement list on the carlorbiz host ─ */}
-            <Route path="/">
-              {brand.isMtmot ? (
-                <ErrorBoundary>
-                  <Suspense fallback={<Loading />}>
-                    <MtmotProductPage />
-                  </Suspense>
-                </ErrorBoundary>
-              ) : (
-                <EngagementList />
-              )}
-            </Route>
-
-            {/* ── Aventine strategic-elicitation surface (CC-75; magic-link) ─ */}
-            <Route path="/elicit/:engagementId">
-              <ErrorBoundary>
-                <Suspense fallback={<Loading />}>
-                  <AventineElicitationPage />
-                </Suspense>
-              </ErrorBoundary>
-            </Route>
-
-            {/* ── Engagement shell (the status/role router) ──── */}
-            <Route path="/e/:engagementId">
-              <ErrorBoundary>
-                <Suspense fallback={<Loading />}>
-                  <EngagementShell />
-                </Suspense>
-              </ErrorBoundary>
-            </Route>
-
-            {/* ── Global admin (internal_admin only) ─────────── */}
-            <Route path="/admin">
-              <CarlorbizOnly>
-                <Suspense fallback={<Loading />}>
-                  <ProtectedRoute component={Admin} />
-                </Suspense>
-              </CarlorbizOnly>
-            </Route>
-
-            {/* ── Sandbox request triage (admin only) ────────── */}
-            <Route path="/admin/sandbox">
-              <CarlorbizOnly>
-                <Suspense fallback={<Loading />}>
-                  <ProtectedRoute component={SandboxRequestsAdmin} />
-                </Suspense>
-              </CarlorbizOnly>
-            </Route>
-
-            {/* ── Campaign respondent provisioning (admin only) ─ */}
-            <Route path="/admin/campaign">
-              <CarlorbizOnly>
-                <Suspense fallback={<Loading />}>
-                  <ProtectedRoute component={CampaignProvisionAdmin} />
-                </Suspense>
-              </CarlorbizOnly>
-            </Route>
-
-            {/* ── 404 ────────────────────────────────────────── */}
-            <Route>
+          {/* ── Aventine strategic-elicitation surface (CC-75; magic-link) ─ */}
+          <Route path="/elicit/:engagementId">
+            <ErrorBoundary>
               <Suspense fallback={<Loading />}>
-                <NotFound />
+                <AventineElicitationPage />
               </Suspense>
-            </Route>
-          </Switch>
-          <Toaster />
-        </CMSProvider>
+            </ErrorBoundary>
+          </Route>
+
+          {/* ── Engagement shell (the status/role router) ──── */}
+          <Route path="/e/:engagementId">
+            <ErrorBoundary>
+              <Suspense fallback={<Loading />}>
+                <EngagementShell />
+              </Suspense>
+            </ErrorBoundary>
+          </Route>
+
+          {/* ── Sandbox request triage (admin only) ────────── */}
+          <Route path="/admin/sandbox">
+            <CarlorbizOnly>
+              <Suspense fallback={<Loading />}>
+                <ProtectedRoute component={SandboxRequestsAdmin} />
+              </Suspense>
+            </CarlorbizOnly>
+          </Route>
+
+          {/* ── Campaign respondent provisioning (admin only) ─ */}
+          <Route path="/admin/campaign">
+            <CarlorbizOnly>
+              <Suspense fallback={<Loading />}>
+                <ProtectedRoute component={CampaignProvisionAdmin} />
+              </Suspense>
+            </CarlorbizOnly>
+          </Route>
+
+          {/* ── 404 ────────────────────────────────────────── */}
+          <Route>
+            <Suspense fallback={<Loading />}>
+              <NotFound />
+            </Suspense>
+          </Route>
+        </Switch>
+        <Toaster />
       </ChatProvider>
     </AuthProvider>
   );
