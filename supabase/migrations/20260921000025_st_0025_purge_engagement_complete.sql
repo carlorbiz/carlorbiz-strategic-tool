@@ -191,6 +191,7 @@ GRANT EXECUTE ON FUNCTION st_record_purge_storage(UUID, JSONB, INT) TO service_r
 -- Same hole, same fix, for the 0013 clone function: its only caller is the
 -- st-provision-sandbox edge function (service role), and on the live project
 -- anon could call it directly.
+REVOKE ALL ON FUNCTION st_clone_engagement_for_user(UUID, UUID, TEXT) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION st_clone_engagement_for_user(UUID, UUID, TEXT) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION st_clone_engagement_for_user(UUID, UUID, TEXT) TO service_role;
 
