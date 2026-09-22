@@ -264,7 +264,7 @@ const researchSteps: StepBuilder = (engagement, v, brand) => [
         </p>
         <p>
           Re-launch this tour anytime from the navigation. Questions:{' '}
-          <strong>carla@carlorbiz.com.au</strong>.
+          <strong>{brand.supportEmail}</strong>.
         </p>
       </div>
     ),
@@ -414,7 +414,7 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
           </p>
           <p>
             Re-launch this tour anytime from the navigation. Questions:{' '}
-            <strong>carla@carlorbiz.com.au</strong>.
+            <strong>{brand.supportEmail}</strong>.
           </p>
         </div>
       ),
@@ -545,7 +545,7 @@ const aiStrategySteps: StepBuilder = (engagement, v, brand) => {
           </p>
           <p>
             That last beat is the difference between a slide deck and a decision system. Questions:{' '}
-            <strong>carla@carlorbiz.com.au</strong>.
+            <strong>{brand.supportEmail}</strong>.
           </p>
         </div>
       ),

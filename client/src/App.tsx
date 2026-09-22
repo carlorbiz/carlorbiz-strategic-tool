@@ -28,19 +28,22 @@ const Loading = () => (
   </div>
 );
 
-// Host-guard (CC-84): the mtmot host (strategy.mtmot.com) is the public,
-// demo-only product surface — admin/console routes belong to the Carlorbiz
-// consulting instance. If an admin route is reached on the mtmot host, bounce
-// it to the same path on strategy.carlorbiz.com.au rather than exposing a login
-// on the product front door. Non-mtmot hosts render the route unchanged.
+// Host-guard (CC-84): on the MTMOT public-marketing build (VITE_BRAND_IS_MTMOT
+// true), admin/console routes are not the product's public front door. If
+// configured, VITE_BRAND_ADMIN_REDIRECT_URL bounces them to wherever the
+// operator's own console lives instead of exposing a login there; if unset,
+// the route simply renders nothing rather than guessing a destination — no
+// other operator's domain is ever hardcoded into a client build. A client
+// build has VITE_BRAND_IS_MTMOT unset (false), so this guard is inert.
 function CarlorbizOnly({ children }: { children: ReactNode }) {
   const brand = getBrand();
+  const redirectUrl = (import.meta.env.VITE_BRAND_ADMIN_REDIRECT_URL as string | undefined)?.trim();
   useEffect(() => {
-    if (brand.isMtmot && typeof window !== "undefined") {
+    if (brand.isMtmot && redirectUrl && typeof window !== "undefined") {
       const { pathname, search } = window.location;
-      window.location.replace(`https://strategy.carlorbiz.com.au${pathname}${search}`);
+      window.location.replace(`${redirectUrl}${pathname}${search}`);
     }
-  }, [brand.isMtmot]);
+  }, [brand.isMtmot, redirectUrl]);
   if (brand.isMtmot) return <Loading />;
   return <>{children}</>;
 }
@@ -49,7 +52,7 @@ function App() {
   const brand = getBrand();
   useEffect(() => {
     applyBrandDocument(brand);
-  }, [brand.key]);
+  }, [brand]);
 
   return (
     <AuthProvider>
