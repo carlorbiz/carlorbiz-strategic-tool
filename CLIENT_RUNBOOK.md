@@ -87,7 +87,9 @@ npx supabase secrets set OPENAI_API_KEY=sk-... LLM_PROVIDER=openai
 
 Optional: `LLM_MODEL=<model>` to pin a model for that provider. Leave
 `NERA_ENGINE_URL` / `NERA_ENGINE_READ_KEY` unset unless the client is licensed
-for the Intelligence Engine bolt-on. Full list in `.env.example`.
+for the Intelligence Engine bolt-on. Every variable the build and the
+functions read, with one line each and nothing filled in, is
+`.env.production.example`.
 
 ## 6. Deploy the edge functions (3 min)
 
