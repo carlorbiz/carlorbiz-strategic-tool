@@ -119,7 +119,7 @@ ${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
     const llmConfig: LLMConfig = await resolveLLMConfig(
       supabase,
       engagementId,
-      { provider: "google", model: "gemini-3.5-flash" },
+      { provider: "google", model: "gemini-3.5-flash-lite" },
     );
 
     const result = await callLLM(

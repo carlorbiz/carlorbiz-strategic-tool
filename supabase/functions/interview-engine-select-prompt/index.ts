@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
     const llmConfig: LLMConfig = await resolveLLMConfig(
       supabase,
       engagement_id,
-      { provider: "google", model: "gemini-3.5-flash" },
+      { provider: "google", model: "gemini-3.5-flash-lite" },
     );
 
     let selectedId: string;

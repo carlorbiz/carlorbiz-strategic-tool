@@ -74,7 +74,7 @@ async function requireAuth(req: Request): Promise<string> {
 //   overall summary: Claude Sonnet 4.5 — single call, prose quality matters.
 // A single-provider deployment runs everything on that provider.
 
-const ANALYSIS_DEFAULT = { provider: "google" as const, model: "gemini-2.5-flash" };
+const ANALYSIS_DEFAULT = { provider: "google" as const, model: "gemini-3.5-flash-lite" };
 const SUMMARY_DEFAULT = { provider: "anthropic" as const, model: "claude-sonnet-4-5" };
 
 // ─── LLM prompts ──────────────────────────────────────────────

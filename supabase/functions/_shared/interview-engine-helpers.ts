@@ -32,7 +32,7 @@ const ENV_MODEL = (Deno.env.get("LLM_MODEL") || "").trim();
 // provider and nothing named a model for it. Same trio st-nera-query has used.
 const PROVIDER_DEFAULT_MODELS: Record<LLMProvider, string> = {
   anthropic: "claude-sonnet-4-5",
-  google: "gemini-2.5-flash",
+  google: "gemini-3.5-flash-lite",
   openai: "gpt-4o-mini",
 };
 
