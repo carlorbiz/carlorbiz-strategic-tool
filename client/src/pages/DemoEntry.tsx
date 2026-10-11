@@ -101,7 +101,7 @@ export default function DemoEntry() {
           Explore the {brand.productName}
         </h1>
         <p className="text-muted-foreground max-w-2xl">
-          These are three fully worked strategic plans — pick one, take the guided tour, and
+          These are four fully worked strategic plans — pick one, take the guided tour, and
           interrogate it the way your own board would. Everything here is a live working plan,
           not a slideshow. You can look at anything; nothing you do changes the data.
         </p>

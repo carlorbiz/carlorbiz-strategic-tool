@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: MessagesSquare,
     title: 'Interviews, not surveys',
-    body: 'Stakeholders talk to CJ in a natural conversation. She elicits what matters, cites her sources, and never makes them fill in a form.',
+    body: 'Stakeholders talk to CJ for Teams in a natural conversation. She elicits what matters, cites her sources, and never makes them fill in a form.',
   },
   {
     icon: Layers,
@@ -63,7 +63,7 @@ export default function MtmotProductPage() {
             </Button>
           </Link>
         </div>
-        <p className="mt-4 text-sm text-gray-500">Three fully worked plans. No sign-up.</p>
+        <p className="mt-4 text-sm text-gray-500">Four fully worked plans. No sign-up.</p>
       </section>
 
       {/* Proof band */}
@@ -76,9 +76,13 @@ export default function MtmotProductPage() {
             The demo plans are live engagements run by Carlorbiz Consulting — the proof that a
             consultant can subscribe to the Engine and deliver their own clients on it.
           </p>
-          {/* CC-327 (Carla, 8 Sep 2026): the short-form business-account line, approved verbatim. */}
+          {/* DEC-129 (Carla, 11 Oct 2026): CJ for Teams, quarantined from the CJ of the personal
+              subscriptions. Rewrites the CC-327 line of 8 Sep ("CJ keeps individual and business accounts separate"). */}
           <p className="mt-4 text-sm text-gray-500 max-w-2xl mx-auto">
-            Business subscriptions run under a business account. CJ keeps individual and business accounts separate.
+            Business subscriptions run under a business account. CJ for Teams works only from your
+            organisation's evidence and is quarantined from the CJ people meet in MTMOT's personal
+            subscriptions: nothing anyone shares there reaches your organisation, and nothing from your
+            organisation reaches them.
           </p>
         </div>
       </section>
@@ -108,7 +112,7 @@ export default function MtmotProductPage() {
           </h2>
           <ol className="grid sm:grid-cols-4 gap-6 text-center">
             {[
-              ['1', 'Interview', 'Stakeholders talk to CJ; every transcript joins the corpus.'],
+              ['1', 'Interview', 'Stakeholders talk to CJ for Teams; every transcript joins the corpus.'],
               ['2', 'Synthesise', 'Each stage distils into themes, tensions and emerging commitments.'],
               ['3', 'Deliver', 'A cited, board-ready plan — with the commitments as the living taxonomy.'],
               ['4', 'Keep living', 'Updates, surveys and drift watch keep the plan honest between board cycles.'],
