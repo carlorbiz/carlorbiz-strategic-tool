@@ -1,7 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM, streamLLM, parseStreamDeltas } from "../_shared/llm.ts";
 import type { LLMConfig, LLMMessage } from "../_shared/llm.ts";
-import { resolveAssistantName } from "../_shared/assistantName.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -205,14 +204,14 @@ Rule 2: WHEN CLARIFYING, KEEP IT TIGHT.
 - Include a "most common" default that the user can accept with one click`;
 }
 
-function getSystemPrompt(config: AIConfig, assistantName: string): string {
+function getSystemPrompt(config: AIConfig): string {
   if (config.system_prompt) return config.system_prompt;
 
   const supportLine = config.support_contact
     ? ` Contact ${config.support_contact} for further assistance.`
     : "";
 
-  return `You are ${assistantName}, the AI knowledge assistant for ${config.client_name}. You help users find and understand information from the knowledge base.
+  return `You are Nera, the AI knowledge assistant for ${config.client_name}. You help users find and understand information from the knowledge base.
 
 RULES:
 1. Answer ONLY from the provided context. Do not use any outside knowledge. NEVER reference internal terms like "knowledge chunks", "chunks", "context provided", or "based on the information provided". Speak as if you inherently know the content — cite the actual source documents instead.
@@ -1212,7 +1211,7 @@ Deno.serve(async (req) => {
     const aiConfig = await loadAIConfig(supabase);
     _currentLLMConfig = getLLMConfig(aiConfig);
     CLASSIFY_AND_TRIAGE_PROMPT = getClassifyPrompt(aiConfig);
-    NERA_SYSTEM_PROMPT = getSystemPrompt(aiConfig, resolveAssistantName(body.assistant_name));
+    NERA_SYSTEM_PROMPT = getSystemPrompt(aiConfig);
     NO_CHUNKS_RESPONSE = getNoChunksResponse(aiConfig);
     SYNONYM_MAP = aiConfig.synonym_map || {};
     DOMAIN_TYPO_PATTERNS = (aiConfig.typo_patterns || []).map(
