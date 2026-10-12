@@ -25,6 +25,9 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Plus, Save, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const STAGE_TYPES: { value: StageType; label: string }[] = [
   { value: 'interview', label: 'Interview' },
@@ -138,9 +141,9 @@ function StageForm({ stage, isAdmin, onRefresh }: StageFormProps) {
           </div>
 
           <div>
-            <Label className="text-xs">Nera system prompt (optional)</Label>
+            <Label className="text-xs">{assistantName} system prompt (optional)</Label>
             <Textarea value={neraPrompt} onChange={e => setNeraPrompt(e.target.value)} rows={3} className="text-sm" disabled={!isAdmin}
-              placeholder="Custom Nera prompt for this stage. Leave blank to use the profile default." />
+              placeholder={`Custom ${assistantName} prompt for this stage. Leave blank to use the profile default.`} />
           </div>
 
           <div className="flex items-center gap-2">

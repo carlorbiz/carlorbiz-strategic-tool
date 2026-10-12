@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { getBrand } from '@/lib/brand';
 import type {
   Engagement,
   EngagementStage,
@@ -222,7 +223,7 @@ export async function triggerDriftWatch(engagementId: string): Promise<void> {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ engagement_id: engagementId }),
+    body: JSON.stringify({ engagement_id: engagementId, assistant_name: getBrand().assistantName }),
   });
 
   if (!resp.ok) {

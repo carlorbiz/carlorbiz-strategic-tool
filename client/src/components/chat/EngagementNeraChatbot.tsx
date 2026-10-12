@@ -22,6 +22,9 @@ import { ChatInput } from './ChatInput';
 import { RequestAccessDialog } from '@/components/demo/RequestAccessDialog';
 import { useMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 export function EngagementNeraChatbot() {
   const {
@@ -78,7 +81,7 @@ export function EngagementNeraChatbot() {
               N
             </div>
             <div>
-              <SheetTitle className="text-left">Nera</SheetTitle>
+              <SheetTitle className="text-left">{assistantName}</SheetTitle>
               <p className="text-xs text-muted-foreground">
                 {usage && usage.limit != null
                   ? `${usage.tier === 'sandbox' ? 'Sandbox' : 'Demo'} · ${Math.min(usage.used ?? 0, usage.limit)}/${usage.limit} questions`
@@ -120,10 +123,10 @@ export function EngagementNeraChatbot() {
               {messages.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-sm">
-                    Ask Nera about this engagement.
+                    Ask {assistantName} about this engagement.
                   </p>
                   <p className="text-xs mt-2">
-                    Nera answers from the {v.evidence_plural.toLowerCase()} and {v.commitment_top_plural.toLowerCase()} for <strong>{engagement.name}</strong> only — nothing leaks across engagements.
+                    {assistantName} answers from the {v.evidence_plural.toLowerCase()} and {v.commitment_top_plural.toLowerCase()} for <strong>{engagement.name}</strong> only — nothing leaks across engagements.
                   </p>
                 </div>
               )}

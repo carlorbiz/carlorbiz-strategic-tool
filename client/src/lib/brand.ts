@@ -32,6 +32,9 @@ export interface Brand {
    *  (strategy.mtmot.com and its Carlorbiz-consulting counterpart) are the
    *  only builds that should ever set this true; a client build never does. */
   isMtmot: boolean;
+  /** The in-app assistant's display name. Set per deployment via
+   *  VITE_BRAND_ASSISTANT_NAME; MTMOT's deployment uses the default. */
+  assistantName: string;
 }
 
 const DEFAULTS: Brand = {
@@ -46,6 +49,7 @@ const DEFAULTS: Brand = {
   accentColor: '#C9A96E',
   supportEmail: 'support@mtmot.com',
   isMtmot: false,
+  assistantName: 'CJ for Teams',
 };
 
 function readEnv(key: string): string | undefined {
@@ -87,8 +91,14 @@ export function getBrand(): Brand {
     accentColor: readEnv('VITE_BRAND_ACCENT_COLOR') ?? DEFAULTS.accentColor,
     supportEmail: readEnv('VITE_BRAND_SUPPORT_EMAIL') ?? DEFAULTS.supportEmail,
     isMtmot: readEnv('VITE_BRAND_IS_MTMOT') === 'true' && !onConsoleOrigin(),
+    assistantName: readEnv('VITE_BRAND_ASSISTANT_NAME') ?? DEFAULTS.assistantName,
   };
   return cached;
+}
+
+// Possessive form of a display name ("CJ for Teams'", "Nera's").
+export function possessive(name: string): string {
+  return /s$/i.test(name) ? `${name}'` : `${name}'s`;
 }
 
 // Set <title> + meta description at runtime (index.html ships generic

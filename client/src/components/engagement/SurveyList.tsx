@@ -14,6 +14,9 @@ import {
 } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { RefreshCw, FileSpreadsheet, AlertTriangle, CheckCircle2, Loader2, Clock } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const STATUS_CONFIG: Record<SurveyStatus, {
   label: string;
@@ -97,7 +100,7 @@ export function SurveyList({ refreshTrigger }: SurveyListProps) {
         <FileSpreadsheet className="w-10 h-10 mx-auto mb-2 opacity-50" />
         <p className="text-sm">
           No surveys uploaded yet. Upload your first survey export and
-          Nera will analyse it into the knowledge base.
+          {assistantName} will analyse it into the knowledge base.
         </p>
       </div>
     );

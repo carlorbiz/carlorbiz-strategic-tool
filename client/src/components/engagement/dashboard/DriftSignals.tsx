@@ -5,6 +5,9 @@ import type { DriftReport } from '@/types/engagement';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 interface DriftSignal {
   type: string;
@@ -49,7 +52,7 @@ export function DriftSignals() {
         <CardContent>
           <p className="text-sm text-muted-foreground">
             No drift signals yet. Once documents start flowing in and the drift-watch
-            agent runs, signals will appear here when Nera notices something worth
+            agent runs, signals will appear here when {assistantName} notices something worth
             your attention.
           </p>
         </CardContent>

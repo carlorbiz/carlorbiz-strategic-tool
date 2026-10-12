@@ -23,6 +23,9 @@ import { useStrategicChat } from '@/contexts/StrategicChatContext';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const SOVEREIGNTY_DRIFT_PROMPTS = [
   'Shadow AI. What do our own documents show about AI tools actually in use across the organisation, and how does that compare with the tools our policies and registers say we have approved? Report the gap at organisational level, not by person.',
@@ -50,11 +53,11 @@ export function SovereigntyDriftSampleNeraQuestions() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <ShieldAlert className="w-4 h-4" />
-          Ask Nera the six sovereignty signals
+          Ask {assistantName} the six sovereignty signals
         </CardTitle>
         <CardDescription>
           Six register-level questions about what this organisation can still demonstrate it
-          holds. Click any to have Nera answer from your own corpus, with citations. These are
+          holds. Click any to have {assistantName} answer from your own corpus, with citations. These are
           board questions, not staff ones — they ask what is evidenced, never who.
         </CardDescription>
       </CardHeader>

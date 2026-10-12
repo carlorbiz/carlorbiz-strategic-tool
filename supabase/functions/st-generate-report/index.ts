@@ -26,6 +26,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
 import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
+import { resolveAssistantName } from "../_shared/assistantName.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -188,6 +189,7 @@ interface GenerationJob {
   template: any;
   period_start?: string;
   period_end?: string;
+  assistantName: string;
 }
 
 async function runGeneration(
@@ -431,7 +433,7 @@ ${
     // Build system prompt from config or default
     const reportPromptTemplate =
       aiConfig?.system_prompt_report ??
-      `You are Nera, generating a report for {client_name}'s engagement '{engagement_name}' covering the period {period_start} to {period_end}. Draw evidence exclusively from the knowledge corpus. Every claim must be cited to a specific source using [chunk_id] notation. Follow the template structure exactly. Use the organisation's vocabulary throughout. Flag any sections where insufficient evidence exists — do not fabricate.`;
+      `You are ${job.assistantName}, generating a report for {client_name}'s engagement '{engagement_name}' covering the period {period_start} to {period_end}. Draw evidence exclusively from the knowledge corpus. Every claim must be cited to a specific source using [chunk_id] notation. Follow the template structure exactly. Use the organisation's vocabulary throughout. Flag any sections where insufficient evidence exists — do not fabricate.`;
 
     const systemPrompt = reportPromptTemplate
       .replace(/\{report_template_name\}/g, template.name)
@@ -612,6 +614,7 @@ Deno.serve(async (req) => {
       title,
       period_start,
       period_end,
+      assistant_name,
     } = await req.json();
 
     if (!engagement_id || !template_id) {
@@ -690,6 +693,7 @@ Deno.serve(async (req) => {
       template,
       period_start,
       period_end,
+      assistantName: resolveAssistantName(assistant_name),
     };
 
     // ── ?sync=1: the pre-CC-231 behaviour — run inline, return the result ──

@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Upload, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const ACCEPTED_TYPES = '.xlsx,.xls,.csv,.json';
 
@@ -86,7 +89,7 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
         const result = await ingestParsedSurvey(survey.id, extraction.sheets);
         toast.success(
           `Parsed ${result.response_count} responses across ${result.questions_total} questions. ` +
-          `Nera is analysing them in the background — check the Surveys tab in a few minutes for the full breakdown. ` +
+          `${assistantName} is analysing them in the background — check the Surveys tab in a few minutes for the full breakdown. ` +
           `The file itself never left your machine.`,
           { duration: 8000 },
         );
@@ -130,7 +133,7 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
           Upload Survey
         </CardTitle>
         <CardDescription>
-          Upload a survey export (Excel, CSV, or JSON) and Nera will analyse responses,
+          Upload a survey export (Excel, CSV, or JSON) and {assistantName} will analyse responses,
           extract themes, and add findings to the knowledge base linked to your {v.commitment_top_plural.toLowerCase()}.
           The file is read in your browser — only the parsed responses are sent for analysis.
         </CardDescription>
@@ -205,7 +208,7 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
               This survey may contain personally identifiable information
             </Label>
             <p className="text-xs text-muted-foreground mt-0.5">
-              If checked, Nera will not quote individual responses verbatim.
+              If checked, {assistantName} will not quote individual responses verbatim.
               Aggregate analysis and themes are still extracted.
             </p>
           </div>
@@ -220,7 +223,7 @@ export function SurveyUpload({ onUploadComplete }: SurveyUploadProps) {
           {uploading ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
           ) : ingesting ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analysing with Nera...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Analysing with {assistantName}...</>
           ) : (
             <><Upload className="w-4 h-4 mr-2" /> Upload and analyse</>
           )}

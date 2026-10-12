@@ -31,6 +31,9 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { Upload, FileUp, Loader2, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const ACCEPTED_TYPES = '.pdf,.doc,.docx,.md,.txt,.xlsx,.xls,.csv,.json';
 
@@ -288,7 +291,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
           Upload {v.evidence_singular}
         </CardTitle>
         <CardDescription>
-          Upload a {v.evidence_singular.toLowerCase()} and Nera will chunk it into the knowledge base,
+          Upload a {v.evidence_singular.toLowerCase()} and {assistantName} will chunk it into the knowledge base,
           linked to the {v.commitment_top_plural.toLowerCase()} and {v.cross_cut_plural.toLowerCase()} you select.
         </CardDescription>
       </CardHeader>
@@ -536,7 +539,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
               This document may contain personally identifiable information
             </Label>
             <p className="text-xs text-muted-foreground mt-0.5">
-              If checked, Nera will not quote verbatim from this document in any output.
+              If checked, {assistantName} will not quote verbatim from this document in any output.
               Aggregate analysis is still performed. Individual patient information must
               never be uploaded — see the tool's data policy.
             </p>
@@ -570,7 +573,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
           {uploading ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Reading file in your browser...</>
           ) : ingesting ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Indexing with Nera...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Indexing with {assistantName}...</>
           ) : (
             <><Upload className="w-4 h-4 mr-2" /> Index this document</>
           )}

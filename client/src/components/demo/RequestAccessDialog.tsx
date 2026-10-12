@@ -18,6 +18,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { submitSandboxRequest } from '@/lib/sandboxApi';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 interface RequestAccessDialogProps {
   demoEngagementId?: string;
@@ -86,7 +89,7 @@ export function RequestAccessDialog({
           <DialogTitle>Request your own sandbox</DialogTitle>
           <DialogDescription>
             We'll set up a private copy of this plan that's yours to edit — add your own
-            priorities and documents, and keep asking Nera. Your changes are saved and only
+            priorities and documents, and keep asking {assistantName}. Your changes are saved and only
             you can see them.
           </DialogDescription>
         </DialogHeader>

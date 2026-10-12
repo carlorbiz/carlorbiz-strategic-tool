@@ -8,6 +8,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Send, MessageCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 // ─── ?access= token exchange (96h reusable credential; prefetch-proof) ───────
 // Respondents land here with ?access=<token>. If there is no current session,
@@ -128,7 +131,7 @@ function ElicitationInner() {
               <MessageCircle className="w-6 h-6 text-primary" />
             </div>
             <h1 className="text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
-              A conversation with Nera
+              A conversation with {assistantName}
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Ahead of your strategy session, I'd like to understand how you see Aventine —
@@ -182,7 +185,7 @@ function ElicitationInner() {
       <div className="flex-1 w-full max-w-2xl mx-auto flex flex-col px-4 py-6">
         <div className="flex items-center gap-2 pb-3 text-sm text-muted-foreground">
           <MessageCircle className="w-4 h-4" />
-          <span>Nera · Aventine strategy conversation</span>
+          <span>{assistantName} · Aventine strategy conversation</span>
           <span className="ml-auto text-xs">{coveredCount}/{totalDimensions} areas</span>
         </div>
 

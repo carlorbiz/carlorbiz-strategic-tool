@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { RefreshCw, FileText, AlertTriangle, CheckCircle2, Loader2, Clock, ExternalLink } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const STATUS_CONFIG: Record<DocumentStatus, {
   label: string;
@@ -99,7 +102,7 @@ export function DocumentList({ refreshTrigger }: DocumentListProps) {
         <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
         <p className="text-sm">
           No {v.evidence_plural.toLowerCase()} uploaded yet.
-          Upload your first {v.evidence_singular.toLowerCase()} and Nera will start building
+          Upload your first {v.evidence_singular.toLowerCase()} and {assistantName} will start building
           the knowledge base for this engagement.
         </p>
       </div>

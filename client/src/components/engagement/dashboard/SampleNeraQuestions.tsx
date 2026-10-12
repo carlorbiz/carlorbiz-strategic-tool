@@ -12,6 +12,9 @@ import { useStrategicChat } from '@/contexts/StrategicChatContext';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const RESEARCH_PROMPTS = [
   'Of our four strategic pillars, which one is best served by the current corpus, and which is the weakest?',
@@ -38,11 +41,11 @@ export function SampleNeraQuestions() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
-          Ask Nera about your strategic pillars
+          Ask {assistantName} about your strategic pillars
         </CardTitle>
         <CardDescription>
           Strategic questions a Programme Director or board would ask. Click any to
-          open Nera and have her answer from the corpus, tied back to your pillars.
+          open {assistantName} and have her answer from the corpus, tied back to your pillars.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

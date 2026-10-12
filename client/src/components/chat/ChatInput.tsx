@@ -2,6 +2,9 @@ import { useState, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Loader2 } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -14,7 +17,7 @@ export function ChatInput({
   onSend,
   isLoading = false,
   disabled = false,
-  placeholder = 'Ask Nera about this engagement...',
+  placeholder = `Ask ${assistantName} about this engagement...`,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
 

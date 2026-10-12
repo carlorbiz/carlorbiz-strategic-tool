@@ -31,6 +31,9 @@ import {
 import { toast } from 'sonner';
 import { Save, Trash2, Loader2 } from 'lucide-react';
 import { ToolsInPlaySelector } from '@/components/engagement/ToolsInPlaySelector';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 export function EngagementSettings() {
   const { engagement, aiConfig, isEngagementAdmin, refresh } = useEngagement();
@@ -171,7 +174,7 @@ export function EngagementSettings() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="soft">Soft — any admin can add, justification logged</SelectItem>
-                <SelectItem value="medium">Medium — Nera reviews for fit and duplication</SelectItem>
+                <SelectItem value="medium">Medium — {assistantName} reviews for fit and duplication</SelectItem>
                 <SelectItem value="hard">Hard — new items require board ratification</SelectItem>
               </SelectContent>
             </Select>

@@ -10,6 +10,9 @@ import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { useMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 export function NeraChatbot() {
   const { messages, isLoading, isStreaming, sendMessage, selectOption, submitFeedback, clearHistory } = useChat();
@@ -51,7 +54,7 @@ export function NeraChatbot() {
               N
             </div>
             <div>
-              <SheetTitle className="text-left">Nera</SheetTitle>
+              <SheetTitle className="text-left">{assistantName}</SheetTitle>
               <p className="text-xs text-muted-foreground">Your AI Knowledge Assistant</p>
             </div>
           </div>
@@ -145,7 +148,7 @@ export function NeraChatbot() {
           ) : (
             <div className="p-4 border-t space-y-3">
               <p className="text-sm text-muted-foreground text-center">
-                Please log in to chat with Nera
+                Please log in to chat with {assistantName}
               </p>
               <Button
                 className="w-full"

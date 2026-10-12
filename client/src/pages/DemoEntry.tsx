@@ -10,6 +10,8 @@ import { RequestAccessDialog } from '@/components/demo/RequestAccessDialog';
 import { getBrand } from '@/lib/brand';
 import { DEMO_ENGAGEMENT_IDS } from '@/lib/demo';
 
+const assistantName = getBrand().assistantName;
+
 // The three seeded, read-only demo engagements live in `@/lib/demo` (shared with
 // the engagement shell so the role gate exempts them). Write access is blocked
 // at the database layer by migration 0012 — a prospect can browse and run the
@@ -131,7 +133,7 @@ export default function DemoEntry() {
       <div className="mt-10 rounded-lg border bg-muted/40 p-6 text-center space-y-3">
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           Want to go further? We can set you up with a private sandbox — your own editable
-          copy of a plan, with more questions for Nera and changes that stick between visits.
+          copy of a plan, with more questions for {assistantName} and changes that stick between visits.
         </p>
         <RequestAccessDialog triggerLabel="Request a private sandbox" triggerVariant="outline" />
       </div>

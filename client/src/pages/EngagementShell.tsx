@@ -19,6 +19,8 @@ import { EngagementDeliveredView } from '@/pages/engagement/DeliveredView';
 import { EngagementLivingView } from '@/pages/engagement/LivingView';
 import { EngagementArchivedView } from '@/pages/engagement/ArchivedView';
 
+const assistantName = getBrand().assistantName;
+
 // The per-surface engagement bar: EP3 green logo, back-to-engagements, the
 // engagement name, tour re-launch, and the local sign-out. On the Carlorbiz
 // skin it is the sticky top nav (unchanged). On the MTMOT skin the replicated

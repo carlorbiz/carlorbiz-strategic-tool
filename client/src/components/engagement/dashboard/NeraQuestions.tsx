@@ -4,6 +4,9 @@ import { fetchLatestDriftReport } from '@/lib/engagementApi';
 import type { DriftReport } from '@/types/engagement';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { MessageCircleQuestion } from 'lucide-react';
+import { getBrand, possessive } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 /**
  * Shows open observations from Nera's drift-watch that haven't been triaged.
@@ -52,7 +55,7 @@ export function NeraQuestions() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <MessageCircleQuestion className="w-4 h-4" />
-          Questions from Nera
+          Questions from {assistantName}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -62,8 +65,8 @@ export function NeraQuestions() {
           </div>
         ))}
         <p className="text-xs text-muted-foreground mt-2">
-          These observations come from Nera's drift-watch analysis. In a future
-          version you'll be able to discuss them with Nera directly.
+          These observations come from {possessive(assistantName)} drift-watch analysis. In a future
+          version you'll be able to discuss them with {assistantName} directly.
         </p>
       </CardContent>
     </Card>

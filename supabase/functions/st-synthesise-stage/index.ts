@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
 import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
+import { resolveAssistantName } from "../_shared/assistantName.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -46,7 +47,8 @@ Deno.serve(async (req) => {
 
   try {
     await requireAuth(req);
-    const { stage_id } = await req.json();
+    const reqBody = await req.json();
+    const { stage_id } = reqBody;
 
     if (!stage_id) {
       return jsonResponse({ error: "stage_id is required" }, 400);
@@ -179,7 +181,7 @@ ${
       model: "claude-sonnet-4-5",
     });
 
-    const systemPrompt = `You are Nera, synthesising the outputs of a completed engagement stage. Analyse all stakeholder inputs, workshop decisions, and evidence to produce structured insights for the next stage.
+    const systemPrompt = `You are ${resolveAssistantName(reqBody.assistant_name)}, synthesising the outputs of a completed engagement stage. Analyse all stakeholder inputs, workshop decisions, and evidence to produce structured insights for the next stage.
 
 Return a JSON object with:
 - "themes": array of { "title": string, "description": string, "strength": "strong"|"moderate"|"emerging" }

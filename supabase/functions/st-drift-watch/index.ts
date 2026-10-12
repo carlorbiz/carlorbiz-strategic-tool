@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
 import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
+import { resolveAssistantName } from "../_shared/assistantName.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -39,7 +40,7 @@ async function requireAuth(req: Request): Promise<string> {
 }
 
 // ─── Default drift analysis prompt (fallback if not configured) ──
-const DEFAULT_DRIFT_PROMPT = `You are Nera, a strategic governance analyst. Analyse the evidence corpus for the engagement and produce a structured drift report.
+const defaultDriftPrompt = (assistantName: string) => `You are ${assistantName}, a strategic governance analyst. Analyse the evidence corpus for the engagement and produce a structured drift report.
 
 For each commitment, assess:
 1. Mention frequency — is it appearing in recent documents and survey evidence?
@@ -62,7 +63,8 @@ Deno.serve(async (req) => {
 
   try {
     const _userId = await requireAuth(req);
-    const { engagement_id } = await req.json();
+    const reqBody = await req.json();
+    const { engagement_id } = reqBody;
 
     if (!engagement_id) {
       return jsonResponse({ error: "engagement_id is required" }, 400);
@@ -195,7 +197,8 @@ ${
     });
 
     const driftPrompt =
-      aiConfig?.system_prompt_drift_watch ?? DEFAULT_DRIFT_PROMPT;
+      aiConfig?.system_prompt_drift_watch ??
+      defaultDriftPrompt(resolveAssistantName(reqBody.assistant_name));
 
     const llmResult = await callLLM(
       llmConfig,

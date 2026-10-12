@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { getBrand } from '@/lib/brand';
 import type {
   ReportingTemplate,
   ComplianceReport,
@@ -151,7 +152,7 @@ export async function generateReport(params: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify({ ...params, assistant_name: getBrand().assistantName }),
   });
 
   if (!resp.ok) {
@@ -231,7 +232,7 @@ export async function synthesiseStage(stageId: string): Promise<{
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ stage_id: stageId }),
+    body: JSON.stringify({ stage_id: stageId, assistant_name: getBrand().assistantName }),
   });
 
   if (!resp.ok) {

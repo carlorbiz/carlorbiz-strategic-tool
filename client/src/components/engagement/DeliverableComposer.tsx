@@ -30,6 +30,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { FileText, Loader2, ArrowRight, Check, AlertTriangle } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 /**
  * DeliverableComposer — the bridge between the consulting engagement arc
@@ -193,7 +196,7 @@ export function DeliverableComposer() {
               <DialogHeader>
                 <DialogTitle>Compose Engagement Deliverable</DialogTitle>
                 <DialogDescription>
-                  This document will be chunked into the knowledge corpus so Nera can cite it.
+                  This document will be chunked into the knowledge corpus so {assistantName} can cite it.
                   The engagement will transition to <strong>delivered</strong>.
                 </DialogDescription>
               </DialogHeader>

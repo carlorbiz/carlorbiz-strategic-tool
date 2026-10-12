@@ -19,6 +19,9 @@ import { useStrategicChat } from '@/contexts/StrategicChatContext';
 import { useEngagement } from '@/contexts/EngagementContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Search, ArrowRight } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const GENERIC_DRIFT_PROMPTS = [
   'Read our strategic plans in order of the period they speak for. Has the language about our position stayed the same across a window in which our operating reality materially changed?',
@@ -48,10 +51,10 @@ export function GenericDriftSampleNeraQuestions() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Search className="w-4 h-4" />
-          Ask Nera the eight drift signals
+          Ask {assistantName} the eight drift signals
         </CardTitle>
         <CardDescription>
-          The eight warning signs, put to your own corpus. Click any to have Nera answer
+          The eight warning signs, put to your own corpus. Click any to have {assistantName} answer
           from your primary documents, with citations. Working through all eight is the
           continuous version of the board workbook.
         </CardDescription>

@@ -21,6 +21,7 @@ import {
 } from "../_shared/llm.ts";
 import type { LLMConfig, LLMMessage } from "../_shared/llm.ts";
 import { resolveLLMConfigFromRow } from "../_shared/interview-engine-helpers.ts";
+import { resolveAssistantName } from "../_shared/assistantName.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -304,7 +305,7 @@ async function loadEngagementContext(
 
 // ─── System prompt ────────────────────────────────────────────
 
-function buildSystemPrompt(ctx: EngagementContext): string {
+function buildSystemPrompt(ctx: EngagementContext, assistantName: string): string {
   if (ctx.systemPromptOverride) return ctx.systemPromptOverride;
 
   const v = ctx.vocabulary;
@@ -367,7 +368,7 @@ function buildSystemPrompt(ctx: EngagementContext): string {
     ? "1 strategic pillar defined."
     : `${ctx.pillars.length} strategic pillars defined.`;
 
-  return `You are Nera, the AI assistant for the strategic engagement **${ctx.engagement.name}**${ctx.engagement.client_name ? ` (${ctx.engagement.client_name})` : ""}.
+  return `You are ${assistantName}, the AI assistant for the strategic engagement **${ctx.engagement.name}**${ctx.engagement.client_name ? ` (${ctx.engagement.client_name})` : ""}.
 
 You help the engagement team — admins, stakeholders, and clients — find evidence, track ${v.commitment_top_plural.toLowerCase()}, and make sense of what has been uploaded into the engagement's knowledge base.
 
@@ -403,7 +404,7 @@ ${stageLines}
 8. **Be precise with figures.** Quote exact amounts, dates, percentages, and decisions verbatim from the source documents. If a figure isn't in the documents, do not produce one.
 9. **Format key values in bold** for scannability. Use bullets when listing multiple findings.
 10. **Keep responses tight.** Two to four short paragraphs is usually right. Long blocks of prose lose people.
-11. **Voice:** direct, Australian English, plain. Do not pad with "I'd be happy to help" or "Great question". Do not refer to yourself as an AI; you are Nera.
+11. **Voice:** direct, Australian English, plain. Do not pad with "I'd be happy to help" or "Great question". Do not refer to yourself as an AI; you are ${assistantName}.
 12. **Conversational flow.** When a follow-up builds on earlier turns or the question is ambiguous, open with a one-line paraphrase of what you understand them to be asking — so they can set you straight if you've misread — then answer. Don't paraphrase clear, self-contained questions; just answer them. Natural flow is neither clipped nor long-winded.
 
 # When you cannot answer
@@ -768,7 +769,7 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
   const answerQueryId = crypto.randomUUID();
-  const systemPrompt = buildSystemPrompt(ctx);
+  const systemPrompt = buildSystemPrompt(ctx, resolveAssistantName(body.assistant_name));
 
   const chunks = await retrieveScopedChunks(supabase, engagementId, query);
   const sources = uniqueSources(chunks);

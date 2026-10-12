@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, FileText } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 export function ReportTemplateEditor() {
   const { engagement } = useEngagement();
@@ -167,7 +170,7 @@ export function ReportTemplateEditor() {
                   placeholder="# Report Title..."
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Use {'{for_each_priority}'}, {'{priority_title}'}, {'{rag_status}'}, {'{drift_signals_narrative}'}, etc. as placeholders. Nera fills them from the evidence corpus.
+                  Use {'{for_each_priority}'}, {'{priority_title}'}, {'{rag_status}'}, {'{drift_signals_narrative}'}, etc. as placeholders. {assistantName} fills them from the evidence corpus.
                 </p>
               </div>
               <div className="flex justify-end gap-2">

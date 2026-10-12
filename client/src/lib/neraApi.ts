@@ -1,5 +1,6 @@
 import { NeraQueryRequest, NeraQueryResponse, ChatSource, TriageOption } from '@/types/chat';
 import { supabase } from '@/lib/supabase';
+import { getBrand } from '@/lib/brand';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -63,7 +64,7 @@ export async function queryNera(
         'Content-Type': 'application/json',
         ...authHeaders,
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ ...request, assistant_name: getBrand().assistantName }),
     });
 
     if (!response.ok) {
@@ -106,7 +107,7 @@ export async function queryNeraStreaming(
         'Content-Type': 'application/json',
         ...authHeaders,
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ ...request, assistant_name: getBrand().assistantName }),
     });
 
     if (!response.ok) {

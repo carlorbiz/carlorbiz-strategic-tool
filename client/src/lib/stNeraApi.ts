@@ -2,6 +2,7 @@
 // edge function. Keep separate from neraApi.ts (which is the website chatbot).
 
 import { supabase } from '@/lib/supabase';
+import { getBrand } from '@/lib/brand';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -65,6 +66,7 @@ export async function queryStNeraStreaming(
         engagement_id: engagementId,
         query,
         session_id: sessionId,
+        assistant_name: getBrand().assistantName,
       }),
     });
 

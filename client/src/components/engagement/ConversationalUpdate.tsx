@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { MessageCircle, Send, Loader2, CheckCircle2, X, AlertTriangle } from 'lucide-react';
+import { getBrand } from '@/lib/brand';
+
+const assistantName = getBrand().assistantName;
 
 const RAG_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   on_track: { label: 'On Track', color: 'text-green-600' },
@@ -57,10 +60,10 @@ export function ConversationalUpdate() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5" />
-            Tell Nera what's happening
+            Tell {assistantName} what's happening
           </CardTitle>
           <CardDescription>
-            Describe a recent decision, milestone, delay, or change. Nera will figure out
+            Describe a recent decision, milestone, delay, or change. {assistantName} will figure out
             which {v.commitment_top_singular.toLowerCase()} it relates to and capture it as a structured update.
           </CardDescription>
         </CardHeader>
@@ -99,7 +102,7 @@ export function ConversationalUpdate() {
           <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-green-600" />
           <p className="font-medium">Update saved</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Nera has captured the update and linked it to the relevant {v.commitment_top_singular.toLowerCase()}.
+            {assistantName} has captured the update and linked it to the relevant {v.commitment_top_singular.toLowerCase()}.
           </p>
           <Button onClick={reset} variant="outline" className="mt-4">
             Record another update
@@ -115,7 +118,7 @@ export function ConversationalUpdate() {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <MessageCircle className="w-4 h-4" />
-          Update conversation with Nera
+          Update conversation with {assistantName}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -150,7 +153,7 @@ export function ConversationalUpdate() {
         {/* Confirmation card */}
         {pendingConfirmation && (
           <div className="border rounded-lg p-3 bg-amber-50 dark:bg-amber-950/20 space-y-2">
-            <p className="text-sm font-medium">Nera understood this as:</p>
+            <p className="text-sm font-medium">{assistantName} understood this as:</p>
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">

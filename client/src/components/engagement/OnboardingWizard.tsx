@@ -14,6 +14,8 @@ import { useVocabulary } from '@/hooks/useVocabulary';
 import { getBrand, type Brand } from '@/lib/brand';
 import type { Engagement, VocabularyMap } from '@/types/engagement';
 
+const assistantName = getBrand().assistantName;
+
 interface OnboardingWizardProps {
   /** External control — when true, the tour starts regardless of localStorage. */
   forceStart?: boolean;
@@ -219,10 +221,10 @@ const researchSteps: StepBuilder = (engagement, v, brand) => [
   },
   {
     target: '[data-tour="nera-bubble"]',
-    title: 'Talk to Nera about your pillars',
+    title: `Talk to ${assistantName} about your pillars`,
     content: (
       <p className="text-sm">
-        Click the round bubble to open Nera. She answers strictly from <strong>this
+        Click the round bubble to open {assistantName}. She answers strictly from <strong>this
         engagement's</strong> corpus — no cross-contamination. The questions worth asking are
         pillar-level: <em>"Which pillar is best served by what we've collected?"</em> or{' '}
         <em>"Where is the corpus saying our assumptions about workforce uptake are wrong?"</em>
@@ -294,7 +296,7 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
             Two ideas thread through it: <strong>{v.commitment_top_plural}</strong> are the
             strategic intent (what the organisation is committing to); <strong>evidence</strong>
             {' '}is everything that lands in the corpus — board papers, status updates,
-            meeting notes, conversations with Nera. The loop between them is your{' '}
+            meeting notes, conversations with {assistantName}. The loop between them is your{' '}
             <strong>operating rhythm</strong>. The next two minutes show you where it lives.
           </p>
         </div>
@@ -321,7 +323,7 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
         <p className="text-sm">
           Each {topSingular} carries a live <strong>RAG status</strong> rolled up from its{' '}
           {subPlural}. Click any card to expand the {subPlural} underneath and see the
-          last update Nera captured. The card colour is the latest answer to the only
+          last update {assistantName} captured. The card colour is the latest answer to the only
           question that matters at the next board meeting: <em>"is it on track?"</em>
         </p>
       ),
@@ -342,10 +344,10 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
     },
     {
       target: '[data-tour="conversational-update"]',
-      title: 'Tell Nera what just happened',
+      title: `Tell ${assistantName} what just happened`,
       content: (
         <p className="text-sm">
-          Instead of filling in a status form, you just <em>tell Nera</em> what's moved — in
+          Instead of filling in a status form, you just <em>tell {assistantName}</em> what's moved — in
           your own words. She works out which {topSingular} or {v.commitment_sub_singular.toLowerCase()}
           {' '}it relates to, pulls out the status snapshot, and writes the narrative for you.
           You confirm before it's saved. This is how a {topSingular} stays alive between
@@ -361,7 +363,7 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
         <p className="text-sm">
           Every {v.evidence_singular.toLowerCase()} you upload — board papers, meeting notes,
           grant reports, stakeholder feedback — is converted, chunked, and tagged against the
-          {' '}{topPlural} it touches. Nera reads all of it. That's how she answers questions
+          {' '}{topPlural} it touches. {assistantName} reads all of it. That's how she answers questions
           without you having to find the source first.
         </p>
       ),
@@ -369,10 +371,10 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
     },
     {
       target: '[data-tour="nera-bubble"]',
-      title: 'Talk to Nera about the plan',
+      title: `Talk to ${assistantName} about the plan`,
       content: (
         <p className="text-sm">
-          Click the round bubble to open Nera. She answers strictly from <strong>this
+          Click the round bubble to open {assistantName}. She answers strictly from <strong>this
           engagement's</strong> corpus — no cross-contamination. The questions worth asking are
           {' '}{topSingular}-level: <em>"Which {topSingular} has gone quiet?"</em>,{' '}
           <em>"What does the corpus say about workforce since the last board meeting?"</em>,
@@ -390,7 +392,7 @@ const strategicPlanningSteps: StepBuilder = (engagement, v, brand) => {
         <p className="text-sm">
           <strong>Documents</strong> and <strong>Surveys</strong> are where evidence lands.{' '}
           <strong>Reports</strong> is the consequential one — pick a template (Board Pre-Read,
-          quarterly summary, funder report), pick a period, and Nera drafts it from the
+          quarterly summary, funder report), pick a period, and {assistantName} drafts it from the
           corpus with citations back to source. You review, edit side-by-side, then mark it
           approved.
         </p>
@@ -520,10 +522,10 @@ const aiStrategySteps: StepBuilder = (engagement, v, brand) => {
     },
     {
       target: '[data-tour="nera-bubble"]',
-      title: 'Ask Nera where the accounts disagree',
+      title: `Ask ${assistantName} where the accounts disagree`,
       content: (
         <p className="text-sm">
-          Nera answers strictly from this engagement's corpus. The questions worth asking here
+          {assistantName} answers strictly from this engagement's corpus. The questions worth asking here
           are the ones a single interview cannot answer: <em>"Where do the COO and the team leader
           describe the same handoff differently?"</em>, <em>"Which proposal survives the
           never-automate test?"</em>, <em>"What has to be true before the second quarter?"</em>
@@ -538,7 +540,7 @@ const aiStrategySteps: StepBuilder = (engagement, v, brand) => {
       content: (
         <div className="space-y-2 text-sm">
           <p>
-            Open <strong>Reports</strong>, pick the AI Strategy Report, and Nera drafts it from the
+            Open <strong>Reports</strong>, pick the AI Strategy Report, and {assistantName} drafts it from the
             corpus: five sections on the intake groups, the three proposals on one gate, vendor
             tool intelligence, and a References list where every claim points at an intake
             chunk, a stakeholder chunk, or a tool reference.
