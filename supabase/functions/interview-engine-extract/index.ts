@@ -6,6 +6,7 @@ import {
   upsertPromptCoverage,
   formatMessagesForLLM,
   resolveLLMConfig,
+  GEMINI_PRO_MODEL,
 } from "../_shared/interview-engine-helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -202,7 +203,7 @@ Deno.serve(async (req) => {
     const llmConfig: LLMConfig = await resolveLLMConfig(
       supabase,
       conversation.engagement_id,
-      { provider: "google", model: "gemini-3.1-pro-preview" },
+      { provider: "google", model: GEMINI_PRO_MODEL },
     );
 
     // Native structured output only applies to Gemini; anthropic/openai ignore it

@@ -24,7 +24,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callLLM } from "../_shared/llm.ts";
-import { resolveLLMConfig } from "../_shared/interview-engine-helpers.ts";
+import { resolveLLMConfig, GEMINI_FAST_MODEL } from "../_shared/interview-engine-helpers.ts";
 
 // ─── Environment ──────────────────────────────────────────────
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -74,7 +74,7 @@ async function requireAuth(req: Request): Promise<string> {
 //   overall summary: Claude Sonnet 4.5 — single call, prose quality matters.
 // A single-provider deployment runs everything on that provider.
 
-const ANALYSIS_DEFAULT = { provider: "google" as const, model: "gemini-3.5-flash-lite" };
+const ANALYSIS_DEFAULT = { provider: "google" as const, model: GEMINI_FAST_MODEL };
 const SUMMARY_DEFAULT = { provider: "anthropic" as const, model: "claude-sonnet-4-5" };
 
 // ─── LLM prompts ──────────────────────────────────────────────

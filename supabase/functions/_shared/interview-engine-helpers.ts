@@ -28,11 +28,17 @@ const LLM_API_KEYS: Record<LLMProvider, string> = {
 const ENV_PROVIDER = (Deno.env.get("LLM_PROVIDER") || "").trim().toLowerCase();
 const ENV_MODEL = (Deno.env.get("LLM_MODEL") || "").trim();
 
+// Gemini tier defaults (CC-450, law 5: model ids live in env vars). Set the
+// GEMINI_FAST_MODEL / GEMINI_PRO_MODEL secrets to move every function at once;
+// the fallbacks are the models in use when this was written (13 Oct 2026).
+export const GEMINI_FAST_MODEL = (Deno.env.get("GEMINI_FAST_MODEL") || "").trim() || "gemini-3.5-flash-lite";
+export const GEMINI_PRO_MODEL = (Deno.env.get("GEMINI_PRO_MODEL") || "").trim() || "gemini-3.1-pro-preview";
+
 // Used only when the resolved provider differs from the function's default
 // provider and nothing named a model for it. Same trio st-nera-query has used.
 const PROVIDER_DEFAULT_MODELS: Record<LLMProvider, string> = {
   anthropic: "claude-sonnet-4-5",
-  google: "gemini-3.5-flash-lite",
+  google: GEMINI_FAST_MODEL,
   openai: "gpt-4o-mini",
 };
 

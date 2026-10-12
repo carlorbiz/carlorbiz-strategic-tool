@@ -6,7 +6,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // ─── Config ───────────────────────────────────────────────────
-const GEMINI_MODEL = "gemini-3.5-flash-lite";
+const GEMINI_MODEL = (Deno.env.get("GEMINI_FAST_MODEL") || "").trim() || "gemini-3.5-flash-lite"; // CC-450: env var, same fallback as _shared
 const MAX_OUTPUT_TOKENS = 65536;
 const FILE_POLL_INTERVAL_MS = 3000;
 const FILE_POLL_MAX_ATTEMPTS = 60; // 3 minutes max wait

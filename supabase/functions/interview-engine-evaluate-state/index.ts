@@ -6,6 +6,7 @@ import {
   fetchUserState,
   formatMessagesForLLM,
   resolveLLMConfig,
+  GEMINI_FAST_MODEL,
 } from "../_shared/interview-engine-helpers.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -119,7 +120,7 @@ ${formattedHistory.map((m) => `${m.role}: ${m.content}`).join("\n")}`;
     const llmConfig: LLMConfig = await resolveLLMConfig(
       supabase,
       engagementId,
-      { provider: "google", model: "gemini-3.5-flash-lite" },
+      { provider: "google", model: GEMINI_FAST_MODEL },
     );
 
     const result = await callLLM(
