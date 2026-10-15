@@ -13,7 +13,17 @@ export function BrandLogo({
   imgClassName?: string;
 }) {
   const brand = getBrand();
-  const img = <img src={brand.logo} alt={`${brand.logoAlt} logo`} className={imgClassName} />;
+  const logoImg = <img src={brand.logo} alt={`${brand.logoAlt} logo`} className={imgClassName} />;
+  // MTMOT's own build carries the Strategy Engine glyph before the logo;
+  // client builds never do.
+  const img = brand.isMtmot ? (
+    <span className="inline-flex items-center gap-2">
+      <img src="/icons/strategy-engine/glyph.svg" alt="" aria-hidden="true" width={28} height={28} className="h-7 w-7 shrink-0" />
+      {logoImg}
+    </span>
+  ) : (
+    logoImg
+  );
   const isExternal = /^https?:\/\//.test(brand.homeUrl);
 
   if (isExternal) {

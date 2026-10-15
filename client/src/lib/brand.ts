@@ -22,6 +22,10 @@ export interface Brand {
   /** Single accent colour (hex), applied as the --color-brand-accent CSS
    *  custom property at runtime. */
   accentColor: string;
+  /** Favicon SVG path or URL (VITE_BRAND_ICON). */
+  icon: string;
+  /** 32px PNG favicon path or URL (VITE_BRAND_ICON_PNG). */
+  iconPng: string;
   /** Support contact shown in-app (e.g. onboarding copy, error states). */
   supportEmail: string;
   /** True when this build should render the replicated mtmot.com marketing
@@ -47,6 +51,8 @@ const DEFAULTS: Brand = {
   logoAlt: 'MTMOT Strategy Engine',
   homeUrl: '/',
   accentColor: '#C9A96E',
+  icon: '/icons/strategy-engine/favicon.svg',
+  iconPng: '/icons/strategy-engine/favicon-32.png',
   supportEmail: 'support@mtmot.com',
   isMtmot: false,
   assistantName: 'CJ for Teams',
@@ -89,6 +95,8 @@ export function getBrand(): Brand {
     logoAlt: readEnv('VITE_BRAND_LOGO_ALT') ?? readEnv('VITE_BRAND_PRODUCT_NAME') ?? DEFAULTS.logoAlt,
     homeUrl: readEnv('VITE_BRAND_HOME_URL') ?? DEFAULTS.homeUrl,
     accentColor: readEnv('VITE_BRAND_ACCENT_COLOR') ?? DEFAULTS.accentColor,
+    icon: readEnv('VITE_BRAND_ICON') ?? DEFAULTS.icon,
+    iconPng: readEnv('VITE_BRAND_ICON_PNG') ?? DEFAULTS.iconPng,
     supportEmail: readEnv('VITE_BRAND_SUPPORT_EMAIL') ?? DEFAULTS.supportEmail,
     isMtmot: readEnv('VITE_BRAND_IS_MTMOT') === 'true' && !onConsoleOrigin(),
     assistantName: readEnv('VITE_BRAND_ASSISTANT_NAME') ?? DEFAULTS.assistantName,
@@ -112,6 +120,11 @@ export function applyBrandDocument(brand: Brand): void {
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute('content', brand.description);
     document.documentElement.style.setProperty('--color-brand-accent', brand.accentColor);
+    // Favicon follows the brand, so an env-branded client build gets its own icon.
+    document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]').forEach((link) => {
+      const isSvg = link.type === 'image/svg+xml';
+      link.href = isSvg ? brand.icon : brand.iconPng;
+    });
     // The MTMOT palette (bronze headings, chrome dark blocks, gold gradients,
     // the warm working surface) lives in the .brand-mtmot rules in index.css;
     // the accent variable above is one value inside it, not the whole skin.
