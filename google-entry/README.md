@@ -49,9 +49,44 @@ Four documents for a fictional organisation, Northbank Community Health, written
 
 Copy `test-corpus/` into the watched folder, load the sample commitments, scan, sign off a few rows, run the report. Record what Gemini produced, the token counts on the Scans sheet, and what you would change.
 
+## Capacity and quotas (checked against Google's Apps Script quota page, 8 Nov 2026)
+
+These are Google's published figures for Google Workspace accounts; consumer gmail.com accounts are lower where shown.
+
+| Quota | Workspace | Consumer | What it means for this product |
+|---|---|---|---|
+| Script runtime | 6 min per execution | 6 min | A scan reads about 20 to 50 documents per run and stops cleanly at 5 min; delta-only, so the next run continues. |
+| Triggers total runtime | 6 hr per day | 90 min | An hourly scan (24 runs x 5 min = 2 hr) fits a Workspace account with room to spare. |
+| URL Fetch calls | 100,000 per day | 20,000 | One Gemini call per document; not a constraint at governance-corpus volumes. |
+| URL Fetch POST and response size | 50 MB per call | 50 MB | A PDF is sent inline, capped here at 15 MB after base64 overhead. |
+| Simultaneous executions | 30 per user | 30 | The script lock keeps this product to one run at a time anyway. |
+| Properties value size | 9 KB per value | 9 KB | The Gemini key and model id are far below it. |
+| Triggers | 20 per user per script | 20 | This product installs two. |
+
+Sheets itself holds 10 million cells per spreadsheet and gets slow past roughly 100,000 rows. At five to eight evidence rows a document, archive the Evidence sheet to a yearly tab after about 10,000 documents.
+
+**The size question is corpus size, not organisation size.** The script watches one folder: the strategy and board library (plans, board papers, executive updates, committee minutes). For a 3,000-staff organisation that is hundreds of documents a year. It is not, and is never sold as, a scan of everything the organisation produces; that is the full engine's ingestion.
+
+## Hardening already in the code
+
+- **One run at a time.** Scheduled and menu runs share a script lock (`withLock_`), so an hourly trigger never overlaps a slow scan and two reports are never written at once.
+- **The sheet layout is a contract.** `SCHEMA_VERSION` in `Config.gs` is written to Settings by setup; the script refuses to run against a newer layout than it knows, and migrations live in `setupSheets`. Later packs (research, systems) add columns through a version bump, never by hand.
+- **Evidence carries its source.** The `Source` column names the pack that wrote the row (`documents` today), so the drift report can group by pack when more exist.
+- **Delta-only reads.** A file is re-read only when its Drive `modifiedTime` changes.
+- **Time budget.** A run stops at 5 minutes with an honest line on the Scans sheet rather than being killed at 6.
+
+## Hardening to apply at install
+
+- **Install under a dedicated Workspace user** (for example `strategy-engine@` the client's domain) with access to the watched folder only. Triggers and the Sheet belong to the installing user: if a named person installs it and leaves, the watch stops; and the script sees whatever that user can see, so a scoped user is also the privacy boundary.
+- **Restrict who can edit the Sheet.** Anyone with edit access to the bound script can read the Gemini key from script properties. Reviewers need edit access to the Evidence sheet only; give the script editor role to one administrator.
+- **Key-free option.** A client who will not hold an API key can use Vertex AI through the installing user's own Google sign-in (`ScriptApp.getOAuthToken()` with a Google Cloud project in their organisation). That is a configuration conversation at the implementation tier, not a change to the floor.
+
+## The bridge to the full engine
+
+A client who steps up to the $15,000 implementation carries their record with them: the Commitments sheet maps to `st_organisational_pillars` (title, description, success signal, level) and confirmed Evidence rows map to `st_documents` summaries and stakeholder inputs. The export is a planned script in this folder; until it exists the mapping above is the contract.
+
 ## Known limits
 
-- Apps Script runs for at most 6 minutes per execution; the scan stops at 5 and resumes on the next run (delta-only, so nothing is re-read).
 - Files over 15 MB (PDF) or 50 MB payload are skipped and logged.
 - Office files are converted through a temporary Google Doc in the organisation's Drive and trashed immediately; a client who objects can convert their files to Google formats instead.
 - Shared Drive access follows the installing user's permissions, so install it as a user who can see the whole folder.

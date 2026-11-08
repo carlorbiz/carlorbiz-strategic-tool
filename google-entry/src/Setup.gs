@@ -9,6 +9,8 @@ function setupSheets() {
   const settings = sheet_(ss, SHEET_SETTINGS, ['Setting', 'Value', 'What it does']);
   const have = settings.getLastRow() > 1 ? settings.getRange(2, 1, settings.getLastRow() - 1, 1).getValues().map(r => String(r[0])) : [];
   SETTINGS_DEFAULTS.forEach(d => { if (have.indexOf(d[0]) < 0) settings.appendRow(d); });
+  const current = parseInt(settings_(ss)['Schema version'], 10);
+  if (isNaN(current) || current < SCHEMA_VERSION) setSetting_(ss, 'Schema version', String(SCHEMA_VERSION)); // migrations go here as versions grow
   settings.setColumnWidths(1, 1, 180).setColumnWidths(2, 1, 320).setColumnWidths(3, 1, 420);
 
   const commitments = sheet_(ss, SHEET_COMMITMENTS, COMMITMENT_HEADERS);

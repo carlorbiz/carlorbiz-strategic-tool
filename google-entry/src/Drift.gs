@@ -7,9 +7,14 @@
  */
 
 function driftReport() {
+  return withLock_('drift report', driftReport_);
+}
+
+function driftReport_() {
   const ss = SpreadsheetApp.getActive();
   const started = new Date();
   const settings = settings_(ss);
+  checkSchema_(settings);
   const folderId = settings['Drive folder ID'];
   if (!folderId) throw new Error('Settings > Drive folder ID is empty.');
   const windowDays = parseInt(settings['Drift window (days)'], 10) || 90;
@@ -35,7 +40,7 @@ function evidenceRows_(ss) {
   if (!sh || sh.getLastRow() < 2) return [];
   const H = EVIDENCE_HEADERS;
   return sh.getRange(2, 1, sh.getLastRow() - 1, H.length).getValues().map(v => ({
-    file: v[H.indexOf('File')], link: v[H.indexOf('Link')], modified: v[H.indexOf('Modified')],
+    file: v[H.indexOf('File')], link: v[H.indexOf('Link')], modified: v[H.indexOf('Modified')], source: v[H.indexOf('Source')] || PACK_DOCUMENTS,
     commitment: String(v[H.indexOf('Commitment')]).trim(), signal: String(v[H.indexOf('Signal')]).trim(),
     excerpt: v[H.indexOf('Excerpt')], confidence: v[H.indexOf('Confidence')], note: v[H.indexOf('Note')],
     signoff: String(v[H.indexOf('Sign-off')]).trim(),

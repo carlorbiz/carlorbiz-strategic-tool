@@ -6,9 +6,14 @@
  */
 
 function scanDrive() {
+  return withLock_('scan', scanDrive_);
+}
+
+function scanDrive_() {
   const ss = SpreadsheetApp.getActive();
   const started = new Date();
   const settings = settings_(ss);
+  checkSchema_(settings);
   const folderId = settings['Drive folder ID'];
   if (!folderId) throw new Error('Settings > Drive folder ID is empty.');
   const commitments = commitments_(ss).filter(c => c.status !== 'archived');
@@ -176,7 +181,7 @@ function assessDocument_(f, parts, commitments, settings) {
 function writeEvidence_(sheet, f, data, when) {
   const stamp = fmt_(when);
   const type = (f.mimeType || '').split('/').pop().replace('vnd.google-apps.', '');
-  const base = [stamp, f.name, f.webViewLink || '', (f.modifiedTime || '').slice(0, 10), type];
+  const base = [stamp, f.name, f.webViewLink || '', (f.modifiedTime || '').slice(0, 10), type, PACK_DOCUMENTS];
   const tail = ['', '', '', f.id, f.modifiedTime];
   const rows = [];
   rows.push(base.concat(['', 'summary', data.summary || '', '', data.contains_personal_data ? 'Contains personal data: handle under the organisation\'s privacy policy.' : ''], tail));
